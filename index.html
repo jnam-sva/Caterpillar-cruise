@@ -1,0 +1,2767 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Caterpillar Cruise</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=DynaPuff:wght@600;700&family=Instrument+Serif:ital@0;1&family=IBM+Plex+Sans+KR:wght@400;500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --glass: rgba(40, 24, 56, .74);
+    --glass-strong: rgba(36, 22, 50, .93);
+    --glass-line: rgba(255, 214, 250, .18);
+    --text: #fff6fb;
+    --muted: rgba(255, 238, 250, .62);
+    --accent: #ff6fa8;
+    --gold: #ffd45c;
+    --ok: #7ee8b0;
+    --radius: 24px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: #111; }
+  body { color: var(--text); font-family: "IBM Plex Sans KR", sans-serif; -webkit-font-smoothing: antialiased; }
+  .mono { font-family: "Space Mono", monospace; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+  .glass {
+    background: var(--glass); border: 1px solid var(--glass-line); border-radius: var(--radius);
+    backdrop-filter: blur(14px) saturate(1.2); -webkit-backdrop-filter: blur(14px) saturate(1.2);
+    box-shadow: 0 4px 0 rgba(20, 8, 30, .25);
+  }
+  button { font: inherit; color: inherit; cursor: pointer; border: 0; background: none; }
+  [hidden] { display: none !important; }
+
+  #board { position: fixed; inset: 0; z-index: 0; width: 100vw; height: 100vh; display: block; }
+
+  /* ---------- 게임 중 HUD ---------- */
+  .hud { position: fixed; z-index: 5; transition: opacity .3s; }
+  body:not([data-screen="game"]):not([data-screen="over"]):not([data-screen="clear"]) .hud { opacity: 0; pointer-events: none; }
+  .tl { top: 20px; left: 20px; display: flex; flex-direction: column; gap: 12px; align-items: flex-start; }
+  .bl { left: 20px; bottom: 20px; font-size: 14px !important; opacity: .85; }
+  .logo { font-family: "DynaPuff", "Outfit", sans-serif; font-weight: 700; font-size: 20px; letter-spacing: .01em; text-shadow: 0 2px 12px rgba(0,0,0,.35); }
+  .logo i { color: var(--accent); font-style: normal; }
+  .scorebox { display: flex; gap: 6px; padding: 10px 16px; }
+  .scorebox div { min-width: 70px; }
+  .scorebox b { display: block; font-family: "Outfit", sans-serif; font-weight: 700; font-size: 34px; line-height: 1.05; font-variant-numeric: tabular-nums; }
+  .scorebox .pop { animation: pop .35s cubic-bezier(.2,1.6,.4,1); }
+  @keyframes pop { 40% { transform: scale(1.35); color: var(--gold); } }
+  .mpbox { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; padding: 10px 14px; width: 240px; }
+  .mpbar { height: 12px; border-radius: 12px; background: rgba(255,255,255,.12); overflow: hidden; }
+  .mpbar i { display: block; height: 100%; width: 100%; border-radius: 12px; background: linear-gradient(90deg, #8fd8ff, #b6f5a8); transition: width .3s cubic-bezier(.2,.8,.2,1), background .3s; }
+  .mpbox.low .mpbar i { background: linear-gradient(90deg, #ff4d2e, #ffb347); }
+  .mpbox b { font-family: "Outfit", sans-serif; font-weight: 700; font-size: 15px; min-width: 3ch; text-align: right; font-variant-numeric: tabular-nums; }
+  .mpbox.hit { animation: shake .35s; }
+  @keyframes shake { 20% { transform: translateX(-6px); } 40% { transform: translateX(6px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(3px); } }
+  .now { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; padding: 10px 14px 10px 12px; max-width: 340px; }
+  .now .disc { width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; background: rgba(255,255,255,.1); font-size: 15px; }
+  .now .name { font-weight: 500; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .now .sub { margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .now .bpm { text-align: right; }
+  .now .bpm b { font-family: "Outfit", sans-serif; font-weight: 700; font-size: 22px; display: flex; align-items: center; gap: 6px; justify-content: flex-end; }
+  #beatDot { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,.25); transition: background .25s, transform .25s; }
+  #beatDot.on { background: var(--accent); transform: scale(1.6); transition: none; }
+
+  .tc { top: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 22px; padding: 10px 22px; text-align: center; }
+  .tc b { display: block; font-family: "Outfit", sans-serif; font-weight: 700; font-size: 22px; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .tc .timer b { font-size: 30px; min-width: 3.2ch; }
+  .boost-pill { position: absolute; left: 50%; bottom: -16px; transform: translateX(-50%); padding: 4px 12px; border-radius: 999px;
+    background: #3fa9ff; color: #fff; border: 2px solid #2a1a33; font: 700 11px "Space Mono", monospace; letter-spacing: .06em; white-space: nowrap;
+    animation: pop .35s cubic-bezier(.2,1.6,.4,1); }
+  .tc.hurry .timer b { color: var(--accent); animation: tick 1s steps(1) infinite; }
+  @keyframes tick { 50% { opacity: .45; } }
+  .float { position: fixed; z-index: 6; left: 50%; top: 92px; transform: translateX(-50%); font-family: "Outfit"; font-weight: 800; font-size: 18px; color: var(--gold); pointer-events: none; animation: floatUp 1s ease-out forwards; text-shadow: 0 2px 10px rgba(0,0,0,.5); }
+  .speed-banner {
+    position: fixed; z-index: 7; left: 50%; top: 36%; transform: translate(-50%, -50%); pointer-events: none; text-align: center;
+    font-family: "DynaPuff", "Outfit", sans-serif; font-weight: 700; font-size: 56px; color: #fff; letter-spacing: .01em;
+    padding: 10px 34px 12px; border-radius: 28px; background: #3fa9ff; border: 4px solid #2a1a33; box-shadow: 0 7px 0 #2a1a33;
+    animation: bannerPop 1.4s cubic-bezier(.2,1.5,.4,1) forwards;
+  }
+  .speed-banner .zap { display: inline-block; margin-right: 8px; animation: zap .3s ease-in-out 3; }
+  .speed-banner small { display: block; font: 700 12px "Space Mono", monospace; letter-spacing: .1em; opacity: .9; margin-top: 2px; }
+  @keyframes bannerPop {
+    0% { transform: translate(-50%, -50%) scale(.3) rotate(-8deg); opacity: 0; }
+    18% { transform: translate(-50%, -50%) scale(1.08) rotate(3deg); opacity: 1; }
+    30%, 75% { transform: translate(-50%, -50%) scale(1) rotate(-2deg); opacity: 1; }
+    100% { transform: translate(-50%, -90%) scale(.9); opacity: 0; }
+  }
+  @keyframes zap { 50% { transform: scale(1.4) rotate(15deg); } }
+  @keyframes floatUp { to { transform: translate(-50%, -26px); opacity: 0; } }
+
+  /* 카메라 카드: 게임 중엔 오른쪽 위, 카메라 설정 단계에선 크게 */
+  #camCard { position: fixed; z-index: 5; top: 20px; right: 20px; width: min(300px, 32vw); padding: 8px; transition: opacity .3s; }
+  body:not([data-screen="game"]):not([data-screen="over"]):not([data-screen="theme"]) #camCard:not(.big) { opacity: 0; pointer-events: none; }
+  body[data-screen="theme"] #camCard.live { z-index: 9; width: 200px; }
+  body[data-screen="theme"] #camCard:not(.live) { opacity: 0; pointer-events: none; }
+  #camCard.big { position: relative; top: auto; right: auto; width: 100%; z-index: auto; }
+  .cam { position: relative; aspect-ratio: 4/3; background: #000; border-radius: 12px; overflow: hidden; }
+  .cam video, .cam canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+  .cam video { filter: grayscale(1) brightness(.85); opacity: .7; }
+  .cam .live { position: absolute; top: 8px; left: 8px; display: flex; align-items: center; gap: 6px; }
+  .cam .live::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); animation: blink 1.4s infinite; }
+  .cam .off { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; padding: 16px; color: var(--muted); font-size: 13px; }
+  @keyframes blink { 50% { opacity: .2; } }
+  .cam-foot { display: flex; align-items: center; gap: 10px; padding: 8px 4px 2px; }
+  #status { flex: 1; text-transform: none; letter-spacing: .02em; font-size: 11px; }
+  .compass { width: 30px; height: 30px; position: relative; flex: none; }
+  .needle { position: absolute; inset: 0; border: 2px solid rgba(255,255,255,.3); border-radius: 50%; transition: border-color .2s; }
+  .needle::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 2px; margin-top: -1px; background: rgba(255,255,255,.3); }
+  .needle::after { content: ""; position: absolute; left: 50%; top: -4px; width: 6px; height: 6px; margin-left: -3px; border-radius: 50%; background: rgba(255,255,255,.3); }
+  .needle.on { border-color: var(--text); }
+  .needle.on::before { background: var(--text); }
+  .needle.on::after { background: var(--accent); }
+  .speed { display: none; }                    /* 속도 수치는 숨김 */
+  #camCard.big .cam-foot { display: none; }    /* 설정 화면 카메라 아래 상태줄 숨김 */
+
+  /* ---------- 온보딩 화면들 ---------- */
+  .screen {
+    position: fixed; inset: 0; z-index: 8; display: grid; place-items: center; padding: 24px;
+    background: radial-gradient(ellipse at center, rgba(0,0,0,.25), rgba(0,0,0,.55));
+    opacity: 0; pointer-events: none; transition: opacity .4s;
+  }
+  body[data-screen="intro"] #s-intro, body[data-screen="setup"] #s-setup,
+  body[data-screen="theme"] #s-theme, body[data-screen="over"] #s-over, body[data-screen="clear"] #s-clear,
+  body[data-screen="settings"] #s-settings, body[data-screen="mission"] #s-mission { opacity: 1; pointer-events: auto; }
+  .mission { width: min(680px, 100%); text-align: center; }
+  .mission h2 { font-family: "DynaPuff", "Outfit", sans-serif; font-weight: 700; font-size: 30px; line-height: 1.15; margin: 6px 0 4px; color: #fff6fb; text-shadow: 0 3px 0 #5b2a63; }
+  .mission-art { width: 100%; max-width: 420px; height: auto; margin: 6px auto 4px; display: block; overflow: visible; }
+  .mission-art .m-cat { animation: crawl 2.4s ease-in-out infinite; }
+  @keyframes crawl { 50% { transform: translate(8px, -3px); } }
+  .mission-art .m-tent { transform-box: fill-box; transform-origin: center bottom; animation: tentBob 1.2s ease-in-out infinite; }
+  @keyframes tentBob { 50% { transform: scale(1.06); } }
+  .mission-tips { list-style: none; display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 14px 0 20px; }
+  .mission-tips li {
+    display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 16px 8px 14px; border-radius: 18px;
+    background: #fff6e6; color: #2a1a33; border: 3px solid #2a1a33; box-shadow: 0 4px 0 #2a1a33;
+  }
+  .mission-tips li:nth-child(odd) { transform: rotate(-1.5deg); } .mission-tips li:nth-child(even) { transform: rotate(1.5deg); }
+  .mission-tips b { font-size: 40px; line-height: 1.1; }
+  .mission-tips strong { font-family: "Outfit", sans-serif; font-weight: 800; font-size: 18px; line-height: 1.15; }
+  .mission-tips span { font: 700 11px "Space Mono", monospace; text-transform: uppercase; letter-spacing: .04em; color: rgba(42,26,51,.6); }
+  #missionTime { font-size: 26px; color: #e0563a; }
+  @media (max-width: 600px) { .mission-tips { grid-template-columns: 1fr 1fr; } }
+  .settings-panel { width: min(620px, 100%); }
+  .sync-ctl { display: flex; gap: 12px; align-items: center; }
+  .sync-ctl .btn { padding: 9px 16px; font-size: 13px; }
+  .sync-cal { text-align: center; padding: 14px; margin: 4px 0 8px; border-radius: 14px; background: rgba(255,255,255,.06); }
+  .sync-cal p { font-size: 13px; color: var(--muted); margin-bottom: 10px; }
+  .sync-dots { display: flex; justify-content: center; gap: 8px; margin-bottom: 12px; }
+  .sync-dots i { width: 14px; height: 14px; border-radius: 50%; background: rgba(255,255,255,.18); transition: transform .08s, background .15s; }
+  .sync-dots i.beat { background: var(--gold); transform: scale(1.35); }
+  .sync-dots i.done { background: var(--ok); }
+  .settings-title { font-family: "Outfit", sans-serif; font-weight: 800; font-size: 28px; letter-spacing: -.02em; }
+  .settings-lead { margin: 4px 0 8px; color: var(--muted); font-size: 13px; }
+  .set-link { font-size: 13px; }
+  #s-intro .link { color: var(--text); text-shadow: 0 1px 6px rgba(0,0,0,.45); }
+  .panel { width: min(860px, 100%); max-height: calc(100vh - 48px); overflow-y: auto; padding: 28px; background: var(--glass-strong); }
+
+  .btn {
+    font-family: "Outfit", sans-serif; font-weight: 700; font-size: 14px; letter-spacing: .02em;
+    padding: 14px 30px; border-radius: 999px; background: #fff6fb; color: #3a1d3a;
+    box-shadow: 0 4px 0 rgba(20,8,30,.45); transition: transform .1s, box-shadow .1s, opacity .2s;
+  }
+  .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 0 rgba(20,8,30,.45); }
+  .btn:active { transform: translateY(4px); box-shadow: 0 1px 0 rgba(20,8,30,.45); }
+  .btn:disabled { opacity: .35; cursor: default; transform: none; box-shadow: 0 4px 0 rgba(20,8,30,.45); }
+  .btn.ready { animation: readyPulse 1.2s ease-in-out infinite; }
+  @keyframes readyPulse { 50% { box-shadow: 0 4px 0 rgba(20,8,30,.45), 0 0 0 8px rgba(126,232,176,.35); } }
+  .btn.ghost { background: transparent; color: var(--text); border: 1px solid var(--glass-line); box-shadow: none; }
+  .btn.ghost:hover { background: rgba(255,255,255,.08); }
+  .link { font-size: 13px; color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
+  .link:hover { color: var(--text); }
+
+  /* 카메라 가이드 */
+  .guide { display: grid; grid-template-columns: 96px 1fr; gap: 18px; align-items: center; margin: 12px 0 16px; padding: 10px 16px; border-radius: 16px; background: rgba(255,255,255,.05); }
+  .guide .guide-steps { grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .sens-box { margin-top: 10px; padding: 12px; border-radius: 12px; background: rgba(255,255,255,.05); }
+  .sens-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .sens-box input[type=range] { width: 100%; }
+  .mini-test { display: flex; gap: 12px; align-items: center; margin-top: 10px; }
+  .mini-test .big-wheel { width: 46px; height: 46px; border-width: 4px; flex: none; }
+  .mini-test .big-wheel::before { height: 4px; margin-top: -2px; }
+  .mini-test .big-wheel::after { width: 8px; height: 8px; margin-left: -4px; top: -8px; }
+  .mini-test .bar { max-width: none; margin-bottom: 6px; }
+  .fig { width: 100%; color: var(--text); }
+  .fig .drive { transform-origin: 80px 80px; animation: steerDemo 3s ease-in-out infinite; }
+  @keyframes steerDemo { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-18deg); } 75% { transform: rotate(18deg); } }
+  .guide-steps { list-style: none; counter-reset: g; display: grid; gap: 10px; }
+  .guide-steps li { counter-increment: g; display: grid; grid-template-columns: 26px 1fr; column-gap: 10px; }
+  .guide-steps li::before { content: counter(g); grid-row: span 2; width: 24px; height: 24px; border-radius: 50%; background: var(--text); color: #3a1d3a; font: 600 13px/24px "Outfit", sans-serif; text-align: center; }
+  .guide-steps b { font-weight: 500; font-size: 14px; }
+  .guide-steps span { font-size: 12px; color: var(--muted); line-height: 1.5; }
+  @media (max-width: 720px) { .guide { grid-template-columns: 1fr; } .guide .guide-steps { grid-template-columns: 1fr; } .guide .fig { max-width: 120px; margin: 0 auto; } }
+  /* 카메라 안 사람 윤곽선: 아직 맞추는 중 = 흰 점선, 맞춘 부분 = 초록 */
+  .outline { display: none; position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  #camCard.big.live .outline { display: block; }   /* 카메라가 켜진 뒤에만 */
+  .outline g > * , .outline g g > * { stroke: rgba(255,255,255,.75); transition: stroke .3s; }
+  .outline .o-wheel { opacity: 0; transition: opacity .3s; }
+  .outline.steering .o-wheel { opacity: 1; }
+  .outline .ok, .outline .ok > * { stroke: var(--ok); stroke-dasharray: none; }
+  .outline .focus, .outline .focus > * { stroke: var(--gold); animation: dash 1s linear infinite; }
+  @keyframes dash { to { stroke-dashoffset: -38; } }
+  .cam .off { flex-direction: column; }
+  .cam .off p { margin-bottom: 14px; font-size: 12px; line-height: 1.6; }
+  #camCard:not(.big) .off .btn { display: none; }
+
+  /* 단계별 안내: 카메라 바로 위, 가운데 */
+  .coach { display: flex; align-items: center; justify-content: center; text-align: center; gap: 12px; height: 56px; margin: 0 0 10px; }
+  .coach.done h3 { color: var(--ok); }
+  .coach-art { display: none; }
+  #camCard.big .coach-art:not([hidden]) {
+    display: block; position: absolute; z-index: 3; top: 12px; left: 50%; transform: translateX(-50%);
+  }
+  .coach-art svg { width: 72px; height: 72px; display: block; filter: drop-shadow(0 2px 8px rgba(0,0,0,.6)); }
+  .coach-art .w { transform-origin: 40px 46px; }
+  .coach-art.left .w { animation: wl 1.6s ease-in-out infinite; }
+  .coach-art.right .w { animation: wr 1.6s ease-in-out infinite; }
+  @keyframes wl { 0%, 15% { transform: rotate(0); } 55%, 80% { transform: rotate(-35deg); } 100% { transform: rotate(0); } }
+  @keyframes wr { 0%, 15% { transform: rotate(0); } 55%, 80% { transform: rotate(35deg); } 100% { transform: rotate(0); } }
+  .coach-art .ar { animation: arr 1.6s ease-in-out infinite; }
+  @keyframes arr { 0%, 15% { opacity: .2; } 50%, 85% { opacity: 1; } 100% { opacity: .2; } }
+  /* 준비 완료: 반짝이 ✨ 세 개가 차례로 반짝 */
+  .coach-art.ready path { transform-box: fill-box; transform-origin: center; animation: twinkleIn .5s cubic-bezier(.2,1.6,.4,1) both, twinkle 1.6s .5s ease-in-out infinite; }
+  .coach-art.ready .s2 { animation-delay: .15s, .8s; fill: #fff6c2; }
+  .coach-art.ready .s3 { animation-delay: .3s, 1.1s; fill: #ffffff; }
+  @keyframes twinkleIn { from { transform: scale(0) rotate(-45deg); opacity: 0; } }
+  @keyframes twinkle { 50% { transform: scale(.75) rotate(12deg); opacity: .75; } }
+  .coach h3 { font-family: "Outfit", sans-serif; font-weight: 800; font-size: 24px; letter-spacing: -.02em; line-height: 1.15; }
+  /* 카메라 크기는 화면 높이에 맞춰 자동 조절 → 노트북 화면이 낮아도 스크롤 없이 버튼까지 다 보이게 */
+  .cam-wrap { width: min(576px, 100%, calc((100vh - 400px) * 1.333)); min-width: 240px; margin: 0 auto; }
+  @media (max-height: 820px) {
+    #s-setup .panel { padding: 18px 24px; }
+    #s-setup .stepper { margin-bottom: 10px; }
+    #s-setup .coach { height: 46px; margin-bottom: 6px; }
+    #s-setup .coach h3 { font-size: 20px; }
+    #s-setup .sens-row { margin-top: 8px; padding: 6px 12px; }
+    #s-setup .panel-foot { margin-top: 12px; }
+    #s-setup .btn { padding: 10px 22px; }
+    .cam-wrap { width: min(576px, 100%, calc((100vh - 300px) * 1.333)); }
+    .cam-wrap .tip, .sens-tip { display: none; }
+    #s-setup.screen { padding: 12px; }
+    #s-setup .panel { max-height: calc(100vh - 24px); }
+  }
+  .sens-row { display: flex; align-items: center; gap: 14px; margin-top: 12px; padding: 10px 14px; border-radius: 14px; background: rgba(255,255,255,.05); }
+  .sens-row { justify-content: center; }
+  .sens-tip { margin-left: auto; text-transform: none; letter-spacing: .02em; }
+  .sens-row .seg button { padding: 6px 11px; }
+
+  /* 1. 인트로 */
+  #s-intro { text-align: center; background: radial-gradient(ellipse at center, rgba(20,40,10,.28), rgba(20,40,10,.05) 70%); }
+  .intro-title {
+    font-family: "DynaPuff", "Outfit", sans-serif; font-weight: 700; font-size: clamp(44px, 8.6vw, 132px);
+    line-height: .95; letter-spacing: .01em; color: #fff6fb;
+    text-shadow: 0 .06em 0 #5b2a63, 0 .12em 0 rgba(30, 8, 40, .35), 0 .2em 40px rgba(30, 0, 40, .35);
+  }
+  .intro-title .sp { display: inline-block; color: var(--gold); font-size: .5em; vertical-align: top; animation: twinkle 1.6s ease-in-out infinite; }
+  @keyframes twinkle { 50% { transform: scale(.6) rotate(20deg); opacity: .5; } }
+  .intro-title span { display: inline-block; animation: bounce 1.2s ease-in-out infinite alternate; }
+  .intro-title .beat { color: var(--accent); text-shadow: 0 .06em 0 #8c2a5a, 0 .12em 0 rgba(30, 8, 40, .35), 0 .2em 40px rgba(30, 0, 40, .35); }
+  .intro-title .dot { color: var(--gold); }
+  .tagline { margin: 22px 0 34px; font-size: 11px; letter-spacing: .32em; color: var(--text); opacity: .8; }
+  @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-.04em); } }
+  .intro-actions { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+  #goSetup { font-family: "DynaPuff", "Outfit", sans-serif; font-size: 26px; padding: 20px 56px; border-radius: 999px;
+    background: var(--gold); color: #2a1a33; border: 3px solid #2a1a33; box-shadow: 0 7px 0 #2a1a33; }
+  #goSetup:hover { transform: translateY(-3px); box-shadow: 0 10px 0 #2a1a33; }
+  #goSetup:active { transform: translateY(5px); box-shadow: 0 2px 0 #2a1a33; }
+
+  /* 2. 설정 단계 */
+  .stepper { display: flex; gap: 6px; margin-bottom: 24px; }
+  .stepper li { list-style: none; flex: 1; }
+  .stepper li::before { content: ""; display: block; height: 4px; border-radius: 4px; background: rgba(255,255,255,.14); margin-bottom: 8px; transition: background .3s; }
+  .stepper li.done::before, .stepper li.on::before { background: var(--text); }
+  .stepper li.on .mono { color: var(--text); }
+  .step { display: none; }
+  .step.on { display: block; animation: rise .35s cubic-bezier(.2,.8,.2,1); }
+  .step h2 { font-family: "Outfit", sans-serif; font-size: 26px; font-weight: 800; letter-spacing: -.02em; }
+  .step > p.lead { margin: 8px 0 22px; color: var(--muted); font-size: 14px; line-height: 1.6; max-width: 56ch; }
+  .two { display: grid; grid-template-columns: 1.3fr 1fr; gap: 22px; align-items: start; }
+  @media (max-width: 720px) { .two { grid-template-columns: 1fr; } }
+  .checks { list-style: none; display: flex; flex-direction: column; gap: 5px; }
+  .checks li { display: grid; grid-template-columns: 26px 1fr; gap: 10px; align-items: center; padding: 7px 12px; border-radius: 12px; background: rgba(255,255,255,.05); font-size: 14px; transition: background .3s; }
+  .checks li i { width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,.3); display: grid; place-items: center; font-style: normal; font-size: 12px; transition: all .25s; }
+  .checks li.ok { background: rgba(95,211,154,.12); }
+  .checks li.ok i { background: var(--ok); border-color: var(--ok); color: #0d2a1c; }
+  .checks li small { display: block; color: var(--muted); font-size: 12px; }
+  .tip { margin-top: 14px; font-size: 12px; color: var(--muted); line-height: 1.6; }
+  .row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 0; border-bottom: 1px solid var(--glass-line); }
+  .row:last-child { border-bottom: 0; }
+  .row h4 { font-size: 15px; font-weight: 500; }
+  .row h4 + p { font-size: 12px; color: var(--muted); margin-top: 3px; }
+  .seg { display: inline-flex; padding: 3px; border-radius: 999px; background: rgba(255,255,255,.08); flex: none; }
+  .seg button { padding: 8px 14px; border-radius: 999px; font-size: 12px; color: var(--muted); transition: background .2s, color .2s; }
+  .seg button.on { background: var(--text); color: #4a1e45; font-weight: 500; }
+  input[type=range] { width: 200px; accent-color: var(--text); }
+  .switch { width: 46px; height: 26px; border-radius: 999px; background: rgba(255,255,255,.18); position: relative; transition: background .2s; flex: none; }
+  .switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: var(--text); transition: transform .2s; }
+  .switch[aria-checked="true"] { background: var(--ok); }
+  .switch[aria-checked="true"]::after { transform: translateX(20px); }
+  .tester { display: grid; place-items: center; gap: 14px; padding: 22px; border-radius: 14px; background: rgba(255,255,255,.05); }
+  .big-wheel { width: 120px; height: 120px; border-radius: 50%; border: 8px solid var(--text); position: relative; transition: transform .05s linear; }
+  .big-wheel::before { content: ""; position: absolute; left: -2px; right: -2px; top: 50%; height: 8px; margin-top: -4px; background: var(--text); }
+  .big-wheel::after { content: ""; position: absolute; left: 50%; top: -14px; width: 14px; height: 14px; margin-left: -7px; border-radius: 50%; background: var(--accent); }
+  .bar { width: 100%; max-width: 280px; height: 10px; border-radius: 10px; background: rgba(255,255,255,.1); position: relative; overflow: hidden; }
+  .bar::before { content: ""; position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; margin-left: -1px; background: rgba(255,255,255,.4); }
+  .bar i { position: absolute; top: 0; bottom: 0; background: var(--accent); }
+  .panel-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 26px; gap: 12px; }
+
+  /* 3. 테마 선택 */
+  /* ---------- Music 단계: 게임 레벨 선택 느낌 ---------- */
+  #s-theme .panel { width: min(900px, 100%); }
+  .music-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .music-title { font-family: "DynaPuff", "Outfit", sans-serif; font-weight: 700; font-size: 34px; color: #fff6fb; text-shadow: 0 3px 0 #5b2a63; }
+  .palm-hint { color: var(--gold); text-transform: none; letter-spacing: .02em; font-size: 12px; }
+  .themes { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin: 18px 0 20px; padding: 12px 8px 20px; }
+  @media (max-width: 760px) { .themes { grid-template-columns: 1fr 1fr; } }
+  .theme {
+    --ink: #2a1a33;
+    position: relative; display: flex; flex-direction: column; align-items: center; text-align: center;
+    padding: 14px 12px 14px; border-radius: 26px; background: var(--bg); color: var(--ink);
+    border: 3px solid var(--ink); box-shadow: 0 6px 0 var(--ink);
+    transform: rotate(var(--tilt)); transition: transform .18s cubic-bezier(.2,1.4,.4,1), box-shadow .18s;
+  }
+  .theme.palm-on, .songs li.palm-on, .btn.palm-on { outline: 4px solid var(--ok); outline-offset: 4px; }
+  .theme:hover, .theme.palm-on { transform: rotate(0) translateY(-4px) scale(1.03); box-shadow: 0 10px 0 var(--ink); }
+  /* 선택된 카드: 흰 테두리는 그림자와 겹치지 않도록 outline으로 (네 변 모두 온전히 보이게) */
+  .theme.on { transform: rotate(0) translateY(-6px) scale(1.05); box-shadow: 0 10px 0 var(--ink); outline: 5px solid rgba(255,255,255,.9); outline-offset: 3px; }
+  .theme.on.palm-on { outline-color: var(--ok); }
+  .theme .art { width: 78px; height: 78px; margin-bottom: 6px; }
+  .theme .art svg { width: 100%; height: 100%; overflow: visible; }
+  .theme.on .art svg, .theme:hover .art svg { animation: wobble .9s ease-in-out infinite; }
+  @keyframes wobble { 25% { transform: rotate(-6deg) scale(1.04); } 75% { transform: rotate(6deg) scale(1.04); } }
+  .theme b { font-family: "DynaPuff", "Outfit", sans-serif; font-weight: 700; font-size: 18px; line-height: 1.1; }
+  .theme .mono { color: rgba(42,26,51,.7); margin-top: 6px; font-size: 9px; }
+  .theme .pick { position: absolute; top: -12px; right: -8px; padding: 4px 9px; border-radius: 999px; background: var(--gold); color: var(--ink); border: 2px solid var(--ink); font: 700 10px "Space Mono", monospace; transform: rotate(8deg); display: none; }
+  .theme.on .pick { display: block; }
+
+  .songs { list-style: none; display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }
+  .songs li {
+    --ink: #2a1a33;
+    display: grid; grid-template-columns: 46px 1fr auto; gap: 12px; align-items: center;
+    padding: 10px 14px 10px 10px; border-radius: 18px; cursor: pointer; color: var(--ink);
+    background: #fff6e6; border: 3px solid var(--ink); box-shadow: 0 4px 0 var(--ink);
+    transition: transform .15s cubic-bezier(.2,1.4,.4,1), box-shadow .15s, background .2s;
+  }
+  .songs li:hover, .songs li.palm-on { transform: translateY(-3px); box-shadow: 0 7px 0 var(--ink); }
+  .songs li { position: relative; }
+  /* 선택된 곡: 색 + 굵은 노란 테두리 + 살짝 떠오름 */
+  .songs li.on {
+    background: var(--hl, #ffe08a); transform: translateY(-3px);
+    outline: 4px solid var(--gold); outline-offset: 3px; box-shadow: 0 7px 0 var(--ink);
+  }
+  /* 지금 재생 중인 곡: 오른쪽 위 스티커 */
+  .songs li.playing::after {
+    content: "♪ PLAYING"; position: absolute; top: -12px; right: 12px; padding: 3px 8px; border-radius: 999px;
+    background: var(--gold); color: var(--ink); border: 2px solid var(--ink);
+    font: 700 9px "Space Mono", monospace; letter-spacing: .04em; transform: rotate(4deg);
+  }
+  .songs li .disc { width: 46px; height: 46px; border-radius: 50%; position: relative;
+    background: radial-gradient(circle, var(--hl, #ffd45c) 0 5px, #2a1a33 6px 9px, #3c2a47 10px 12px, #2a1a33 13px 15px, #3c2a47 16px 18px, #2a1a33 19px); }
+  .songs li .disc::after { content: ""; position: absolute; inset: 0; border-radius: 50%; background: linear-gradient(135deg, rgba(255,255,255,.28), transparent 45%); }
+  .songs li.playing .disc { animation: spin 1.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .songs li .nm { font-family: "Outfit", sans-serif; font-weight: 800; font-size: 16px; line-height: 1.15; }
+  .songs li .scene { font: 700 10px "Space Mono", monospace; letter-spacing: .04em; text-transform: uppercase; color: rgba(42,26,51,.6); margin-top: 3px; }
+  .songs li .bpmn { font: 700 13px "Space Mono", monospace; text-align: right; }
+  .songs li .bpmn small { display: block; font-size: 9px; opacity: .6; }
+  .songs li.add { grid-template-columns: 46px 1fr; background: transparent; color: var(--text); border-style: dashed; border-color: rgba(255,255,255,.35); box-shadow: none; }
+  .songs li.add .disc { background: none; border: 2px dashed rgba(255,255,255,.4); display: grid; place-items: center; font-size: 20px; }
+  .songs li.add .disc::after { display: none; }
+  .songs li.loading { opacity: .6; cursor: wait; }
+  .songs li.empty { display: block; background: transparent; box-shadow: none; cursor: default; transform: none; }
+  .empty { grid-column: 1 / -1; padding: 22px; text-align: center; color: var(--muted); font-size: 14px; border: 2px dashed var(--glass-line); border-radius: 18px; }
+  .btn.drive { font-family: "DynaPuff", "Outfit", sans-serif; font-size: 18px; padding: 14px 34px; background: var(--gold); color: #2a1a33; border: 3px solid #2a1a33; box-shadow: 0 5px 0 #2a1a33; }
+  .btn.drive:not(:disabled) { animation: readyPulse 1.4s ease-in-out infinite; }
+
+  /* ---------- 손바닥 커서 ---------- */
+  #palm { position: fixed; z-index: 30; left: 0; top: 0; width: 64px; height: 64px; margin: -32px 0 0 -32px; pointer-events: none; opacity: 0; transition: opacity .25s; }
+  #palm.on { opacity: 1; }
+  #palm svg { width: 100%; height: 100%; filter: drop-shadow(0 3px 6px rgba(0,0,0,.45)); }
+  #palm .track { fill: rgba(42,26,51,.55); stroke: rgba(255,255,255,.7); stroke-width: 3; }
+  #palm .fill { fill: none; stroke: var(--ok); stroke-width: 6; stroke-linecap: round; transform: rotate(-90deg); transform-origin: 32px 32px; }
+  #palm .hand rect { fill: #fff6fb; }
+  #palm.hover .track { fill: rgba(126,232,176,.45); }
+  .tag {
+    display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;
+    font: 700 9px "Space Mono", monospace; letter-spacing: .06em; text-transform: uppercase;
+    padding: 3px 7px 3px 6px; border-radius: 999px; background: rgba(255,255,255,.08); color: var(--text);
+  }
+  .tag::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--g); }
+  .empty { padding: 24px; text-align: center; color: var(--muted); font-size: 14px; border: 1px dashed var(--glass-line); border-radius: 12px; }
+
+  /* 게임 오버 */
+  #s-over .panel, #s-clear .panel { width: min(460px, 100%); text-align: center; }
+  #s-clear h2 { font-family: "Outfit", sans-serif; font-weight: 800; font-size: 40px; letter-spacing: -.03em; }
+  #s-clear h2 .em { display: block; font-size: 56px; margin-bottom: 6px; }
+  .next-list { list-style: none; display: grid; gap: 6px; margin: 18px 0 22px; text-align: left; }
+  .next-list li { padding: 10px 14px; border-radius: 12px; background: rgba(255,255,255,.06); font-size: 14px; display: flex; justify-content: space-between; }
+  .next-list li b { font-family: "Outfit"; font-weight: 700; }
+  #s-over h2 { font-family: "Outfit", sans-serif; font-weight: 800; font-size: 44px; letter-spacing: -.03em; }
+  #overWhy { margin-top: 6px; color: var(--muted); font-size: 14px; }
+  .final { display: flex; justify-content: center; gap: 30px; margin: 22px 0 26px; }
+  .final b { display: block; font-family: "Outfit", sans-serif; font-weight: 800; font-size: 48px; }
+  .final .new { color: var(--gold); }
+  .over-actions { display: flex; flex-direction: column; gap: 10px; align-items: center; }
+  .over-actions .sub { display: flex; gap: 8px; }
+
+  /* 게임 중 설명 카드 */
+  .howto {
+    position: fixed; z-index: 5; left: 50%; bottom: 20px; transform: translate(-50%, calc(100% + 40px)); opacity: 0; pointer-events: none;
+    display: flex; gap: 10px; width: max-content; max-width: calc(100vw - 40px); overflow-x: auto; padding: 4px;
+    transition: transform .45s cubic-bezier(.2,.8,.2,1), opacity .3s;
+  }
+  .howto.peek { transform: translateX(-50%); opacity: 1; pointer-events: auto; }
+  .howto .c { flex: none; width: 168px; padding: 14px 14px 13px; }
+  .howto .c .em { font-size: 22px; line-height: 1; }
+  .howto .c h4 { font-family: "Outfit", sans-serif; font-size: 12px; font-weight: 700; margin: 10px 0 4px; }
+  .howto .c p { font-size: 12px; line-height: 1.5; color: var(--muted); }
+  .help { position: fixed; z-index: 6; right: 20px; bottom: 20px; width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; font-family: "Outfit"; font-weight: 700; }
+  body:not([data-screen="game"]) .help { display: none; }
+  .pause-btn { position: fixed; z-index: 6; right: 20px; bottom: 68px; width: 38px; height: 38px; border-radius: 50%;
+    display: grid; place-items: center; font-size: 12px; letter-spacing: -2px; }
+  body:not([data-screen="game"]) .pause-btn { display: none; }
+  body[data-screen="pause"] #s-pause { opacity: 1; pointer-events: auto; }
+  body[data-screen="pause"] .hud { opacity: .35; }
+  .pause-panel { width: min(440px, 100%); text-align: center; }
+  .pause-panel h2 { font-family: "DynaPuff", "Outfit", sans-serif; font-weight: 700; font-size: 40px; color: #fff6fb; text-shadow: 0 3px 0 #5b2a63; }
+  .pause-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 18px; }
+  .pause-grid .btn { padding: 12px 10px; font-size: 13px; }
+
+  @keyframes rise { from { opacity: 0; transform: translateY(12px); } }
+  @media (max-width: 760px) { #camCard:not(.big) { width: 150px; } .now { max-width: 220px; } .scorebox b { font-size: 24px; } .panel { padding: 20px; } }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+  @media (max-height: 820px) {
+    /* 음악 고르기 · 미션 화면도 낮은 화면에선 촘촘하게 */
+    #s-theme.screen, #s-mission.screen { padding: 12px; }
+    #s-theme .panel, #s-mission .panel { padding: 16px 22px; max-height: calc(100vh - 24px); }
+    #s-theme .stepper { margin-bottom: 8px; }
+    .music-title { font-size: 26px; }
+    .themes { margin: 8px 0 10px; padding: 8px 6px 14px; gap: 14px; }
+    .theme { padding: 8px 10px 10px; }
+    .theme .art { width: 44px; height: 44px; margin-bottom: 2px; }
+    .theme b { font-size: 15px; }
+    .theme .mono { margin-top: 2px; }
+    .songs { gap: 8px; }
+    .songs li { padding: 6px 12px 6px 8px; grid-template-columns: 34px 1fr auto; }
+    .songs li .disc { width: 34px; height: 34px; }
+    #s-theme .panel-foot, #s-mission .panel-foot { margin-top: 12px; }
+    .mission h2 { font-size: 24px; }
+    .mission-art { max-width: 280px; margin: 0 auto; }
+    .mission-tips { margin: 8px 0 12px; gap: 8px; }
+    .mission-tips li { padding: 8px 6px; }
+    .mission-tips b { font-size: 26px; }
+    .mission-tips strong { font-size: 15px; }
+    #missionTime { font-size: 20px; }
+  }
+</style>
+</head>
+<body data-screen="intro">
+<canvas id="board" aria-label="Game view"></canvas>
+
+<!-- ===== 게임 중 HUD ===== -->
+<div class="hud tl">
+  <div class="now glass">
+    <span class="disc">♫</span>
+    <span style="min-width:0">
+      <div class="name" id="musicName">Nothing playing</div>
+      <div class="sub mono" id="sceneName">Green Field</div>
+    </span>
+    <span class="bpm">
+      <b><i id="beatDot"></i><span id="bpmVal">—</span></b>
+      <span class="tag" id="nowTag" hidden></span>
+    </span>
+  </div>
+  <div class="scorebox glass">
+    <div><span class="mono">Score</span><b id="score">0</b></div>
+    <div><span class="mono">Best</span><b id="best">0</b></div>
+  </div>
+  <div class="mpbox glass" id="mpBox">
+    <span class="mono">MP</span>
+    <div class="mpbar"><i id="mpFill"></i></div>
+    <b id="mpVal">100</b>
+  </div>
+</div>
+<div class="hud bl logo">CATERPILLAR CRUISE<i>.</i></div>
+
+<!-- 가운데 위: 스테이지 · 남은 시간 · 텐트까지 거리 -->
+<div class="hud tc glass" id="stageHud">
+  <div><span class="mono">Stage</span><b id="stageNum">1</b></div>
+  <div class="timer"><span class="mono">Time</span><b id="timeLeft">0:45</b></div>
+  <span class="boost-pill" id="boostPill" hidden>⚡ BOOST</span>
+  <div><span class="mono">⛺ Tent</span><b id="tentDist">—</b></div>
+</div>
+
+<div id="camCard" class="glass">
+  <div class="cam">
+    <video id="video" playsinline muted></video>
+    <canvas id="camCanvas"></canvas>
+    <!-- 핸들 단계 일러스트: 카메라 화면 안 위쪽 가운데 -->
+    <div class="coach-art" id="coachArt" hidden></div>
+    <div class="off" id="camOff">
+      <div>
+        <p id="camOffText">Your camera stays on this device.<br>Nothing is recorded.</p>
+        <button class="btn" id="camOnBtn">Turn on camera</button>
+      </div>
+    </div>
+    <!-- 몸을 맞출 사람 윤곽선 (카메라 설정 단계에서만) -->
+    <svg class="outline" id="camOutline" viewBox="0 -30 400 300" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <g fill="none" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="10 9">
+        <circle class="o-head" cx="200" cy="88" r="32"/>
+        <path class="o-body" d="M138 150 Q200 128 262 150 L272 300 M138 150 L128 300"/>
+        <!-- 핸들 단계부터: 팔·손·핸들이 내 조향 각도에 맞춰 기울어짐 (머리·몸통은 고정) -->
+        <g class="o-wheel" id="oWheel"><circle cx="200" cy="178" r="54"/><path d="M146 178 H254 M200 178 V232"/></g>
+        <path class="o-arms" id="oArms" d="M138 152 L96 212 L146 178 M262 152 L304 212 L254 178"/>
+        <g class="o-hands">
+          <g id="oHandL"><circle cx="146" cy="178" r="13"/><path d="M137 165 L133 151 M145 163 L145 147 M153 165 L157 151"/></g>
+          <g id="oHandR"><circle cx="254" cy="178" r="13"/><path d="M263 165 L267 151 M255 163 L255 147 M247 165 L243 151"/></g>
+        </g>
+      </g>
+    </svg>
+    <span class="live mono">Arms</span>
+    <span class="speed mono" id="speedVal">85 px/s</span>
+  </div>
+  <div class="cam-foot">
+    <span class="mono" id="status">Camera off</span>
+    <div class="compass" title="Wheel"><div class="needle" id="needle"></div></div>
+  </div>
+</div>
+
+<!-- ===== 1. 인트로 ===== -->
+<section class="screen" id="s-intro" aria-label="Intro">
+  <div>
+    <h1 class="intro-title">
+      <span style="animation-delay:0s">CATERPILLAR</span><br>
+      <span class="beat" style="animation-delay:.2s">CRUISE</span><span class="dot">.</span>
+    </h1>
+    <p class="mono tagline">Drive by arm · steer to the beat</p>
+    <div class="intro-actions">
+      <button class="btn" id="goSetup">Get started</button>
+      <button class="link" id="quickStart" hidden>Use my last setup →</button>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 2. 유저 설정 ===== -->
+<section class="screen" id="s-setup" aria-label="Setup">
+  <div class="panel glass">
+    <ol class="stepper" id="stepper">
+      <li><span class="mono">1 · Camera &amp; steering</span></li>
+      <li><span class="mono">2 · Music</span></li>
+    </ol>
+
+    <!-- ① 카메라 + 조향: 가이드, 카메라, 체크, 감도 테스트를 한 화면에 -->
+    <div class="step" data-step="camera">
+      <div class="cam-wrap">
+        <!-- 지금 해야 할 일 하나만 크게 보여주는 안내 (카메라 바로 위, 가운데) -->
+        <div class="coach" id="coach">
+          <h3 id="coachTitle">Turn on your camera</h3>
+        </div>
+        <div id="camSlot"></div>
+        <div class="sens-row">
+          <span class="mono">Sensitivity</span>
+          <div class="seg" data-key="sens"><button data-v="3">Gentle</button><button data-v="5">Normal</button><button data-v="8">Sharp</button></div>
+          <span class="mono sens-tip">Try it: the outline turns with you</span>
+        </div>
+        <input type="range" id="sensRange" min="1" max="10" step="1" aria-label="Sensitivity" hidden>
+        <span id="sensVal" hidden></span>
+        <p class="tip" style="text-align:center">No camera? Steer with ← → and press Next.</p>
+      </div>
+    </div>
+
+    <div class="panel-foot">
+      <button class="btn ghost" id="backBtn">Back</button>
+      <button class="link set-link" data-open-settings>⚙ Settings</button>
+      <button class="btn" id="nextBtn">Pick music →</button>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 설정 (온보딩 어디서든 하단 링크로 열기) ===== -->
+<section class="screen" id="s-settings" aria-label="Settings">
+  <div class="panel glass settings-panel">
+    <h2 class="settings-title">Settings</h2>
+    <p class="settings-lead">Changes are saved automatically.</p>
+      <div class="row">
+        <div><h4>Volume</h4><p>Music and beat sounds</p></div>
+        <input type="range" id="volume" min="0" max="1" step="0.05" aria-label="Volume">
+      </div>
+      <div class="row">
+        <div><h4>Speed follows the beat</h4><p>Faster songs make a faster caterpillar</p></div>
+        <button class="switch" id="bpmSpeed" role="switch" aria-label="Speed follows the beat"></button>
+      </div>
+      <div class="row">
+        <div><h4>Beat effects</h4><p>How much leaves, lights and fruit bounce</p></div>
+        <div class="seg" data-key="fx"><button data-v="0.5">Subtle</button><button data-v="1">Normal</button><button data-v="1.6">Wild</button></div>
+      </div>
+      <div class="row">
+        <div><h4>Speed</h4><p>Multiplies the song’s speed</p></div>
+        <div class="seg" data-key="speed"><button data-v="0.8">Relaxed</button><button data-v="1">Normal</button><button data-v="1.25">Fast</button></div>
+      </div>
+      <div class="row">
+        <div><h4>Obstacles</h4><p>Trees, cacti, rocks, buildings and your own body drain MP. “Lots” adds traffic cones.</p></div>
+        <div class="seg" data-key="obstacles"><button data-v="0">None</button><button data-v="1">Some</button><button data-v="2">Lots</button></div>
+      </div>
+      <div class="row">
+        <div><h4>Beat sync</h4><p id="syncInfo">Auto (uses your device’s audio delay)</p></div>
+        <div class="sync-ctl">
+          <button class="btn ghost" id="syncCalBtn">Tap to sync</button>
+          <button class="link" id="syncAutoBtn">Auto</button>
+        </div>
+      </div>
+      <div class="sync-cal" id="syncCal" hidden>
+        <p>Tap <b>Space</b> (or the button) on each beat you <b>hear</b>.</p>
+        <div class="sync-dots" id="syncDots"></div>
+        <button class="btn" id="syncTap">TAP</button>
+      </div>
+      <div class="row">
+        <div><h4>Steering sensitivity</h4><p>Gentle needs big arm moves, Sharp reacts to small ones</p></div>
+        <div class="seg" data-key="sens"><button data-v="3">Gentle</button><button data-v="5">Normal</button><button data-v="8">Sharp</button></div>
+      </div>
+    <div class="panel-foot">
+      <button class="link" id="resetSettings">Reset to defaults</button>
+      <button class="btn" id="closeSettings">Done</button>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 3. 노래 테마 선택 ===== -->
+<section class="screen" id="s-theme" aria-label="Choose music">
+  <div class="panel glass">
+    <ol class="stepper">
+      <li class="done"><span class="mono">1 · Camera &amp; steering</span></li>
+      <li class="on"><span class="mono">2 · Music</span></li>
+    </ol>
+    <div class="music-head">
+      <h2 class="music-title">Pick your mood</h2>
+      <span class="palm-hint mono" id="palmHint">✋ Hover your palm over a card to pick it</span>
+    </div>
+    <div class="themes" id="themes"></div>
+    <ul class="songs" id="songs"></ul>
+    <input type="file" id="fileIn" accept="audio/*" hidden>
+    <div class="panel-foot">
+      <button class="btn ghost" id="toSettings" data-palm>Back</button>
+      <button class="link set-link" data-open-settings>⚙ Settings</button>
+      <button class="btn drive" id="driveBtn" data-palm disabled>Drive ▶</button>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 게임 오버 ===== -->
+<section class="screen" id="s-over" aria-label="Game over">
+  <div class="panel glass">
+    <h2>CRASH!</h2>
+    <p id="overWhy">Out of MP.</p>
+    <div class="final">
+      <div><span class="mono">Score</span><b id="finalScore">0</b></div>
+      <div><span class="mono">Best</span><b id="finalBest">0</b></div>
+    </div>
+    <div class="over-actions">
+      <button class="btn" id="againBtn" data-palm>Drive again</button>
+      <div class="sub">
+        <button class="btn ghost" id="changeSongBtn" data-palm>Change song</button>
+        <button class="btn ghost" id="settingsBtn">Settings</button>
+      </div>
+      <span class="mono" style="margin-top:6px">Raise both arms or press Space to drive again</span>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 미션 안내 (출발 직전) ===== -->
+<section class="screen" id="s-mission" aria-label="Mission">
+  <div class="panel glass mission">
+    <span class="mono">Stage <span id="missionStage">1</span> · Mission</span>
+    <h2>Get home before time runs out!</h2>
+    <svg class="mission-art" viewBox="0 0 360 120" aria-hidden="true">
+      <path d="M70 78 C120 30, 190 110, 262 62" fill="none" stroke="#fff6fb" stroke-width="4" stroke-dasharray="2 12" stroke-linecap="round" opacity=".8"/>
+      <g class="m-cat">
+        <circle cx="22" cy="86" r="10" fill="#ff8fb8" stroke="#2a1a33" stroke-width="3"/>
+        <circle cx="38" cy="84" r="11" fill="#ffb3d0" stroke="#2a1a33" stroke-width="3"/>
+        <circle cx="55" cy="80" r="14" fill="#ff8fb8" stroke="#2a1a33" stroke-width="3"/>
+        <circle cx="59" cy="77" r="2.3" fill="#2a1a33"/><circle cx="51" cy="76" r="2.3" fill="#2a1a33"/>
+        <path d="M52 67 q-4 -10 -9 -12 M60 67 q3 -10 9 -12" fill="none" stroke="#2a1a33" stroke-width="2.5" stroke-linecap="round"/>
+      </g>
+      <g class="m-tent">
+        <path d="M262 92 L296 30 L330 92 Z" fill="#ff7a45" stroke="#2a1a33" stroke-width="3.5" stroke-linejoin="round"/>
+        <path d="M296 30 L296 92" stroke="#2a1a33" stroke-width="2.5"/>
+        <path d="M286 92 L296 70 L306 92 Z" fill="#3a1d12"/>
+        <path d="M296 30 L296 12 L314 18 L296 24" fill="#ffd45c" stroke="#2a1a33" stroke-width="2.5" stroke-linejoin="round"/>
+        <text x="296" y="112" text-anchor="middle" font-family="Outfit, sans-serif" font-weight="800" font-size="13" fill="#fff6fb">HOME</text>
+      </g>
+      <g transform="translate(176 34)">
+        <circle r="18" fill="#fff6fb" stroke="#2a1a33" stroke-width="3"/>
+        <path d="M0 -10 V0 L7 5" fill="none" stroke="#2a1a33" stroke-width="3" stroke-linecap="round"/>
+      </g>
+    </svg>
+    <!-- 큰 아이콘 + 짧은 한마디로 한눈에 -->
+    <ul class="mission-tips">
+      <li><b>⛺</b><strong>Find the tent</strong><span>Follow the arrow</span></li>
+      <li><b>⏱</b><strong id="missionTime">—</strong><span>Time limit</span></li>
+      <li><b>🌵</b><strong>Don’t crash</strong><span>Lose MP</span></li>
+      <li><b>👟</b><strong>Speed boost</strong><span>Grab sneakers</span></li>
+    </ul>
+    <button class="btn drive" id="goBtn" data-palm>Let’s go! <span id="goCount">10</span></button>
+    <div class="mono" style="margin-top:10px">Hover your palm or press Space</div>
+  </div>
+</section>
+
+<!-- ===== 스테이지 클리어 ===== -->
+<section class="screen" id="s-clear" aria-label="Stage clear">
+  <div class="panel glass">
+    <h2><span class="em">⛺</span>STAGE <span id="clearNum">1</span> CLEAR!</h2>
+    <p style="margin-top:6px;color:var(--muted);font-size:14px">You made it home with <b id="clearLeft" style="color:var(--text)">0s</b> to spare.</p>
+    <ul class="next-list">
+      <li><span>Time bonus</span><b id="clearBonus">+0</b></li>
+      <li><span>Next beat</span><b id="nextBpm">—</b></li>
+      <li><span>Caterpillar speed</span><b id="nextSpeed">—</b></li>
+      <li><span>Traffic cones</span><b id="nextCones">—</b></li>
+      <li><span>MP refill</span><b>+30</b></li>
+    </ul>
+    <button class="btn" id="nextStageBtn" data-palm>Next stage ▶</button>
+    <div class="mono" style="margin-top:12px">Starts in <span id="clearCount">4</span>s · raise both arms or press Space</div>
+  </div>
+</section>
+
+<!-- 손바닥 커서: 카메라로 손을 따라다니며, 버튼 위에 1초 머물면 선택 -->
+<div id="palm" aria-hidden="true">
+  <svg viewBox="0 0 64 64">
+    <circle class="track" cx="32" cy="32" r="28"/>
+    <circle class="fill" id="palmFill" cx="32" cy="32" r="28" pathLength="100" stroke-dasharray="0 100"/>
+    <g class="hand" transform="translate(32 33)">
+      <rect x="-9" y="-4" width="18" height="16" rx="7"/>
+      <rect x="-9" y="-16" width="4.5" height="15" rx="2.25"/><rect x="-3.6" y="-19" width="4.5" height="18" rx="2.25"/>
+      <rect x="1.8" y="-17" width="4.5" height="16" rx="2.25"/><rect x="7" y="-13" width="4" height="12" rx="2"/>
+      <rect x="-15" y="-1" width="4.5" height="11" rx="2.25" transform="rotate(-35 -12.75 4.5)"/>
+    </g>
+  </svg>
+</div>
+
+<!-- 게임 중: 설명 카드 -->
+<div class="howto" id="howto">
+  <div class="c glass"><div class="em">🛞</div><h4>Steer</h4><p>Lower one arm to turn that way. Drop both arms to go straight.</p></div>
+  <div class="c glass"><div class="em">⛺</div><h4>Get home</h4><p>Follow the big arrow to your tent before the timer runs out.</p></div>
+  <div class="c glass"><div class="em">🍒</div><h4>Eat fruit</h4><p>Fruit and jelly beans give points and +2s. Golden ★ = +5s. 👟 Sneakers = speed boost!</p></div>
+  <div class="c glass"><div class="em">🌵</div><h4>Watch your MP</h4><p>Trees, cacti, rocks, cones and your own body drain MP. Jelly beans give some back. When MP hits zero, the run ends.</p></div>
+  <div class="c glass"><div class="em">🎵</div><h4>Feel the beat</h4><p>The song sets your speed and the scenery.</p></div>
+</div>
+<button class="help glass" id="helpBtn" aria-label="Show how to play">?</button>
+<button class="pause-btn glass" id="pauseBtn" aria-label="Pause (Esc)">❚❚</button>
+
+<!-- ===== 일시정지 ===== -->
+<section class="screen" id="s-pause" aria-label="Paused">
+  <div class="panel glass pause-panel">
+    <h2>Paused</h2>
+    <p class="mono" style="margin:4px 0 18px">Esc or Space to keep going</p>
+    <button class="btn drive" id="resumeBtn" data-palm>▶ Resume</button>
+    <div class="pause-grid">
+      <button class="btn ghost" id="restartBtn" data-palm>↻ Restart stage 1</button>
+      <button class="btn ghost" id="pauseSongBtn" data-palm>♫ Change song</button>
+      <button class="btn ghost" id="pauseSettingsBtn" data-palm>⚙ Settings</button>
+      <button class="btn ghost" id="quitBtn" data-palm>⌂ Quit to home</button>
+    </div>
+  </div>
+</section>
+
+<script type="module">
+import { PoseLandmarker, FilesetResolver }
+  from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14";
+
+// ---------- Game: 드라이브 시점 (카메라가 뱀을 따라가며 회전) ----------
+const VIEW = 680;             // 화면의 짧은 변 = 680 논리 단위 (실제 픽셀은 화면 해상도에 맞춰 확대)
+const WORLD = 8000;           // 달리는 세계 크기 (가장자리는 반대편과 이어짐) – 스테이지를 길게 하려고 넓힘
+const DENSITY = (WORLD / 2400) ** 2;   // 세계가 넓어진 만큼 풍경·먹이·콘 개수도 늘려 밀도 유지
+let VW = VIEW, VH = VIEW, CX = VW / 2, CY = VH * 0.66;   // 화면 크기와 뱀 머리 위치 (앞쪽을 더 많이 보이게 아래쪽)
+const board = document.getElementById("board");
+const ctx = board.getContext("2d");
+const $ = id => document.getElementById(id);
+
+// ---------- 설정 (온보딩에서 정하고 브라우저에 기억) ----------
+const DEFAULTS = { volume: 0.6, bpmSpeed: true, fx: 1, sens: 5, speed: 1, obstacles: 1, syncMs: null };   // syncMs: null = 자동(장치 지연값)
+let settings = { ...DEFAULTS }, hasSaved = false;
+try { const s = JSON.parse(localStorage.getItem("armsnake-settings")); if (s) { settings = { ...DEFAULTS, ...s }; hasSaved = true; } } catch {}
+if (settings.obstacles > 2) settings.obstacles = settings.obstacles >= 50 ? 2 : 1;   // 예전 저장값(콘 개수) → 단계
+function saveSettings() { try { localStorage.setItem("armsnake-settings", JSON.stringify(settings)); } catch {} }
+
+const BODY_W = 16;            // 뱀 몸 두께(px)
+const HEAD_R = BODY_W / 2;
+let MAX_TURN = 2.4;           // 핸들 끝까지 꺾었을 때 초당 회전량(rad) – 감도 설정으로 바뀜
+let TURN_EASE = 11;           // 회전 속도가 목표에 따라붙는 빠르기 – 작을수록 부드러움
+const START_SPEED = 110;      // px/s (음악 없을 때 시작 속도)
+const MAX_SPEED = 190;
+const SPEED_STEP = 2;         // 열매 하나당 속도 증가 (음악이 없을 때만)
+// 음악 모드 속도: 느린 곡과 빠른 곡 차이가 확실히 느껴지도록 BPM 차이를 1.6배로 키움
+// 속도(px/s) = 80 + (BPM − 60) × 1.6 → 72 BPM ≈ 99 · 90 ≈ 128 · 124 ≈ 182 · 145 ≈ 216 · 174 ≈ 262
+const SPEED_BASE = 80, SPEED_PER_BPM = 1.6;
+const MUSIC_MIN_SPEED = 80, MUSIC_MAX_SPEED = 280;
+const START_LEN = 110;        // 애벌레 시작 몸 길이(px)
+const GROW = 22;              // 먹이 1점당 늘어나는 길이(px)
+const SEG = 11;               // 몸 마디 간격(px)
+const headR = () => 12;       // 머리 크기 (충돌 판정에도 사용)
+const FRUIT_R = 23;           // 먹는 아이템 크기 (크게, 눈에 잘 띄게)
+const FRUIT_COUNT = Math.round(24 * DENSITY);  // 세계에 동시에 놓이는 먹이 수 (한 화면에 보통 2~3개 보이게)
+
+let obstacles = [], demo = true;
+// 스테이지: 텐트(목적지)에 시간 안에 도착하면 다음 스테이지 (비트 빨라짐, 장애물 늘어남)
+let stage = 1, tent = null, timeLeft = 0, tempo = 1;
+// 스테이지 난이도 곡선: 1~3은 연습 구간(느린 비트·느린 애벌레·가까운 텐트), 4부터 본격적으로 빨라짐
+//   스테이지    1     2     3    | 4     5     6 …
+//   비트 배율  0.85  0.90  0.95  | 1.00  1.08  1.16 … (+8%씩)
+//   속도 배율  0.70  0.78  0.86  | 1.00  1.12  1.24 … (+12%씩, 비트 상승과 곱해짐)
+//   주행 시간  12s   14s   16s   | 20s   22.5s 25s … (텐트까지 거리 = 속도 × 이 시간)
+const tempoFor = n => n <= 3 ? 0.8 + n * 0.05 : 1 + (n - 4) * 0.08;
+const stageSpeedMul = n => n <= 3 ? 0.62 + n * 0.08 : 1 + (n - 4) * 0.12;
+const driveSecs = n => n <= 3 ? 10 + n * 2 : 20 + (n - 4) * 2.5;
+const CONES_STEP = 10;        // 스테이지마다 콘 +10개
+const TENT_R = 58;            // 텐트 크기 (멀리서도 잘 보이게 크게)
+// MP: 장애물에 부딪히면 줄어들고, 0이 되면 게임 오버
+// 운동화: 먹으면 5초 동안 1.5배 빨라짐
+const BOOST_TIME = 5, BOOST_MUL = 1.5;
+let boostT = 0;
+const MP_MAX = 100, HIT_DAMAGE = 25, JELLY_HEAL = 10, CLEAR_HEAL = 30;
+let mp = MP_MAX, invuln = 0, hitFlash = 0;
+// 부딪히는 풍경 (종류: 충돌 반지름 비율)
+const SOLID = { tree: 0.75, cactus: 0.85, rock: 0.8, block: 0.62 };
+function solidAt(pt, pad, always = false) {
+  if (!settings.obstacles && !always) return null;
+  for (const p of propsNear(currentSceneKey(), pt.x, pt.y, pad + 80)) {
+    const k = SOLID[p.type];
+    if (k && wdist(p, pt) < p.size * k + pad) return p;
+  }
+  return null;
+}
+let head, angle, camAngle, steer = 0, turnRate = 0, trail, length, speed, baseSpeed, fruits, score, running = false, lastT = 0;
+let best = 0;
+try { best = +localStorage.getItem("armsnake-best") || 0; } catch {}
+$("best").textContent = best;
+
+// 감긴 세계에서 가장 가까운 차이 (-WORLD/2 ~ WORLD/2)
+const wrapDelta = d => ((d + WORLD / 2) % WORLD + WORLD) % WORLD - WORLD / 2;
+const wrap = v => ((v % WORLD) + WORLD) % WORLD;
+const wdist = (a, b) => Math.hypot(wrapDelta(a.x - b.x), wrapDelta(a.y - b.y));
+const angleDiff = (a, b) => Math.atan2(Math.sin(b - a), Math.cos(b - a));
+
+function reset() {
+  head = { x: WORLD / 2, y: WORLD / 2 };
+  // 출발 지점과 그 앞쪽이 나무·바위로 막혀 있지 않은 곳에서 시작
+  for (let tries = 0; tries < 60 && (solidAt(head, 90) || solidAt({ x: head.x, y: head.y - 160 }, 70)); tries++) {
+    head = { x: Math.random() * WORLD, y: Math.random() * WORLD };
+  }
+  mp = MP_MAX; invuln = 0; hitFlash = 0; boostT = 0; updateMp();
+  angle = camAngle = -Math.PI / 2; steer = 0; turnRate = 0;
+  trail = [];
+  for (let d = 0; d <= START_LEN; d += 4) trail.push({ x: head.x, y: head.y + d });
+  length = START_LEN; baseSpeed = START_SPEED; speed = goalSpeed(); score = 0;
+  $("score").textContent = 0;
+  // 장애물(트래픽 콘): 출발 지점 근처는 비워 둠
+  obstacles = [];
+  placeStage();
+  fruits = [];
+  for (let i = 0; i < FRUIT_COUNT; i++) fruits.push(newFruit());
+}
+
+// 아이템 종류: 운동화(스피드업) 6% · 황금 별 9% · 나머지는 과일·젤리빈
+function pickType() {
+  const r = Math.random();
+  return r < 0.06 ? "shoe" : r < 0.15 ? "gold" : FRUIT_TYPES[Math.random() * FRUIT_TYPES.length | 0];
+}
+// 먹는 것 = 과일 + 젤리빈
+// 이번 스테이지의 텐트와 콘 배치 (뱀이 지금 있는 곳 기준)
+function conesFor(n) { return Math.round(DENSITY * (settings.obstacles === 2 ? 25 + CONES_STEP * (n - 1) : settings.obstacles === 1 ? 6 * (n - 1) : 0)); }
+function placeStage() {
+  // 텐트: 지금 위치에서 700~1000px 떨어진 곳 (스테이지가 오를수록 조금 더 멀리)
+  // 텐트 거리 = 지금 속도로 약 22초(스테이지마다 +2.5초) 달려야 하는 거리 → 느린 곡·빠른 곡 모두 스테이지가 충분히 길게
+  const d = Math.min(3800, Math.max(800, goalSpeed() * driveSecs(stage)));
+  for (let tries = 0; tries < 40; tries++) {
+    const a = Math.random() * Math.PI * 2;
+    tent = { x: wrap(head.x + Math.cos(a) * d), y: wrap(head.y + Math.sin(a) * d) };
+    if (!solidAt(tent, TENT_R + 50)) break;
+  }
+  obstacles = [];
+  for (let i = 0; i < conesFor(stage); i++) {
+    let o;
+    do { o = { x: Math.random() * WORLD, y: Math.random() * WORLD, r: 13 }; }
+    while (wdist(o, head) < 320 || wdist(o, tent) < TENT_R + 80);
+    obstacles.push(o);
+  }
+  // 제한 시간: 지금 속도로 곧장 가는 시간 × 여유(스테이지가 오를수록 빠듯) + 기본 6초
+  const slack = Math.max(1.5, 2.4 - (stage - 1) * 0.12);
+  timeLeft = Math.round(d / Math.max(40, goalSpeed()) * slack + 8);
+}
+
+const FRUIT_TYPES = ["cherry", "lemon", "grape", "orange", "berry", "jelly", "jelly", "jelly"];
+const JELLY_COLORS = ["#ff5fa2", "#7ee081", "#ffb347", "#8f7bff", "#4fd2ff", "#ff6b6b"];
+function newFruit() {
+  let f;
+  do {
+    f = { x: Math.random() * WORLD, y: Math.random() * WORLD, seed: Math.random() * 6.28,
+          type: pickType() };
+    f.jelly = JELLY_COLORS[Math.random() * JELLY_COLORS.length | 0];
+  } while (wdist(f, head) < 260 || trail.some(p => wdist(p, f) < BODY_W + FRUIT_R) || obstacles.some(o => wdist(o, f) < 60) || (tent && wdist(tent, f) < 90) || solidAt(f, FRUIT_R + 10));
+  return f;
+}
+
+function goalSpeed() {
+  const bpm = currentBpm();
+  const base = bpm && settings.bpmSpeed ? Math.min(MUSIC_MAX_SPEED, Math.max(MUSIC_MIN_SPEED, SPEED_BASE + (bpm - 60) * SPEED_PER_BPM)) : baseSpeed;
+  return base * (demo ? 0.8 : settings.speed * stageSpeedMul(stage)) * (bpm ? 1 : tempo) * (boostT > 0 ? BOOST_MUL : 1);
+}
+
+// 데모용 자동 운전: 정면·좌·우 세 방향을 미리 살펴보고 막혀 있으면 덜 막힌 쪽으로 꺾음
+function demoSteer() {
+  const blocked = (da) => {
+    for (const d of [50, 100, 150]) {
+      const p = { x: head.x + Math.cos(angle + da) * d, y: head.y + Math.sin(angle + da) * d };
+      if (solidAt(p, headR() + 10, true) || obstacles.some(o => wdist(o, p) < o.r + headR() + 10)) return 1 / d;   // 가까울수록 더 위험
+    }
+    return 0;
+  };
+  const front = blocked(0);
+  if (!front) return Math.sin(performance.now() / 4000) * 0.12;
+  const left = blocked(-0.6), right = blocked(0.6);
+  return left <= right ? -1 : 1;
+}
+
+function update(dt) {
+  // 1) 핸들 → 회전 속도. 회전 속도 자체도 천천히 따라가서(관성) 커브가 매끄러움
+  // 데모(온보딩 화면 뒤): 뱀이 혼자 천천히 굽이굽이 달림
+  // 데모(메인·설정 화면 뒤): 완만하게 흔들리며 직진하되, 앞에 나무·바위·선인장이 있으면 피해 감
+  const input = demo ? demoSteer() : (keySteer || steer);
+  const targetTurn = input * MAX_TURN;
+  turnRate += (targetTurn - turnRate) * (1 - Math.exp(-TURN_EASE * dt));
+  angle += turnRate * dt;
+
+  // 1-2) 속도: 음악이 있으면 BPM에서, 없으면 열매 개수에서. 곡이 바뀌어도 부드럽게 변함
+  boostT = Math.max(0, boostT - dt);
+  speed += (goalSpeed() - speed) * (1 - Math.exp(-1.5 * dt));
+
+  // 2) 머리 전진
+  head = { x: wrap(head.x + Math.cos(angle) * speed * dt), y: wrap(head.y + Math.sin(angle) * speed * dt) };
+  trail.unshift({ x: head.x, y: head.y });
+
+  // 3) 몸 길이만큼만 경로를 남기고 자르기
+  let acc = 0;
+  for (let i = 1; i < trail.length; i++) {
+    acc += wdist(trail[i], trail[i-1]);
+    if (acc > length) { trail.length = i + 1; break; }
+  }
+
+  // 3-2) 시간과 목적지 (데모 중엔 없음)
+  if (!demo) {
+    timeLeft -= dt;
+    if (timeLeft <= 0) { timeLeft = 0; return gameOver(`Time’s up! Your tent was ${Math.round(wdist(head, tent) / 10)} m away.`); }
+    if (wdist(head, tent) < TENT_R + headR()) return stageClear();
+  }
+
+  // 4-0) 데모: 그래도 닿으면 옆으로 살짝 밀어내서 절대 위로 지나가지 않게 (MP 감소 없음)
+  if (demo) {
+    const thing = solidAt(head, headR() * 0.9, true) || obstacles.find(o => wdist(o, head) < headR() + o.r);
+    if (thing) {
+      const n = Math.atan2(wrapDelta(head.y - thing.y), wrapDelta(head.x - thing.x));
+      const t1 = n + Math.PI / 2, t2 = n - Math.PI / 2;
+      angle = Math.abs(angleDiff(angle, t1)) < Math.abs(angleDiff(angle, t2)) ? t1 : t2;
+      head = { x: wrap(head.x + Math.cos(n) * 4), y: wrap(head.y + Math.sin(n) * 4) };
+    }
+  }
+  // 4) 충돌: 장애물 (데모 중엔 없음)
+  if (!demo) {
+    invuln = Math.max(0, invuln - dt);
+    const cone = obstacles.find(o => wdist(o, head) < headR() + o.r);
+    // 자기 몸: 머리 바로 뒤 마디는 빼고 검사
+    let body = null, accB = 0;
+    for (let i = 1; i < trail.length && !body; i++) {
+      accB += wdist(trail[i], trail[i-1]);
+      if (accB > SEG * 4 && wdist(trail[i], head) < headR() + 6) body = trail[i];
+    }
+    const thing = cone || solidAt(head, headR() * 0.8) || body;
+    if (thing && invuln <= 0) {
+      mp = Math.max(0, mp - HIT_DAMAGE); invuln = 1.2; hitFlash = 1; updateMp(true);
+      // 튕겨 나오기: 부딪힌 면을 따라 옆으로 미끄러지듯 방향을 틀고 살짝 밀어냄
+      // (정면으로 되돌아가면 자기 몸을 물어버리므로 반사 대신 옆 방향)
+      const n = Math.atan2(wrapDelta(head.y - thing.y), wrapDelta(head.x - thing.x));
+      const t1 = n + Math.PI / 2, t2 = n - Math.PI / 2;
+      angle = Math.abs(angleDiff(angle, t1)) < Math.abs(angleDiff(angle, t2)) ? t1 : t2; turnRate = 0;
+      head = { x: wrap(head.x + Math.cos(n) * 14), y: wrap(head.y + Math.sin(n) * 14) };
+      floatText(`−${HIT_DAMAGE} MP`, "#ff6b4a");
+      if (mp <= 0) return gameOver(cone ? "Out of MP — too many traffic cones." : thing === body ? "Out of MP — you got tangled in your own body." : "Out of MP — you crashed into too many things.");
+    }
+  }
+
+  // 5) 열매 (황금 열매는 3점)
+  fruits.forEach((f, i) => {
+    if (wdist(head, f) < headR() + FRUIT_R) {
+      const pts = f.type === "gold" ? 3 : 1;
+      if (!demo) length += GROW * pts;
+      if (demo) { fruits[i] = newFruit(); return; }
+      score += pts; $("score").textContent = score;
+      const bonus = f.type === "gold" ? 5 : 2;
+      timeLeft += bonus;
+      if (f.type === "shoe") {                       // 운동화: 즉시 가속 + 5초 부스트
+        boostT = BOOST_TIME; speed *= 1.3; speedBanner();
+      } else if (f.type === "jelly" && mp < MP_MAX) { mp = Math.min(MP_MAX, mp + JELLY_HEAL); updateMp(); floatText(`+${bonus}s  +${JELLY_HEAL} MP`); }
+      else floatText(`+${bonus}s`);
+      $("score").classList.remove("pop"); void $("score").offsetWidth; $("score").classList.add("pop");
+      baseSpeed = Math.min(MAX_SPEED, baseSpeed + SPEED_STEP);
+      bursts.push({ x: f.x, y: f.y, t: 0, color: fruitColor(f) });
+      fruits[i] = newFruit();
+    }
+  });
+}
+function updateMp(hit) {
+  $("mpFill").style.width = `${mp / MP_MAX * 100}%`;
+  $("mpVal").textContent = Math.round(mp);
+  $("mpBox").classList.toggle("low", mp <= 25);
+  if (hit) { const b = $("mpBox"); b.classList.remove("hit"); void b.offsetWidth; b.classList.add("hit"); }
+}
+// 운동화를 먹으면 화면 가운데 큰 "SPEED UP!" 배너
+function speedBanner() {
+  const el = document.createElement("div"); el.className = "speed-banner";
+  el.innerHTML = '<span class="zap">⚡</span>SPEED UP!<small>5 SECONDS · 1.5×</small>';   // 고정 문자열
+  document.body.append(el); setTimeout(() => el.remove(), 1400);
+}
+function floatText(t, color) {
+  const el = document.createElement("div"); el.className = "float"; el.textContent = t;
+  if (color) el.style.color = color;
+  document.body.append(el); setTimeout(() => el.remove(), 1000);
+}
+
+// 텐트 도착 → 클리어 화면 → 다음 스테이지
+let clearTimer = null;
+function stageClear() {
+  running = false;
+  const left = Math.ceil(timeLeft), bonus = left * 2;
+  score += bonus; $("score").textContent = score;
+  $("clearNum").textContent = stage;
+  $("clearLeft").textContent = `${left}s`;
+  $("clearBonus").textContent = `+${bonus}`;
+  const bpmNow = currentBpm();
+  // 다음 스테이지에서 얼마나 빨라지는지 (비트 상승분 × 스테이지 가산분)
+  const baseFor = b => b && settings.bpmSpeed ? Math.min(MUSIC_MAX_SPEED, Math.max(MUSIC_MIN_SPEED, SPEED_BASE + (b - 60) * SPEED_PER_BPM)) : baseSpeed;
+  const nextTempo = tempoFor(stage + 1);
+  const beatUp = bpmNow ? baseFor(bpmNow / tempo * nextTempo) / baseFor(bpmNow) : nextTempo / tempo;
+  const speedUp = beatUp * stageSpeedMul(stage + 1) / stageSpeedMul(stage);
+  $("nextSpeed").textContent = `+${Math.round((speedUp - 1) * 100)}%`;
+  $("nextBpm").textContent = bpmNow ? `${Math.round(bpmNow)} → ${Math.round(bpmNow / tempo * nextTempo)} BPM` : `×${nextTempo.toFixed(2)} speed`;
+  $("nextCones").textContent = settings.obstacles ? `${conesFor(stage)} → ${conesFor(stage + 1)}` : "Off";
+  show("clear");
+  let n = 4; $("clearCount").textContent = n;
+  clearInterval(clearTimer);
+  clearTimer = setInterval(() => { n--; $("clearCount").textContent = n; if (n <= 0) nextStage(); }, 1000);
+}
+function nextStage() {
+  clearInterval(clearTimer);
+  if (document.body.dataset.screen !== "clear") return;
+  stage++;
+  setTempo(tempoFor(stage));
+  mp = Math.min(MP_MAX, mp + CLEAR_HEAL); updateMp();
+  placeStage();
+  fruits = fruits.map(f => wdist(f, tent) < 90 ? newFruit() : f);
+  running = true; needCalib = true;
+  show("game");
+}
+
+function gameOver(why) {
+  running = false;
+  const isNew = score > best;
+  if (isNew) { best = score; $("best").textContent = best; try { localStorage.setItem("armsnake-best", best); } catch {} }
+  $("overWhy").textContent = why;
+  $("finalScore").textContent = score;
+  $("finalScore").classList.toggle("new", isNew && score > 0);
+  $("finalBest").textContent = best;
+  show("over");
+}
+
+// ---------- 풍경: 장르마다 다른 장소 ----------
+// props: [종류, 개수, 색들]   particles: 화면에 흩날리는 것   dark: 밤 장면이면 헤드라이트 켜짐
+const SCENES = {
+  quiet:        { title: "Green Field",   ground: "#bfe0a0", dot: "rgba(40,90,30,.12)",     snake: "#ff8fb8", dark: false,
+                  props: [["tuft", 220, ["#6fae4f", "#86c262"]], ["stone", 50, ["#d8e9c4", "#a9cf8c"]], ["tree", 45, ["#5f9e48", "#77b65a"]], ["flower", 90, ["#ffffff", "#ffd23f", "#ff9ebb"]]] },
+  "Lo-fi":      { title: "Rainy Park",    ground: "#32404f", dot: "rgba(255,255,255,.06)", snake: "#8fd3ff", dark: true, particles: "rain",
+                  props: [["puddle", 40, ["#3c4d61"]], ["tree", 90, ["#3f6466", "#4d7a73", "#365b5d"]], ["lamp", 30, ["#ffd59a"]]] },
+  "Hip-hop":    { title: "Autumn Avenue", ground: "#eadcbf", dot: "rgba(90,60,20,.10)",   snake: "#ffb347", dark: false, particles: "leaves",
+                  props: [["bench", 18, ["#8a6a4a"]], ["tree", 110, ["#d9822b", "#c4502a", "#e3a33b"]]] },
+  "Pop":        { title: "Sunny Meadow",  ground: "#d9eab3", dot: "rgba(60,90,20,.10)",   snake: "#ff7ab0", dark: false, particles: "petals",
+                  props: [["flower", 260, ["#ff7aa2", "#ffd23f", "#ffffff", "#a78bfa"]], ["tree", 40, ["#7cb35a", "#5f9e48"]]] },
+  "House":      { title: "Night City",    ground: "#1c2030", dot: "rgba(255,255,255,.05)", snake: "#b49bff", dark: true, particles: "fireflies",
+                  props: [["block", 70, ["#262c40", "#2d3452"]], ["neon", 70, ["#ff4fd8", "#38e1ff", "#ffe14d"]], ["lamp", 40, ["#ffd59a"]]] },
+  "Techno":     { title: "Concrete Yard", ground: "#262626", grid: "rgba(255,255,255,.07)", snake: "#7ee8c4", dark: true,
+                  props: [["tile", 220, ["#ffffff"]], ["pole", 40, ["#e8e8e8"]]] },
+  // 사막: 모래색 바닥 + 모래 언덕 무늬 + 사암 바위 + 선인장, 반짝이는 모래알
+  "Trap":       { title: "Neon Desert",   ground: "#ecc98f", dot: "rgba(150,95,40,.12)",   snake: "#ff7ab0", dark: false,
+                  props: [["dune", 60, ["#f4d7a3", "#e1b878"]], ["glint", 200, ["#fff6d8", "#ffe39a"]], ["rock", 50, ["#c98e5a", "#b5794a"]], ["cactus", 80, ["#4fb784", "#3a9f6f"]]] },
+  "Drum & Bass":{ title: "Lava Run",      ground: "#22100d", dot: "rgba(255,120,60,.07)", snake: "#ffd166", dark: true, particles: "sparks",
+                  props: [["crack", 110, ["#ff5a1f", "#ffb02e"]], ["rock", 80, ["#3a1d17", "#4a251c"]]] },
+};
+const SIZES = { tree: [24, 40], lamp: [5, 6], puddle: [26, 46], bench: [16, 20], flower: [6, 10], block: [40, 70],
+                neon: [18, 32], tile: [26, 26], pole: [5, 5], dune: [60, 120], cactus: [12, 18], rock: [10, 24], glint: [2, 4],
+                crack: [40, 80], tuft: [5, 8], stone: [4, 8] };
+
+// 같은 장면은 항상 같은 배치가 나오도록 장면 이름으로 시드를 만든 난수
+function rng(seedStr) {
+  let h = 1779033703;
+  for (const c of seedStr) h = Math.imul(h ^ c.charCodeAt(0), 3432918353), h = h << 13 | h >>> 19;
+  return () => { h = Math.imul(h ^ h >>> 16, 2246822507); h = Math.imul(h ^ h >>> 13, 3266489909); return ((h ^= h >>> 16) >>> 0) / 4294967296; };
+}
+const propCache = new Map();
+function propsFor(key) {
+  if (propCache.has(key)) return propCache.get(key);
+  const sc = SCENES[key], r = rng(key), list = [];
+  for (const [type, n0, colors] of sc.props) for (let i = 0, n = Math.round(n0 * DENSITY); i < n; i++) {
+    const [a, b] = SIZES[type];
+    let x = r() * WORLD, y = r() * WORLD;
+    if (type === "tile") { x = Math.round(x / 40) * 40; y = Math.round(y / 40) * 40; }
+    list.push({ type, x, y, size: a + r() * (b - a), rot: r() * 6.28, seed: r() * 100, color: colors[r() * colors.length | 0], n: i });
+  }
+  list.forEach((p, i) => p.idx = i);
+  // 칸(CELL)별로 나눠 두면 화면 근처 소품만 빠르게 찾을 수 있음 (세계가 넓어져도 느려지지 않게)
+  list.cells = Array.from({ length: GRID_N * GRID_N }, () => []);
+  for (const p of list) list.cells[cellOf(p.x) + cellOf(p.y) * GRID_N].push(p);
+  propCache.set(key, list);
+  return list;
+}
+const CELL = 400, GRID_N = WORLD / CELL;
+const cellOf = v => Math.floor(wrap(v) / CELL) % GRID_N;
+// (x, y) 반경 r 안의 칸들에 있는 소품을 원래 순서(겹침 순서)대로 돌려줌
+function propsNear(key, x, y, r) {
+  const list = propsFor(key), out = [], span = Math.ceil(r / CELL);
+  const cx = cellOf(x), cy = cellOf(y);
+  for (let dy = -span; dy <= span; dy++) for (let dx = -span; dx <= span; dx++) {
+    const c = list.cells[((cx + dx + GRID_N) % GRID_N) + ((cy + dy + GRID_N) % GRID_N) * GRID_N];
+    for (const p of c) out.push(p);
+  }
+  return out.sort((a, b) => a.idx - b.idx);
+}
+
+// ---------- 박자 정보 ----------
+// beatPhase: 지금 박자 안에서 어디쯤인지 (0 → 1). 나뭇잎이 한 박에 한 번씩 흔들리는 데 씀
+let lastBeatTime = 0, beatCount = 0, barPulse = 0, phraseFlash = 0;
+// 1) 소리–화면 시간차 보정: 스피커·블루투스 이어폰은 소리가 늦게 나오므로 화면 효과도 그만큼 늦춤
+//    수동 보정값(syncMs)이 있으면 그것을, 없으면 브라우저가 알려주는 출력 지연을 사용
+function visualDelay() {
+  if (settings.syncMs != null) return settings.syncMs / 1000;
+  return audioCtx ? (audioCtx.outputLatency || 0) + (audioCtx.baseLatency || 0) : 0;
+}
+// "지금 들리는" 오디오 시각
+const heardTime = () => audioCtx.currentTime - visualDelay();
+function beatPhase() {
+  if (music && audioCtx) return Math.min(1, Math.max(0, (heardTime() - lastBeatTime) / (60 / music.bpm)));
+  return (performance.now() / 2400) % 1;   // 음악이 없을 때는 아주 느리게
+}
+// 3) 예측 움직임: 박자 직전(마지막 25%)에 0 → 1로 차오름 → 웅크렸다가 박자에 "팡"
+function anticipation() {
+  if (!music) return 0;
+  const p = beatPhase(), t = Math.max(0, (p - 0.75) / 0.25);
+  return t * t * (3 - 2 * t);
+}
+
+// ---------- 그리기 도구 ----------
+function roundRect(x, y, w, h, r) { ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x, y, w, h, r) : ctx.rect(x, y, w, h); }
+// 두 색을 섞기 (#rrggbb, t: 0 → a, 1 → b)
+function mixColor(a, b, t) {
+  const h = c => [1, 3, 5].map(i => parseInt(c.slice(i, i + 2), 16));
+  const [x, y] = [h(a), h(b)];
+  return `rgb(${x.map((v, i) => Math.round(v + (y[i] - v) * t)).join(",")})`;
+}
+function circle(x, y, r, color) { ctx.fillStyle = color; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill(); }
+function glow(x, y, r, color, alpha) {
+  const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+  g.addColorStop(0, color); g.addColorStop(1, "transparent");
+  ctx.globalAlpha = alpha; ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1;
+}
+
+// 소품마다: 박자(ph: 0→1, pulse: 박자 순간 1→0)에 맞춰 움직임
+function drawProp(p, x, y, ph, pulse, sc) {
+  // 먹을 수 없는 풍경은 움직임을 작게 → 먹이(크게 튀는 것)와 헷갈리지 않게
+  pulse *= 0.4;
+  const s = p.size, wave = Math.sin(2 * Math.PI * ph + p.seed) * 0.5;
+  switch (p.type) {
+    case "tree": {                         // 나뭇잎: 한 박에 한 번 좌우로 흔들림, 박자 순간 살짝 부풀어 오름
+      circle(x + 5, y + 6, s * 0.9, "rgba(0,0,0,.12)");
+      const k = 1 + pulse * 0.05, sway = (0.06 + pulse * 0.2) * (music ? 1 : 0.4);
+      ctx.fillStyle = p.color;
+      for (let i = 0; i < 7; i++) {
+        const a = p.rot + i / 7 * Math.PI * 2;
+        const sw = sway * Math.sin(2 * Math.PI * ph + p.seed + i * 0.5);
+        ctx.save(); ctx.translate(x, y); ctx.rotate(a + sw); ctx.scale(k, k);
+        ctx.beginPath(); ctx.ellipse(s * 0.55, 0, s * 0.55, s * 0.3, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+      }
+      circle(x, y, s * 0.42 * k, p.color);
+      circle(x - s * 0.12, y - s * 0.12, s * 0.18, "rgba(255,255,255,.12)");
+      break;
+    }
+    case "lamp":
+      glow(x, y, 46 * (1 + pulse * 0.5), p.color, 0.18 + pulse * 0.32);
+      circle(x, y, s, "#fff3d6");
+      break;
+    case "puddle": {                       // 박자마다 물결이 퍼짐
+      ctx.fillStyle = p.color; ctx.beginPath(); ctx.ellipse(x, y, s, s * 0.6, p.rot, 0, Math.PI * 2); ctx.fill();
+      if (music) {
+        ctx.strokeStyle = `rgba(200,220,255,${(1 - ph) * 0.45})`; ctx.lineWidth = 1.2;
+        ctx.beginPath(); ctx.ellipse(x, y, s * (0.2 + ph * 0.75), s * 0.6 * (0.2 + ph * 0.75), p.rot, 0, Math.PI * 2); ctx.stroke();
+      }
+      break;
+    }
+    case "bench":
+      ctx.save(); ctx.translate(x, y); ctx.rotate(p.rot);
+      ctx.fillStyle = "rgba(0,0,0,.1)"; ctx.fillRect(-s + 3, -5 + 3, s * 2, 10);
+      ctx.fillStyle = p.color; ctx.fillRect(-s, -5, s * 2, 10);
+      ctx.restore(); break;
+    case "flower": {                       // 꽃잎: 박자마다 활짝 피었다 오므라듦
+      const open = s * (0.55 + pulse * 0.45), tw = wave * 0.15;
+      ctx.fillStyle = p.color;
+      for (let i = 0; i < 5; i++) {
+        const a = p.rot + tw + i / 5 * Math.PI * 2;
+        circle(x + Math.cos(a) * open, y + Math.sin(a) * open, s * 0.55, p.color);
+      }
+      circle(x, y, s * 0.45, "#f6b93b");
+      break;
+    }
+    case "block":
+      ctx.fillStyle = "rgba(0,0,0,.25)"; ctx.fillRect(x - s / 2 + 6, y - s / 2 + 6, s, s);
+      ctx.fillStyle = p.color; ctx.fillRect(x - s / 2, y - s / 2, s, s);
+      ctx.fillStyle = (beatCount + p.n) % 3 === 0 ? `rgba(255,225,140,${0.25 + pulse * 0.6})` : "rgba(255,255,255,.05)";
+      ctx.fillRect(x - s * 0.3, y - s * 0.3, s * 0.6, s * 0.6);
+      break;
+    case "neon": {                         // 네온: 박자마다 색이 번갈아 켜짐
+      const on = (beatCount + p.n) % 2 === 0;
+      ctx.save(); ctx.translate(x, y); ctx.rotate(p.rot);
+      ctx.strokeStyle = p.color; ctx.lineWidth = 3;
+      ctx.globalAlpha = on ? 0.35 + pulse * 0.65 : 0.18;
+      ctx.shadowColor = p.color; ctx.shadowBlur = on ? 6 + pulse * 18 : 0;
+      ctx.strokeRect(-s, -s * 0.35, s * 2, s * 0.7);
+      ctx.restore(); ctx.globalAlpha = 1;
+      break;
+    }
+    case "tile": {                         // 바닥 타일: 박자마다 파도처럼 번쩍
+      const lit = ((Math.round(p.x / 40) + Math.round(p.y / 40) + beatCount) % 4 === 0);
+      ctx.strokeStyle = "rgba(255,255,255,.08)"; ctx.lineWidth = 1;
+      ctx.strokeRect(x - s / 2, y - s / 2, s, s);
+      if (lit && music) { ctx.fillStyle = `rgba(255,255,255,${0.04 + pulse * 0.32})`; ctx.fillRect(x - s / 2, y - s / 2, s, s); }
+      break;
+    }
+    case "pole":
+      glow(x, y, 60, "#ffffff", music ? pulse * 0.45 : 0.05);
+      circle(x, y, s, p.color);
+      break;
+    case "cactus": {                       // 선인장: 박자에 맞춰 통통
+      const k = 1 + pulse * 0.12;
+      circle(x + 4, y + 5, s, "rgba(0,0,0,.18)");
+      ctx.save(); ctx.translate(x, y); ctx.rotate(p.rot + wave * 0.08); ctx.scale(k, k);
+      ctx.fillStyle = p.color;
+      ctx.beginPath(); ctx.ellipse(0, 0, s * 0.45, s, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(-s * 0.6, -s * 0.15, s * 0.22, s * 0.45, -0.4, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(s * 0.6, s * 0.1, s * 0.22, s * 0.4, 0.4, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+      break;
+    }
+    case "rock":
+      ctx.fillStyle = p.color; ctx.beginPath();
+      for (let i = 0; i < 6; i++) {
+        const a = p.rot + i / 6 * Math.PI * 2, rr = s * (0.75 + 0.25 * Math.sin(p.seed + i * 2.1));
+        i ? ctx.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr) : ctx.moveTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr);
+      }
+      ctx.fill(); break;
+    case "glint": {                        // 반짝이: 박자마다 일부가 번갈아 반짝
+      const on = music && (beatCount + p.n) % 3 === 0;
+      ctx.globalAlpha = on ? 0.35 + pulse * 0.65 : 0.25;
+      circle(x, y, s * (on ? 1 + pulse : 1), p.color);
+      ctx.globalAlpha = 1; break;
+    }
+    case "crack": {                        // 용암 틈: 박자마다 달아오름
+      ctx.save(); ctx.translate(x, y); ctx.rotate(p.rot);
+      ctx.strokeStyle = p.color; ctx.lineWidth = 2 + pulse * 3; ctx.lineCap = "round"; ctx.lineJoin = "round";
+      ctx.globalAlpha = 0.45 + pulse * 0.55; ctx.shadowColor = p.color; ctx.shadowBlur = 4 + pulse * 14;
+      ctx.beginPath(); ctx.moveTo(-s / 2, 0);
+      for (let i = 1; i <= 4; i++) ctx.lineTo(-s / 2 + i * s / 4, (i % 2 ? 1 : -1) * s * 0.12 * Math.sin(p.seed + i));
+      ctx.stroke(); ctx.restore(); ctx.globalAlpha = 1;
+      break;
+    }
+    case "tuft":
+      ctx.strokeStyle = p.color; ctx.lineWidth = 1.5; ctx.lineCap = "round";
+      for (const d of [-1, 0, 1]) {
+        ctx.beginPath(); ctx.moveTo(x + d * 3, y);
+        ctx.lineTo(x + d * 4 + wave * 2, y - s); ctx.stroke();
+      }
+      break;
+    case "stone": circle(x, y, s, p.color); break;
+    case "dune":                           // 모래 언덕: 길쭉한 밝은/어두운 물결 (움직이지 않음)
+      ctx.save(); ctx.translate(x, y); ctx.rotate(p.rot);
+      ctx.fillStyle = p.color; ctx.globalAlpha = 0.7;
+      ctx.beginPath(); ctx.ellipse(0, 0, s, s * 0.22, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.globalAlpha = 0.35; ctx.strokeStyle = "#b07a3c"; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.ellipse(0, s * 0.08, s * 0.85, s * 0.16, 0, Math.PI * 0.1, Math.PI * 0.9); ctx.stroke();
+      ctx.restore(); ctx.globalAlpha = 1;
+      break;
+  }
+}
+
+// ---------- 반짝이 (모든 장면 공통, 화면 좌표) ----------
+const twinkles = Array.from({ length: 14 }, () => ({ x: Math.random(), y: Math.random(), s: 1.5 + Math.random() * 2, seed: Math.random() * 6.28 }));
+function sparkle(x, y, r, color, alpha) {
+  ctx.globalAlpha = alpha; ctx.fillStyle = color; ctx.beginPath();
+  ctx.moveTo(x, y - r); ctx.quadraticCurveTo(x, y, x + r, y); ctx.quadraticCurveTo(x, y, x, y + r);
+  ctx.quadraticCurveTo(x, y, x - r, y); ctx.quadraticCurveTo(x, y, x, y - r); ctx.fill(); ctx.globalAlpha = 1;
+}
+function drawTwinkles(pulse, dark) {
+  const t = performance.now() / 1000;
+  for (const p of twinkles) {
+    const a = (Math.sin(t * 1.6 + p.seed) + 1) / 2;
+    sparkle(p.x * VW, p.y * VH, p.s * (0.7 + a * 0.5), dark ? "#fff3c4" : "#ffffff", (dark ? 0.18 : 0.4) * a);
+  }
+}
+// 먹은 자리: 반짝이가 터져 나감
+const pops = [];
+
+// ---------- 화면에 흩날리는 것 (화면 좌표) ----------
+let particles = [], particleKind = null;
+const bursts = [];
+function initParticles(kind) {
+  particleKind = kind; particles = [];
+  const n = { rain: 110, leaves: 16, petals: 22, fireflies: 34, sparks: 0 }[kind] ?? 0;
+  for (let i = 0; i < n; i++) particles.push(spawnParticle(kind, true));
+}
+function spawnParticle(kind, anywhere) {
+  const r = Math.random;
+  const base = { x: r() * VW, y: anywhere ? r() * VH : -20, seed: r() * 6.28, life: 0 };
+  if (kind === "rain") return { ...base, len: 10 + r() * 14, v: 520 + r() * 260 };
+  if (kind === "leaves") return { ...base, v: 24 + r() * 26, size: 5 + r() * 4, color: ["#d9822b", "#c4502a", "#e3a33b"][r() * 3 | 0] };
+  if (kind === "petals") return { ...base, v: 18 + r() * 18, size: 3 + r() * 2.5, color: ["#ff9ebb", "#ffffff", "#ffd8e6"][r() * 3 | 0] };
+  if (kind === "fireflies") return { ...base, v: 6 + r() * 8 };
+  return base;
+}
+function updateDrawParticles(dt, ph, pulse) {
+  const swing = Math.sin(Math.PI * (beatCount + ph));   // 한 박에 한쪽으로: 박자마다 방향이 바뀌는 흔들림
+  if (particleKind === "sparks" && pulse > 0.95 && particles.length < 160) {
+    for (let i = 0; i < 12; i++) particles.push({ x: Math.random() * VW, y: VH + 5, vx: (Math.random() - 0.5) * 60, vy: -160 - Math.random() * 220, life: 0 });
+  }
+  particles = particles.filter(p => {
+    p.life += dt;
+    switch (particleKind) {
+      case "rain":
+        p.y += p.v * dt; p.x -= p.v * 0.18 * dt;
+        ctx.strokeStyle = "rgba(200,220,255,.32)"; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x + p.len * 0.18, p.y - p.len); ctx.stroke();
+        if (p.y > VH + 20) Object.assign(p, spawnParticle("rain"), { x: Math.random() * (VW + 100) });
+        return true;
+      case "leaves": case "petals": {      // 낙엽·꽃잎: 박자마다 좌우로 한 번씩 흔들리며 떨어짐
+        p.y += p.v * dt;
+        const sx = p.x + swing * (particleKind === "leaves" ? 14 : 10) * (music ? 1 : 0.3);
+        ctx.save(); ctx.translate(sx, p.y); ctx.rotate(swing * 0.9 + p.seed);
+        ctx.fillStyle = p.color; ctx.globalAlpha = 0.9;
+        ctx.beginPath(); ctx.ellipse(0, 0, p.size, p.size * 0.5, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.restore(); ctx.globalAlpha = 1;
+        if (p.y > VH + 20) Object.assign(p, spawnParticle(particleKind));
+        return true;
+      }
+      case "fireflies":
+        p.x += Math.cos(p.seed + p.life) * p.v * dt; p.y += Math.sin(p.seed * 2 + p.life * 0.7) * p.v * dt;
+        glow(p.x, p.y, 10, "#fff4a8", 0.25 + pulse * 0.6);
+        return true;
+      case "sparks":
+        p.vy += 260 * dt; p.x += p.vx * dt; p.y += p.vy * dt;
+        circle(p.x, p.y, 1.8, `rgba(255,${150 + (p.life * 200 | 0)},60,${Math.max(0, 1 - p.life / 1.4)})`);
+        return p.life < 1.4;
+    }
+    return false;
+  });
+}
+
+// ---------- 열매 ----------
+const FRUIT_COLORS = { cherry: "#e0293d", lemon: "#f5d33a", grape: "#8b4fc2", orange: "#ff8a1f", berry: "#3a6fe0", gold: "#ffcf3a", shoe: "#3fa9ff" };
+const fruitColor = f => f.type === "jelly" ? f.jelly : FRUIT_COLORS[f.type];
+function drawFruit(f, x, y, pulse, ph) {
+  // 박자 직전엔 살짝 오므라들고(pre), 박자에 커짐(pulse)
+  const k = 1 + pulse * 0.3 - anticipation() * 0.1, bob = Math.sin(2 * Math.PI * ph + f.seed) * 3;
+  const c = fruitColor(f), R = 15;                // 그림은 15px 기준으로 그리고 전체를 FRUIT_R에 맞춰 확대
+  ctx.save(); ctx.translate(x, y); ctx.rotate(Math.PI / 2 + camAngle);   // 화면에서 항상 똑바로 보이게
+  ctx.scale(FRUIT_R / 15, FRUIT_R / 15);
+
+  // "먹어!" 표시: 바닥의 밝은 원판 + 밖으로 퍼지는 링 + 흰 테두리
+  circle(0, 4, R * 1.55, "rgba(255,255,255,.22)");
+  const t = (performance.now() / 1000 + f.seed) % 1.2 / 1.2;
+  ctx.strokeStyle = c; ctx.lineWidth = 3 * (1 - t); ctx.globalAlpha = 1 - t;
+  ctx.beginPath(); ctx.arc(0, 4, R * (1.4 + t * 1.2), 0, Math.PI * 2); ctx.stroke(); ctx.globalAlpha = 1;
+  ctx.strokeStyle = "#fff"; ctx.lineWidth = 2.5;
+  ctx.beginPath(); ctx.arc(0, 4, R * 1.55, 0, Math.PI * 2); ctx.stroke();
+
+  // 운동화는 특별 아이템: 파란 빛 + 뒤로 흐르는 속도선 + "SPEED UP!" 라벨
+  if (f.type === "shoe") {
+    glow(0, 4, R * 3.2, "#7fd0ff", 0.55 + pulse * 0.3);
+    const tt = performance.now() / 1000;
+    ctx.strokeStyle = "rgba(255,255,255,.9)"; ctx.lineWidth = 2.5; ctx.lineCap = "round";
+    for (let j = 0; j < 3; j++) {                       // 왼쪽으로 흐르는 바람 줄
+      const off = ((tt * 2 + j / 3) % 1);
+      ctx.globalAlpha = 1 - off;
+      const yy = -6 + j * 7, x0 = -R * 1.9 - off * 10;
+      ctx.beginPath(); ctx.moveTo(x0, yy); ctx.lineTo(x0 - 8 - j * 3, yy); ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+    // 라벨: 위아래로 통통 + 박자에 커짐
+    const ly = -R * 2.2 + Math.sin(tt * 6) * 1.2, ls = 0.7 * (1 + pulse * 0.08);   // 라벨은 작게 (70%)
+    ctx.save(); ctx.translate(0, ly); ctx.scale(ls, ls); ctx.rotate(-0.06);
+    ctx.font = "800 11px Outfit, sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    const w = ctx.measureText("SPEED UP!").width + 14;
+    ctx.fillStyle = "#2a1a33"; roundRect(-w / 2 + 1, -9 + 2, w, 18, 9); ctx.fill();
+    ctx.fillStyle = "#3fa9ff"; roundRect(-w / 2, -9, w, 18, 9); ctx.fill();
+    ctx.strokeStyle = "#2a1a33"; ctx.lineWidth = 1.5; roundRect(-w / 2, -9, w, 18, 9); ctx.stroke();
+    ctx.fillStyle = "#fff"; ctx.fillText("SPEED UP!", 0, 0.5);
+    ctx.restore();
+  }
+
+  // 먹이 주위를 도는 작은 반짝이
+  const oa = performance.now() / 500 + f.seed;
+  sparkle(Math.cos(oa) * R * 1.9, 4 + Math.sin(oa) * R * 1.9, 3.2, "#fff6c2", 0.85);
+  ctx.translate(0, bob); ctx.scale(k, k);
+  const sh = (fn) => { ctx.save(); ctx.translate(2, 3); ctx.globalAlpha = .25; fn("#000"); ctx.restore(); fn(); };
+  switch (f.type) {
+    case "cherry":
+      ctx.strokeStyle = "#3d6b2f"; ctx.lineWidth = 2.2; ctx.lineCap = "round";
+      ctx.beginPath(); ctx.moveTo(-6, -1); ctx.quadraticCurveTo(-1, -17, 5, -17); ctx.moveTo(6, 1); ctx.quadraticCurveTo(5, -10, 5, -17); ctx.stroke();
+      sh(col => { circle(-6, 4, 8, col || c); circle(7, 5, 8, col || c); });
+      circle(-8.5, 1.5, 2.4, "rgba(255,255,255,.55)"); circle(4.5, 2.5, 2.4, "rgba(255,255,255,.55)"); break;
+    case "lemon":
+      sh(col => { ctx.fillStyle = col || c; ctx.beginPath(); ctx.ellipse(0, 0, R * 1.1, R * 0.78, -0.3, 0, Math.PI * 2); ctx.fill(); });
+      circle(-5, -4, 3, "rgba(255,255,255,.5)"); break;
+    case "grape":
+      ctx.strokeStyle = "#3d6b2f"; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(0, -11); ctx.lineTo(2, -17); ctx.stroke();
+      sh(col => { for (const [gx, gy] of [[-6, -6], [6, -6], [0, -7], [-3, 1], [3, 1], [-7, 1], [7, 1], [0, 8]]) circle(gx, gy, 5, col || c); });
+      circle(-7, -8, 1.8, "rgba(255,255,255,.5)"); break;
+    case "orange":
+      sh(col => circle(0, 0, R, col || c));
+      circle(0, -R + 2, 3, "#3d6b2f"); circle(-5, -5, 3.2, "rgba(255,255,255,.4)"); break;
+    case "berry":
+      sh(col => circle(0, 0, R * 0.9, col || c));
+      circle(0, -3, 3.5, "#1f3f86"); circle(-5, -5, 2.4, "rgba(255,255,255,.5)"); break;
+    case "jelly": {                        // 젤리빈: 콩 모양 + 반짝 하이라이트
+      const jc = f.jelly;
+      const bean = col => {
+        ctx.fillStyle = col || jc; ctx.beginPath();
+        ctx.moveTo(-R, -2);
+        ctx.bezierCurveTo(-R, -R * 0.9, -2, -R * 0.75, 0, -R * 0.35);
+        ctx.bezierCurveTo(2, -R * 0.75, R, -R * 0.9, R, -2);
+        ctx.bezierCurveTo(R, R * 0.75, -R, R * 0.75, -R, -2);
+        ctx.fill();
+      };
+      ctx.rotate(-0.25); sh(bean);
+      ctx.fillStyle = "rgba(255,255,255,.6)"; ctx.beginPath(); ctx.ellipse(-R * 0.5, -R * 0.3, R * 0.28, R * 0.12, -0.4, 0, Math.PI * 2); ctx.fill();
+      break;
+    }
+    case "shoe": {                         // 운동화 (옆모습): 파란 갑피 + 흰 밑창 + 끈 + 번개
+      ctx.scale(1.3, 1.3); ctx.translate(0, 1);
+      sh(col => {
+        ctx.fillStyle = col || "#3fa9ff"; ctx.beginPath();
+        ctx.moveTo(-15, 5); ctx.lineTo(-13, -6); ctx.quadraticCurveTo(-11, -12, -5, -11);
+        ctx.lineTo(-1, -5); ctx.quadraticCurveTo(8, -4, 14, 1); ctx.quadraticCurveTo(17, 4, 15, 6); ctx.closePath(); ctx.fill();
+      });
+      ctx.fillStyle = "#ffffff"; ctx.beginPath();          // 밑창
+      ctx.moveTo(-16, 4); ctx.lineTo(16, 4); ctx.quadraticCurveTo(17, 9, 13, 9); ctx.lineTo(-14, 9); ctx.quadraticCurveTo(-17, 8, -16, 4); ctx.fill();
+      ctx.strokeStyle = "#2a1a33"; ctx.lineWidth = 1.6; ctx.beginPath();
+      ctx.moveTo(-16, 4); ctx.lineTo(16, 4); ctx.stroke();
+      ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 1.8; ctx.lineCap = "round"; ctx.beginPath();   // 끈
+      ctx.moveTo(-4, -7); ctx.lineTo(0, -9); ctx.moveTo(-1, -4); ctx.lineTo(3, -6.5); ctx.moveTo(2, -2); ctx.lineTo(6, -4); ctx.stroke();
+      ctx.fillStyle = "#ffd45c"; ctx.beginPath();          // 옆면 번개
+      ctx.moveTo(-9, -4); ctx.lineTo(-12, 1); ctx.lineTo(-9, 1); ctx.lineTo(-11, 4); ctx.lineTo(-5, -1); ctx.lineTo(-8, -1); ctx.closePath(); ctx.fill();
+      break;
+    }
+    case "gold":
+      glow(0, 0, 34, "#ffe28a", 0.5 + pulse * 0.4);
+      sh(col => { ctx.fillStyle = col || c; ctx.beginPath();
+        for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, r = i % 2 ? 7 : 16; ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r); }
+        ctx.fill(); });
+      break;
+  }
+  ctx.restore();
+}
+
+// 목적지: 뱀의 텐트 (위에서 본 모습) + 박자에 맞춰 퍼지는 신호 링
+function drawTent(x, y, pulse) {
+  const r = TENT_R;
+  const t = (performance.now() / 1000) % 1.5 / 1.5;
+  ctx.strokeStyle = "#ffcf3a"; ctx.globalAlpha = 1 - t; ctx.lineWidth = 4;
+  ctx.beginPath(); ctx.arc(x, y, r * (1.2 + t * 1.6), 0, Math.PI * 2); ctx.stroke(); ctx.globalAlpha = 1;
+  glow(x, y, r * 2.6, "#ffe28a", 0.35 + pulse * 0.25);
+  ctx.save(); ctx.translate(x, y); ctx.rotate(Math.PI / 2 + camAngle);
+  ctx.fillStyle = "rgba(0,0,0,.25)"; ctx.fillRect(-r + 6, -r + 8, r * 2, r * 2);
+  // 지붕 4면 (위에서 본 피라미드)
+  const faces = [["#ff7a45", [[-r, -r], [r, -r]]], ["#e85a2a", [[r, -r], [r, r]]], ["#c9461f", [[r, r], [-r, r]]], ["#ff9563", [[-r, r], [-r, -r]]]];
+  for (const [col, [[ax, ay], [bx, by]]] of faces) { ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(ax, ay); ctx.lineTo(bx, by); ctx.fill(); }
+  ctx.strokeStyle = "#fff"; ctx.lineWidth = 2.5; ctx.strokeRect(-r, -r, r * 2, r * 2);
+  // 입구와 깃발
+  ctx.fillStyle = "#3a1d12"; ctx.beginPath(); ctx.moveTo(-8, r); ctx.lineTo(0, r - 14); ctx.lineTo(8, r); ctx.fill();
+  ctx.strokeStyle = "#fff"; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, -r - 18); ctx.stroke();
+  ctx.fillStyle = "#ffcf3a"; ctx.beginPath(); ctx.moveTo(0, -r - 18); ctx.lineTo(16, -r - 12); ctx.lineTo(0, -r - 6); ctx.fill();
+  ctx.font = "800 18px Outfit, sans-serif"; ctx.textAlign = "center"; ctx.fillStyle = "#fff";
+  ctx.shadowColor = "rgba(0,0,0,.5)"; ctx.shadowBlur = 6;
+  ctx.fillText("HOME", 0, r + 26); ctx.shadowBlur = 0;
+  ctx.restore();
+}
+
+// 장애물: 트래픽 콘 (움직이지 않음)
+function drawCone(x, y) {
+  circle(x + 3, y + 4, 14, "rgba(0,0,0,.25)");
+  circle(x, y, 13, "#ff7a1a");
+  circle(x, y, 8.5, "#ffffff");
+  circle(x, y, 5, "#ff7a1a");
+  ctx.strokeStyle = "rgba(0,0,0,.25)"; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(x, y, 13, 0, Math.PI * 2); ctx.stroke();
+}
+
+// ---------- 장면 전환 ----------
+let sceneKey = null, fade = 0, fadeFrom = null, titleT = 99;
+function currentSceneKey() { return activeItem ? genreFor(activeItem.bpm).name : "quiet"; }
+
+// ---------- 그리기 ----------
+let dpr = 1;
+function fitCanvas() {
+  dpr = window.devicePixelRatio || 1;
+  const w = Math.round(board.clientWidth * dpr), h = Math.round(board.clientHeight * dpr);
+  if (w && h && (board.width !== w || board.height !== h)) { board.width = w; board.height = h; }
+  const k = Math.min(board.width, board.height) / VIEW;   // 화면 비율과 상관없이 짧은 변 기준으로 같은 크기
+  VW = board.width / k; VH = board.height / k; CX = VW / 2; CY = VH * 0.66;
+  ctx.setTransform(k, 0, 0, k, 0, 0);
+}
+
+function draw(dt) {
+  fitCanvas();
+  const key = currentSceneKey();
+  if (key !== sceneKey) {
+    fadeFrom = sceneKey ? SCENES[sceneKey].ground : null; fade = 1; titleT = 0;
+    sceneKey = key; initParticles(SCENES[key].particles);
+  }
+  const sc = SCENES[sceneKey], ph = beatPhase(), pulse = Math.min(1.6, beatPulse * settings.fx);
+  const pre = anticipation() * settings.fx;          // 박자 직전 웅크림 (0~1)
+
+  // 카메라는 뱀 방향을 살짝 늦게 따라감 → 운전할 때처럼 회전이 부드러움
+  // 데모 중엔 화면을 돌리지 않고 북쪽 고정(세상만 흘러감), 게임 중엔 진행 방향을 따라 회전
+  camAngle += angleDiff(camAngle, demo ? -Math.PI / 2 : angle) * (1 - Math.exp(-(demo ? 1.5 : 8) * dt));
+
+  ctx.fillStyle = sc.ground; ctx.fillRect(0, 0, VW, VH);
+
+  ctx.save();
+  ctx.translate(CX, CY);
+  // 다운비트마다 화면이 살짝 줌인 (4마디마다 조금 더 크게)
+  const punch = 1 + Math.min(1.6, barPulse) * 0.022 * settings.fx;
+  ctx.scale(punch, punch);
+  ctx.rotate(-Math.PI / 2 - camAngle);     // 진행 방향이 항상 화면 위쪽
+  const R = Math.hypot(Math.max(CX, VW - CX), Math.max(CY, VH - CY)) + 50;   // 화면 모서리까지 + 여유
+
+  // 바닥 무늬 (움직임이 느껴지게)
+  const step = 40, x0 = Math.floor((head.x - R) / step) * step, y0 = Math.floor((head.y - R) / step) * step;
+  if (sc.grid) {
+    ctx.strokeStyle = sc.grid; ctx.lineWidth = 1; ctx.beginPath();
+    for (let gx = x0; gx < head.x + R; gx += step) { ctx.moveTo(gx - head.x, -R); ctx.lineTo(gx - head.x, R); }
+    for (let gy = y0; gy < head.y + R; gy += step) { ctx.moveTo(-R, gy - head.y); ctx.lineTo(R, gy - head.y); }
+    ctx.stroke();
+  } else {
+    ctx.fillStyle = sc.dot;
+    for (let gx = x0; gx < head.x + R; gx += step) for (let gy = y0; gy < head.y + R; gy += step) ctx.fillRect(gx - head.x - 1, gy - head.y - 1, 2, 2);
+  }
+
+  // 소품
+  for (const p of propsNear(sceneKey, head.x, head.y, R + 80)) {
+    const x = wrapDelta(p.x - head.x), y = wrapDelta(p.y - head.y);
+    if (x * x + y * y > R * R) continue;
+    drawProp(p, x, y, ph, pulse, sc);
+  }
+
+  // 헤드라이트 (밤 장면)
+  if (sc.dark) {
+    ctx.save(); ctx.rotate(angle + Math.PI / 2);
+    const g = ctx.createRadialGradient(0, -40, 10, 0, -160, 260);
+    g.addColorStop(0, "rgba(255,244,220,.16)"); g.addColorStop(1, "rgba(255,244,220,0)");
+    ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(-10, -6); ctx.lineTo(-150, -330); ctx.lineTo(150, -330); ctx.lineTo(10, -6); ctx.fill();
+    ctx.restore();
+  }
+
+  // 텐트 (목적지)
+  if (tent && !demo) {
+    const x = wrapDelta(tent.x - head.x), y = wrapDelta(tent.y - head.y);
+    if (x * x + y * y < (R + 80) * (R + 80)) drawTent(x, y, pulse);
+  }
+
+  // 장애물
+  for (const o of obstacles) {
+    const x = wrapDelta(o.x - head.x), y = wrapDelta(o.y - head.y);
+    if (x * x + y * y < R * R) drawCone(x, y);
+  }
+
+  // 먹이
+  for (const f of fruits) {
+    const x = wrapDelta(f.x - head.x), y = wrapDelta(f.y - head.y);
+    if (x * x + y * y < R * R) drawFruit(f, x, y, pulse, ph);
+  }
+  // 먹은 자리 퍼지는 링
+  for (let i = bursts.length - 1; i >= 0; i--) {
+    const b = bursts[i]; b.t += dt;
+    if (b.t > 0.5) { bursts.splice(i, 1); continue; }
+    const bx = wrapDelta(b.x - head.x), by = wrapDelta(b.y - head.y), rr = 12 + b.t * 90;
+    for (let j = 0; j < 8; j++) {
+      const a = j / 8 * Math.PI * 2 + b.t * 2;
+      sparkle(bx + Math.cos(a) * rr, by + Math.sin(a) * rr, 7 * (1 - b.t / 0.5), j % 2 ? "#fff6c2" : b.color, 1 - b.t / 0.5);
+    }
+  }
+
+  // 뱀 (머리 기준 상대 좌표를 이어 붙여서 벽을 넘어도 끊기지 않음)
+  const pts = [{ x: 0, y: 0 }];
+  for (let i = 1; i < trail.length; i++) pts.push({ x: pts[i-1].x + wrapDelta(trail[i].x - trail[i-1].x), y: pts[i-1].y + wrapDelta(trail[i].y - trail[i-1].y) });
+  ctx.lineCap = "round"; ctx.lineJoin = "round";
+  if (invuln > 0 && Math.floor(invuln * 10) % 2) ctx.globalAlpha = 0.35;   // 부딪힌 직후 깜빡임 (무적 시간)
+  const path = () => { ctx.beginPath(); ctx.moveTo(0, 0); for (const p of pts) ctx.lineTo(p.x, p.y); ctx.stroke(); };
+  // 애벌레: 동그란 마디가 이어지고, 꿈틀대는 물결 + 작은 다리 + 더듬이
+  const now = performance.now() / 1000;
+  const jc = sc.snake;
+  const edge = mixColor(jc, "#2a1a33", 0.55), alt = mixColor(jc, "#ffffff", 0.22);
+  const th0 = Math.PI / 2 + camAngle;   // 광택은 화면 기준 왼쪽 위
+  const lx = (dx, dy) => dx * Math.cos(th0) - dy * Math.sin(th0), ly = (dx, dy) => dx * Math.sin(th0) + dy * Math.cos(th0);
+
+  // 1) 경로에서 SEG 간격으로 마디 위치 + 진행 방향
+  const segs = [];
+  let accD = 0, nextAt = SEG;
+  for (let i = 1; i < pts.length; i++) {
+    accD += Math.hypot(pts[i].x - pts[i-1].x, pts[i].y - pts[i-1].y);
+    if (accD >= nextAt) { segs.push({ x: pts[i].x, y: pts[i].y, a: Math.atan2(pts[i-1].y - pts[i].y, pts[i-1].x - pts[i].x) }); nextAt += SEG; }
+  }
+  const n = segs.length;
+  // 꿈틀: 마디마다 시간차를 둔 물결 (박자에 맞춰 살짝 더 통통)
+  // 몸통: 박자 직전 살짝 납작(pre) → 박자에 통통(pulse)
+  const rOf = i => 9.5 * (1 - 0.25 * (i / Math.max(1, n))) * (1 + 0.08 * Math.sin(now * 8 - i * 0.9) + pulse * 0.12 - pre * 0.1);
+  // 다리: 마디 양옆에 작은 점, 걷는 것처럼 번갈아 앞뒤로
+  for (let i = n - 1; i >= 0; i--) {
+    const g = segs[i], r = rOf(i), step = Math.sin(now * 10 - i * 1.3) * 2.2;
+    for (const sd of [-1, 1]) {
+      const px = -Math.sin(g.a) * sd, py = Math.cos(g.a) * sd;
+      circle(g.x + px * (r + 1.5) + Math.cos(g.a) * step * sd, g.y + py * (r + 1.5) + Math.sin(g.a) * step * sd, 2.3, edge);
+    }
+  }
+  // 몸 마디: 테두리 → 색 (두 가지 색을 번갈아) → 광택
+  for (let i = n - 1; i >= 0; i--) circle(segs[i].x, segs[i].y, rOf(i) + 2, edge);
+  for (let i = n - 1; i >= 0; i--) circle(segs[i].x, segs[i].y, rOf(i), i % 2 ? alt : jc);
+  for (let i = n - 1; i >= 0; i--) { const r = rOf(i); circle(segs[i].x + lx(-r * .35, -r * .35), segs[i].y + ly(-r * .35, -r * .35), r * 0.25, "rgba(255,255,255,.45)"); }
+
+  // 머리 + 더듬이 (박자마다 톡 튐)
+  const R0 = headR() + pulse * 2.2 - pre * 1.6;
+  const cos = Math.cos(angle), sin = Math.sin(angle);
+  ctx.strokeStyle = edge; ctx.lineWidth = 2.2; ctx.lineCap = "round";
+  for (const sd of [-1, 1]) {
+    const bx = cos * R0 * 0.5 - sin * R0 * 0.45 * sd, by = sin * R0 * 0.5 + cos * R0 * 0.45 * sd;
+    const bob = Math.sin(now * 6 + sd) * 2 + pulse * 3;
+    const tx = bx + cos * (11 + bob) - sin * 6 * sd, ty = by + sin * (11 + bob) + cos * 6 * sd;
+    ctx.beginPath(); ctx.moveTo(bx, by); ctx.quadraticCurveTo(bx + cos * 8, by + sin * 8, tx, ty); ctx.stroke();
+    circle(tx, ty, 2.8, mixColor(jc, "#2a1a33", 0.35));
+  }
+  circle(0, 0, R0 + 2, edge);
+  circle(0, 0, R0, jc);
+  circle(lx(-R0 * .38, -R0 * .4), ly(-R0 * .38, -R0 * .4), R0 * 0.28, "rgba(255,255,255,.55)");
+  for (const sd of [-1, 1]) circle(cos * R0 * 0.42 - sin * R0 * 0.36 * sd, sin * R0 * 0.42 + cos * R0 * 0.36 * sd, 2.3, "#2a1a33");
+  ctx.globalAlpha = 1;
+  ctx.restore();
+
+  // 방향 표시는 텐트만 (열매 화살표는 없음)
+  const th = -Math.PI / 2 - camAngle, ct = Math.cos(th), st = Math.sin(th);
+
+  // 텐트 방향: 화면 밖이면 큰 화살표 + 거리
+  if (tent && !demo) {
+    const x = wrapDelta(tent.x - head.x), y = wrapDelta(tent.y - head.y);
+    const sx = x * ct - y * st + CX, sy = x * st + y * ct + CY;
+    const m = 60;
+    if (sx < m || sy < m || sx > VW - m || sy > VH - m) {
+      const dx = sx - CX, dy = sy - CY;
+      const tt = Math.min((dx > 0 ? VW - m - CX : CX - m) / Math.abs(dx || 1e-6), (dy > 0 ? VH - m - CY : CY - m) / Math.abs(dy || 1e-6));
+      const ex = CX + dx * tt, ey = CY + dy * tt, a = Math.atan2(dy, dx);
+      const bounce = Math.sin(performance.now() / 180) * 4;
+      ctx.save(); ctx.translate(ex, ey);
+      circle(0, 0, 30, "rgba(16,17,22,.75)");
+      ctx.strokeStyle = "#ffcf3a"; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(0, 0, 30, 0, Math.PI * 2); ctx.stroke();
+      ctx.font = "22px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("⛺", 0, 1);
+      ctx.rotate(a); ctx.translate(38 + bounce, 0);
+      ctx.fillStyle = "#ffcf3a"; ctx.beginPath(); ctx.moveTo(14, 0); ctx.lineTo(-6, -12); ctx.lineTo(-6, 12); ctx.fill();
+      ctx.restore(); ctx.textBaseline = "alphabetic";
+    }
+  }
+
+  // 흩날리는 것 + 반짝이
+  updateDrawParticles(dt, ph, pulse);
+  // 부스트 중: 화면에 바람 줄무늬
+  if (boostT > 0 && !demo) {
+    const t = performance.now() / 1000, a = Math.min(1, boostT) * 0.35;
+    ctx.strokeStyle = `rgba(255,255,255,${a})`; ctx.lineWidth = 2; ctx.lineCap = "round";
+    for (let i = 0; i < 18; i++) {
+      const x = (i / 18) * VW + Math.sin(i * 9.1) * 30;
+      const y = ((t * 900 + i * 173) % (VH + 200)) - 100;
+      ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y + 40 + (i % 3) * 20); ctx.stroke();
+    }
+  }
+  drawTwinkles(pulse, sc.dark);
+
+  // 4마디마다: 화면 가장자리에 반짝 빛
+  if (phraseFlash > 0) {
+    const g = ctx.createRadialGradient(CX, VH / 2, Math.min(VW, VH) * 0.35, CX, VH / 2, Math.max(VW, VH) * 0.75);
+    g.addColorStop(0, "rgba(255,240,200,0)"); g.addColorStop(1, `rgba(255,240,200,${phraseFlash * 0.28 * settings.fx})`);
+    ctx.fillStyle = g; ctx.fillRect(0, 0, VW, VH);
+    phraseFlash = Math.max(0, phraseFlash - dt * 2.5);
+  }
+
+  // 부딪힘: 화면 가장자리가 빨갛게
+  if (hitFlash > 0) {
+    const g = ctx.createRadialGradient(CX, VH / 2, Math.min(VW, VH) * 0.3, CX, VH / 2, Math.max(VW, VH) * 0.7);
+    g.addColorStop(0, "rgba(255,40,20,0)"); g.addColorStop(1, `rgba(255,40,20,${hitFlash * 0.45})`);
+    ctx.fillStyle = g; ctx.fillRect(0, 0, VW, VH);
+    hitFlash = Math.max(0, hitFlash - dt * 2.2);
+  }
+
+  // 장면 전환: 이전 바닥색이 서서히 사라짐
+  if (fade > 0 && fadeFrom) {
+    ctx.globalAlpha = fade; ctx.fillStyle = fadeFrom; ctx.fillRect(0, 0, VW, VH); ctx.globalAlpha = 1;
+  }
+  fade = Math.max(0, fade - dt / 1.2);
+
+  // 장면 이름 (도착한 곳 표지판처럼)
+  titleT += dt;
+  if (titleT < 3 && !demo && document.body.dataset.screen === "game") {   // 게임 중에만 장소 표지판
+    const a = titleT < 0.5 ? titleT / 0.5 : titleT > 2.3 ? (3 - titleT) / 0.7 : 1;
+    ctx.globalAlpha = a; ctx.textAlign = "center";
+    ctx.fillStyle = sc.dark ? "#f6f5f1" : "#161616";
+    ctx.font = "600 42px Outfit, sans-serif";
+    ctx.fillStyle = sc.dark ? "#fff6fb" : "#4a2a4e"; ctx.fillText(sc.title, CX, VH * 0.2);
+    ctx.font = "11px 'Space Mono', monospace";
+    ctx.fillText(activeItem ? `${themeOf(activeItem.theme).title.toUpperCase()} · ${genreFor(activeItem.bpm).name.toUpperCase()} · ${Math.round(currentBpm())} BPM` : "NO MUSIC", CX, VH * 0.2 + 24);
+    ctx.globalAlpha = 1;
+  }
+}
+
+function loop(t) {
+  const dt = Math.min(0.05, (t - lastT) / 1000 || 0);  // 탭 전환 시 순간이동 방지
+  lastT = t;
+  tickBeats(dt);
+  tickSetup();
+  tickPalm();
+  if (running || demo) update(dt);
+  draw(dt);
+  requestAnimationFrame(loop);
+}
+function startGame() {
+  demo = false;
+  stage = 1; setTempo(tempoFor(1));
+  reset(); running = true;
+  needCalib = true; titleT = 0;
+  placeCam("hud");
+  show("game");
+}
+
+// ---------- Music & BPM ----------
+let audioCtx = null;
+let music = null;             // { kind: "file" | "beat", bpm, ... }
+let beatQueue = [];           // 곧 울릴 박자 시각(audioCtx 시간)
+let beatPulse = 0;            // 박자마다 1 → 서서히 0 (화면 효과용)
+let schedTimer = null;
+const ac = () => (audioCtx ??= new AudioContext());
+const currentBpm = () => music?.bpm ?? null;
+
+// 곡의 BPM 찾기:
+// 저음(킥·베이스)만 남김 → 소리가 "갑자기 커지는 순간"(onset)을 뽑음
+// → 그 신호가 몇 BPM 간격으로 가장 잘 반복되는지(자기상관) 비교
+async function detectBpm(buffer) {
+  const SR = 11025, HOP = 128, fps = SR / HOP;
+  const off = new OfflineAudioContext(1, Math.ceil(buffer.duration * SR), SR);
+  const src = off.createBufferSource(); src.buffer = buffer;
+  const lp = off.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 150;
+  src.connect(lp).connect(off.destination); src.start();
+  const data = (await off.startRendering()).getChannelData(0);
+
+  const n = Math.floor(data.length / HOP);
+  const onset = new Float32Array(n);
+  let prev = 0, mean = 0;
+  for (let i = 0; i < n; i++) {
+    let e = 0;
+    for (let j = 0; j < HOP; j++) { const v = data[i * HOP + j]; e += v * v; }
+    e = Math.sqrt(e / HOP);
+    onset[i] = Math.max(0, e - prev); prev = e; mean += onset[i];
+  }
+  mean /= n;
+  const env = onset.map(v => v - mean);
+
+  let best = -Infinity, bestBpm = 120;
+  for (let bpm = 60; bpm <= 200; bpm += 0.5) {
+    const lag = fps * 60 / bpm, l0 = Math.floor(lag), f = lag - l0;
+    let sum = 0;
+    for (let i = 0; i + l0 + 1 < n; i++) sum += env[i] * (env[i + l0] * (1 - f) + env[i + l0 + 1] * f);
+    // 절반/두 배 BPM으로 잘못 잡는 걸 줄이려고 사람이 느끼는 템포(약 120) 근처에 가중치
+    sum *= Math.exp(-0.5 * (Math.log2(bpm / 120) / 0.9) ** 2);
+    if (sum > best) { best = sum; bestBpm = bpm; }
+  }
+
+  // 정밀 보정: 후보 주변을 0.05 BPM 단위로, 1~8박 뒤까지 한꺼번에 맞춰봄
+  // (1박 간격만 보면 ±2 BPM 오차 → 30초면 박자가 반 박 넘게 밀림)
+  const ac1 = lag => { const l0 = Math.floor(lag), f = lag - l0; let s = 0;
+    for (let i = 0; i + l0 + 1 < n; i += 2) s += env[i] * (env[i + l0] * (1 - f) + env[i + l0 + 1] * f);
+    return s; };
+  let fine = bestBpm, fineScore = -Infinity;
+  for (let bpm = bestBpm - 1.5; bpm <= bestBpm + 1.5; bpm += 0.05) {
+    const lag = fps * 60 / bpm;
+    let sc = 0;
+    for (let m = 1; m <= 8; m++) sc += ac1(lag * m);
+    if (sc > fineScore) { fineScore = sc; fine = bpm; }
+  }
+  bestBpm = fine;
+
+  // 첫 박자 위치(위상): 박자 격자를 밀어보며 onset과 가장 잘 겹치는 지점
+  const period = fps * 60 / bestBpm;
+  let bestOff = 0, bestScore = -Infinity;
+  for (let k = 0; k < period; k++) {
+    let sc = 0;
+    for (let t = k; t < n; t += period) sc += onset[Math.round(t)] || 0;
+    if (sc > bestScore) { bestScore = sc; bestOff = k; }
+  }
+  return { bpm: bestBpm, offset: bestOff / fps };
+}
+
+// ---------- 장르 태그: BPM 범위로 결정 ----------
+const GENRES = [
+  { max: 80,  name: "Lo-fi",       color: "#8fa3b8" },
+  { max: 100, name: "Hip-hop",     color: "#b8935a" },
+  { max: 118, name: "Pop",         color: "#e0a43a" },
+  { max: 130, name: "House",       color: "#5fa384" },
+  { max: 140, name: "Techno",      color: "#6d6d9c" },
+  { max: 160, name: "Trap",        color: "#c25b7a" },
+  { max: 999, name: "Drum & Bass", color: "#ff4d2e" },
+];
+const genreFor = bpm => GENRES.find(g => bpm < g.max);
+function tagEl(bpm) {
+  const g = genreFor(bpm), el = document.createElement("span");
+  el.className = "tag"; el.textContent = g.name; el.style.setProperty("--g", g.color);
+  return el;
+}
+
+// ---------- 신스 악기 (Web Audio로 직접 합성) ----------
+let master = null, noiseBuf = null;
+function out() {
+  if (!master) {
+    const c = ac(), comp = c.createDynamicsCompressor();
+    master = c.createGain(); master.gain.value = settings.volume;
+    master.connect(comp).connect(c.destination);
+  }
+  return master;
+}
+function noise() {
+  if (!noiseBuf) {
+    const c = ac(); noiseBuf = c.createBuffer(1, c.sampleRate, c.sampleRate);
+    const d = noiseBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  }
+  const src = ac().createBufferSource(); src.buffer = noiseBuf; return src;
+}
+function envGain(t, peak, attack, decay) {
+  const g = ac().createGain();
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(peak, t + attack);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + attack + decay);
+  return g;
+}
+const note = m => 440 * 2 ** ((m - 69) / 12);
+const SYN = {
+  kick(t, v = 1) {
+    const o = ac().createOscillator(), g = envGain(t, 0.9 * v, 0.002, 0.3);
+    o.frequency.setValueAtTime(150, t); o.frequency.exponentialRampToValueAtTime(45, t + 0.12);
+    o.connect(g).connect(out()); o.start(t); o.stop(t + 0.35);
+  },
+  snare(t, v = 1) {
+    const n = noise(), bp = ac().createBiquadFilter(), g = envGain(t, 0.35 * v, 0.001, 0.15);
+    bp.type = "bandpass"; bp.frequency.value = 1800; bp.Q.value = 0.7;
+    n.connect(bp).connect(g).connect(out()); n.start(t); n.stop(t + 0.2);
+    const o = ac().createOscillator(), g2 = envGain(t, 0.25 * v, 0.001, 0.08);
+    o.type = "triangle"; o.frequency.value = 190; o.connect(g2).connect(out()); o.start(t); o.stop(t + 0.1);
+  },
+  clap(t, v = 1) {
+    for (const d of [0, 0.012, 0.024]) {
+      const n = noise(), bp = ac().createBiquadFilter(), g = envGain(t + d, 0.3 * v, 0.001, d === 0.024 ? 0.14 : 0.02);
+      bp.type = "bandpass"; bp.frequency.value = 1300; bp.Q.value = 1.2;
+      n.connect(bp).connect(g).connect(out()); n.start(t + d); n.stop(t + d + 0.18);
+    }
+  },
+  hat(t, v = 1, open = false) {
+    const n = noise(), hp = ac().createBiquadFilter(), g = envGain(t, 0.14 * v, 0.001, open ? 0.22 : 0.035);
+    hp.type = "highpass"; hp.frequency.value = 8000;
+    n.connect(hp).connect(g).connect(out()); n.start(t); n.stop(t + 0.3);
+  },
+  bass(t, m, d, type = "sawtooth", v = 1) {
+    const o = ac().createOscillator(), lp = ac().createBiquadFilter(), g = envGain(t, 0.3 * v, 0.005, d);
+    o.type = type; o.frequency.value = note(m); lp.type = "lowpass"; lp.frequency.value = 420;
+    o.connect(lp).connect(g).connect(out()); o.start(t); o.stop(t + d + 0.05);
+  },
+  sub(t, m, d) {   // 808
+    const o = ac().createOscillator(), g = envGain(t, 0.55, 0.004, d);
+    o.frequency.setValueAtTime(note(m) * 1.5, t); o.frequency.exponentialRampToValueAtTime(note(m), t + 0.05);
+    o.connect(g).connect(out()); o.start(t); o.stop(t + d + 0.05);
+  },
+  lead(t, m, d) {   // 반짝이는 신스 (K-pop 아르페지오)
+    const o = ac().createOscillator(), lp = ac().createBiquadFilter(), g = envGain(t, 0.07, 0.003, d);
+    o.type = "square"; o.frequency.value = note(m); lp.type = "lowpass"; lp.frequency.value = 3200;
+    o.connect(lp).connect(g).connect(out()); o.start(t); o.stop(t + d + 0.05);
+  },
+  chord(t, ms, d, v = 1) {
+    for (const m of ms) {
+      const o = ac().createOscillator(), lp = ac().createBiquadFilter(), g = envGain(t, 0.06 * v, 0.03, d);
+      o.type = "triangle"; o.frequency.value = note(m); lp.type = "lowpass"; lp.frequency.value = 1800;
+      o.connect(lp).connect(g).connect(out()); o.start(t); o.stop(t + d + 0.1);
+    }
+  },
+};
+
+// ---------- 내장 곡: 16스텝 패턴 (x = 세게, o = 약하게) ----------
+// chords: 마디별 코드(MIDI 번호), bass: 마디별 근음
+const TRACKS = [
+  { name: "Rainy Window", theme: "chill", bpm: 72, swing: 0.18,
+    kick: "x.....x...x.....", snare: "....x.......x...", hat: "o.o.o.o.o.o.o.o.",
+    chords: [[65,69,72,76],[64,67,71,74],[62,65,69,72],[60,64,67,71]], bass: [41,40,38,36], bassSteps: "x.......x.......", bassType: "sine", chordSteps: "x..............." },
+  { name: "Meadow Nap", theme: "chill", bpm: 82, swing: 0.2,
+    kick: "x.......x.x.....", snare: "....o.......o...", hat: "o...o...o...o...",
+    chords: [[60,64,67,71],[57,60,64,67],[62,65,69,72],[55,59,62,65]], bass: [36,33,38,31], bassSteps: "x.........x.....", bassType: "sine", chordSteps: "x.......x......." },
+  { name: "Corner Store", theme: "groove", bpm: 90, swing: 0.12,
+    kick: "x.....x.x.x.....", snare: "....x.......x...", hat: "x.o.x.o.x.o.x.o.",
+    chords: [[57,60,64],[55,59,62],[53,57,60],[52,55,59]], bass: [33,31,29,28], bassSteps: "x.....x.x.x.....", chordSteps: "x.......x......." },
+  { name: "Sunny Route", theme: "groove", bpm: 110,
+    kick: "x...x...x...x...", clap: "....x.......x...", hat: ".oo..oo..oo..oo.",
+    chords: [[60,64,67],[55,59,62],[57,60,64],[53,57,60]], bass: [36,31,33,29], bassSteps: "x.x.x.x.x.x.x.x.", chordSteps: "x..x..x...x..x.." },
+  { name: "Night Drive", theme: "groove", bpm: 124,
+    kick: "x...x...x...x...", clap: "....x.......x...", hat: "oooooooooooooooo", openHat: "..x...x...x...x.",
+    chords: [[57,60,64,67],[57,60,64,67],[53,57,60,64],[55,59,62,65]], bass: [33,33,29,31], bassSteps: "..x...x...x...x.", chordSteps: "...x.....x....x." },
+  { name: "Concrete", theme: "release", bpm: 132,
+    kick: "x...x...x...x...", clap: "....x.......x...", hat: "xoooxoooxoooxooo", openHat: "..x...x...x...x.",
+    bass: [28,28,28,31], bassSteps: ".xx..xx..xx..xx.", bassType: "square" },
+  { name: "Neon Rush", theme: "release", bpm: 145, roll: "..........xx..x.",
+    kick: "x......x..x.....", clap: "........x.......", hat: "x.x.x.x.x.x.x.x.",
+    chords: [[61,64,68],[61,64,68],[59,63,66],[57,61,64]], bass: [37,37,35,33], sub: true, bassSteps: "x......x..x.....", chordSteps: "x..............." },
+  { name: "Afterburn", theme: "release", bpm: 174,
+    kick: "x.........x.....", snare: "....x.......x...", hat: "x.x.x.x.x.x.x.x.",
+    chords: [[62,65,69],[62,65,69],[58,62,65],[60,64,67]], bass: [26,26,22,24], bassSteps: "x...............", bassType: "sawtooth", bassLen: 16, chordSteps: "x..............." },
+  // K-pop 느낌: 밝은 코드 + 반짝이는 신스 아르페지오(arp)
+  { name: "Starlight", theme: "kpop", bpm: 104,
+    kick: "x.....x.x...x...", clap: "....x.......x...", hat: "x.o.x.o.x.o.x.o.",
+    chords: [[65,69,72],[64,67,71],[62,65,69],[67,71,74]], bass: [41,40,38,43], bassSteps: "x..x..x.x..x..x.", chordSteps: "x.......x.......",
+    arp: "x.x.x.x.x.x.x.x." },
+  { name: "Sugar Rush", theme: "kpop", bpm: 122,
+    kick: "x...x...x...x...", clap: "....x.......x...", hat: "oxoxoxoxoxoxoxox", openHat: "..x...x...x...x.",
+    chords: [[69,72,76],[65,69,72],[67,71,74],[64,67,71]], bass: [45,41,43,40], bassSteps: "x.xx..x.x.xx..x.", chordSteps: "..x..x....x..x..",
+    arp: "xxxxxxxxxxxxxxxx" },
+];
+
+function playStep(tr, step, t, stepDur) {
+  const i = step % 16, bar = Math.floor(step / 16) % 4;
+  const hit = (pat, fn) => { const c = pat?.[i]; if (c === "x") fn(1); else if (c === "o") fn(0.45); };
+  hit(tr.kick, v => SYN.kick(t, v));
+  hit(tr.snare, v => SYN.snare(t, v));
+  hit(tr.clap, v => SYN.clap(t, v));
+  hit(tr.hat, v => SYN.hat(t, v));
+  hit(tr.openHat, v => SYN.hat(t, v, true));
+  if (tr.roll?.[i] === "x") SYN.hat(t + stepDur / 2, 0.6);           // 트랩 하이햇 롤
+  if (tr.bass && tr.bassSteps[i] === "x") {
+    const len = (tr.bassLen ?? 2) * stepDur;
+    tr.sub ? SYN.sub(t, tr.bass[bar], len * 3) : SYN.bass(t, tr.bass[bar], len, tr.bassType);
+  }
+  if (tr.arp?.[i] === "x") { const ch = tr.chords[bar]; SYN.lead(t, ch[(step >> (tr.arp[1] === "x" ? 0 : 1)) % ch.length] + 12, stepDur * 0.9); }
+  if (tr.chords && tr.chordSteps?.[i] === "x") SYN.chord(t, tr.chords[bar], tr.chordSteps === "x..............." ? stepDur * 15 : stepDur * 2.5);
+}
+
+// ---------- 플레이리스트 ----------
+// 내장 곡 + 사용자가 추가한 곡(분석한 BPM과 함께 저장)
+// 테마(분위기)별로 묶음. 장소(풍경)는 곡의 BPM 장르로 정해짐
+const THEMES = [
+  { id: "chill",   title: "Mellow & Chill",         note: "slow and easy" },
+  { id: "groove",  title: "A Little Bit of Groove", note: "nod along" },
+  { id: "release", title: "Let It All Out",         note: "fast and loud" },
+  { id: "kpop",    title: "Bubblegum Bounce",       note: "sweet and bouncy" },
+];
+const themeOf = id => THEMES.find(t => t.id === id);
+const playlist = TRACKS.map(t => ({ kind: "track", name: t.name, bpm: t.bpm, theme: t.theme, track: t }));
+let addTheme = "chill";       // "+" 를 누른 테마에 새 곡이 들어감
+let activeItem = null;
+
+// 테마 화면: 테마 카드 4개 + 고른 테마의 곡 목록
+// 테마 카드: 파스텔 단색 + 굵은 외곽선 + 작은 일러스트 (스티커 같은 게임 카드)
+const INK = "#2a1a33";
+const THEME_LOOK = {
+  chill: { bg: "#a9dcff", hl: "#cfeeff", tilt: "-2deg", art: `<svg viewBox="0 0 80 80">
+    <circle cx="60" cy="18" r="9" fill="#fff6c2" stroke="${INK}" stroke-width="3"/><circle cx="64" cy="15" r="7" fill="#a9dcff"/>
+    <path d="M18 46 a12 12 0 0 1 4-23 a15 15 0 0 1 28-2 a11 11 0 0 1 10 21 z" fill="#fff" stroke="${INK}" stroke-width="3.5" stroke-linejoin="round"/>
+    <g stroke="#3f8fd6" stroke-width="4" stroke-linecap="round"><path d="M26 54 l-3 8"/><path d="M38 56 l-3 8"/><path d="M50 54 l-3 8"/></g>
+    <g fill="${INK}"><circle cx="30" cy="36" r="2.2"/><circle cx="42" cy="36" r="2.2"/></g><path d="M33 40 q3 3 6 0" fill="none" stroke="${INK}" stroke-width="2" stroke-linecap="round"/></svg>` },
+  groove: { bg: "#ffc56e", hl: "#ffe0a8", tilt: "1.5deg", art: `<svg viewBox="0 0 80 80">
+    <circle cx="38" cy="44" r="26" fill="${INK}"/><circle cx="38" cy="44" r="19" fill="none" stroke="#4a3657" stroke-width="2"/><circle cx="38" cy="44" r="13" fill="none" stroke="#4a3657" stroke-width="2"/>
+    <circle cx="38" cy="44" r="8" fill="#ff7a5c"/><circle cx="38" cy="44" r="2" fill="${INK}"/>
+    <path d="M58 10 v24 a6 6 0 1 1 -4 -5.6 V14 l14 -4 v6 z" fill="#fff6fb" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/></svg>` },
+  release: { bg: "#ff9b8a", hl: "#ffc9bf", tilt: "-1.5deg", art: `<svg viewBox="0 0 80 80">
+    <path d="M46 6 L20 44 h16 l-6 30 l28 -42 h-17 z" fill="#ffd45c" stroke="${INK}" stroke-width="3.5" stroke-linejoin="round"/>
+    <g fill="#fff6fb" stroke="${INK}" stroke-width="2.5"><path d="M64 46 l3 7 l7 3 l-7 3 l-3 7 l-3 -7 l-7 -3 l7 -3 z"/><path d="M14 16 l2 5 l5 2 l-5 2 l-2 5 l-2 -5 l-5 -2 l5 -2 z"/></g></svg>` },
+  kpop: { bg: "#ffb3df", hl: "#ffd6ee", tilt: "2deg", art: `<svg viewBox="0 0 80 80">
+    <rect x="35" y="40" width="10" height="34" rx="5" fill="#fff6fb" stroke="${INK}" stroke-width="3"/>
+    <path d="M40 44 C20 30 18 12 30 10 C36 9 40 14 40 18 C40 14 44 9 50 10 C62 12 60 30 40 44 Z" fill="#ff5fa2" stroke="${INK}" stroke-width="3.5" stroke-linejoin="round"/>
+    <circle cx="31" cy="20" r="3" fill="#fff" opacity=".8"/>
+    <g fill="#fff6c2" stroke="${INK}" stroke-width="2"><path d="M66 22 l2 4 l4 2 l-4 2 l-2 4 l-2 -4 l-4 -2 l4 -2 z"/><path d="M12 40 l2 4 l4 2 l-4 2 l-2 4 l-2 -4 l-4 -2 l4 -2 z"/></g></svg>` },
+};
+let pickTheme = null, picked = null;
+function renderThemes() {
+  $("themes").replaceChildren(...THEMES.map(th => {
+    const look = THEME_LOOK[th.id];
+    const b = document.createElement("button");
+    b.className = "theme" + (pickTheme === th.id ? " on" : "");
+    b.dataset.palm = ""; b.dataset.key = "theme:" + th.id;
+    b.style.setProperty("--bg", look.bg); b.style.setProperty("--tilt", look.tilt);
+    const art = document.createElement("div"); art.className = "art"; art.innerHTML = look.art;   // 고정 SVG 문자열
+    const t = document.createElement("b"); t.textContent = th.title;
+    const n = document.createElement("span"); n.className = "mono"; n.textContent = th.note;
+    const pick = document.createElement("span"); pick.className = "pick"; pick.textContent = "PICKED!";
+    b.append(art, t, n, pick);
+    b.onclick = () => {
+      pickTheme = th.id; addTheme = th.id;
+      // 미리듣기 중인 대표곡을 그대로 선택한 곡으로 → 바로 Drive 가능
+      if (activeItem?.theme !== th.id) previewFor(b);
+      if (activeItem?.theme === th.id) { picked = activeItem; $("driveBtn").disabled = false; }
+      renderThemes(); renderSongs();
+    };
+    return b;
+  }));
+}
+function renderSongs() {
+  const ul = $("songs");
+  if (!pickTheme) {
+    const li = document.createElement("li"); li.className = "empty";
+    li.textContent = "Pick a mood card first ↑";
+    ul.replaceChildren(li); return;
+  }
+  const hl = THEME_LOOK[pickTheme].hl;
+  const rows = playlist.filter(it => it.theme === pickTheme).map(item => {
+    const li = document.createElement("li");
+    li.className = (item === picked ? "on" : "") + (item === activeItem ? " playing" : "") + (item.loading ? " loading" : "");
+    li.dataset.palm = ""; li.dataset.key = "song:" + playlist.indexOf(item);
+    li.style.setProperty("--hl", hl);
+    const disc = document.createElement("span"); disc.className = "disc";
+    const name = document.createElement("span");
+    const nm = document.createElement("div"); nm.className = "nm"; nm.textContent = item.name;
+    const scn = document.createElement("div"); scn.className = "scene";
+    scn.textContent = item.loading ? "Finding the beat…" : `${SCENES[genreFor(item.bpm).name].title} · ${genreFor(item.bpm).name}`;
+    name.append(nm, scn);
+    const bpm = document.createElement("span"); bpm.className = "bpmn";
+    bpm.textContent = item.loading ? "…" : Math.round(item.bpm);
+    if (!item.loading) { const sm = document.createElement("small"); sm.textContent = "BPM"; bpm.append(sm); }
+    li.append(disc, name, bpm);
+    li.onclick = () => {
+      if (item.loading) return;
+      picked = item;
+      if (item !== activeItem) playItem(item);              // 고르면 바로 미리 들어볼 수 있음
+      $("driveBtn").disabled = false;
+      renderSongs();
+    };
+    return li;
+  });
+  const add = document.createElement("li"); add.className = "add";
+  const d = document.createElement("span"); d.className = "disc"; d.textContent = "+";
+  const tx = document.createElement("span"); tx.textContent = "Add your own song";
+  add.append(d, tx);
+  add.onclick = () => $("fileIn").click();
+  ul.replaceChildren(...rows, add);
+}
+function renderPlaylist() { if (document.body.dataset.screen === "theme") renderSongs(); }
+
+function showNow(item) {
+  $("musicName").textContent = item ? item.name : "Nothing playing";
+  $("sceneName").textContent = item ? `${themeOf(item.theme).title} · ${SCENES[genreFor(item.bpm).name].title}` : SCENES.quiet.title;
+  $("bpmVal").textContent = item ? Math.round(item.bpm) : "—";
+  const tag = $("nowTag");
+  if (item) { const g = genreFor(item.bpm); tag.textContent = g.name; tag.style.setProperty("--g", g.color); }
+  tag.hidden = !item;
+}
+
+function stopMusic() {
+  if (music?.source) { music.source.onended = null; try { music.source.stop(); } catch {} }
+  clearInterval(schedTimer); schedTimer = null;
+  music = null; beatQueue = []; activeItem = null;
+  showNow(null); renderPlaylist();
+}
+
+function playItem(item) {
+  stopMusic();
+  activeItem = item;
+  const start = ac().currentTime + 0.08;
+  if (item.kind === "track") {
+    music = { kind: "track", bpm: item.bpm * tempo, track: item.track, step: 0, nextStep: start };
+  } else {
+    playBuffer(item, start);
+  }
+  startScheduler();
+  showNow(item); renderPlaylist();
+}
+
+function playBuffer(item, start) {
+  const source = ac().createBufferSource();
+  source.buffer = item.buffer;
+  source.connect(out());
+  source.start(start);
+  // 곡이 끝나면 처음부터 다시 (박자 격자도 다시 맞춤)
+  source.onended = () => {
+    if (music?.source !== source) return;
+    const s2 = ac().currentTime + 0.05;
+    playBuffer(item, s2);
+  };
+  source.playbackRate.value = tempo;
+  music = { kind: "file", bpm: item.bpm * tempo, source, nextBeat: start + item.offset / tempo, beatN: 0 };
+  beatQueue = [];
+}
+
+// 스테이지 템포: 내장 곡은 BPM 자체를, 내 노래 파일은 재생 속도를 올림
+function setTempo(m) {
+  tempo = m;
+  if (!music || !activeItem) return;
+  music.bpm = activeItem.bpm * m;
+  if (music.kind === "file") music.source.playbackRate.value = m;
+  $("bpmVal").textContent = Math.round(music.bpm);
+}
+
+// 0.1초 앞까지 박자/스텝을 미리 예약 (setInterval은 들쭉날쭉해서 오디오 시계 기준으로 예약)
+function startScheduler() {
+  clearInterval(schedTimer);
+  schedTimer = setInterval(() => {
+    if (!music) return;
+    const now = ac().currentTime;
+    if (music.kind === "track") {
+      const tr = music.track, stepDur = 60 / music.bpm / 4;
+      while (music.nextStep < now + 0.1) {
+        const swing = (music.step % 2) ? (tr.swing ?? 0) * stepDur : 0;
+        playStep(tr, music.step, music.nextStep + swing, stepDur);
+        if (music.step % 4 === 0) beatQueue.push({ t: music.nextStep, n: music.step / 4 });
+        music.step++; music.nextStep += stepDur;
+      }
+    } else {
+      while (music.nextBeat < now + 0.1) { beatQueue.push({ t: music.nextBeat, n: music.beatN++ }); music.nextBeat += 60 / music.bpm; }
+    }
+  }, 25);
+}
+
+// 매 프레임: 지금 시각을 지난 박자가 있으면 펄스
+function tickBeats(dt) {
+  beatPulse *= Math.exp(-dt * 7);
+  barPulse *= Math.exp(-dt * 5);
+  if (audioCtx) {
+    let hit = null;
+    const now = heardTime();
+    while (beatQueue.length && beatQueue[0].t <= now) hit = beatQueue.shift();
+    if (hit) {
+      // 2) 강약: 마디 첫 박(다운비트)은 세게, 나머지 박은 약하게. 4마디마다 크게 한 번
+      const down = hit.n % 4 === 0, phrase = hit.n % 16 === 0;
+      beatPulse = down ? 1 : 0.5;
+      if (down) barPulse = phrase ? 1.6 : 1;
+      if (phrase && !demo) phraseFlash = 1;
+      lastBeatTime = hit.t; beatCount = hit.n;
+      const dot = $("beatDot");
+      dot.classList.add("on");
+      setTimeout(() => dot.classList.remove("on"), 90);
+    }
+  }
+  $("speedVal").textContent = `${Math.round(speed ?? START_SPEED)} px/s`;
+  $("boostPill").hidden = !(boostT > 0 && !demo);
+  if (boostT > 0) $("boostPill").textContent = `⚡ BOOST ${Math.ceil(boostT)}s`;
+  if (tent && !demo) {
+    const t = Math.max(0, Math.ceil(timeLeft));
+    $("timeLeft").textContent = `${Math.floor(t / 60)}:${String(t % 60).padStart(2, "0")}`;
+    $("stageHud").classList.toggle("hurry", t <= 10 && running);
+    $("tentDist").textContent = `${Math.round(wdist(head, tent) / 10)} m`;
+    $("stageNum").textContent = stage;
+  }
+}
+
+$("fileIn").onchange = async e => {
+  const file = e.target.files[0];
+  e.target.value = "";
+  if (!file) return;
+  const item = { kind: "file", name: file.name.replace(/\.[^.]+$/, "").slice(0, 40), bpm: 0, theme: addTheme, loading: true };
+  playlist.push(item); renderPlaylist();
+  try {
+    item.buffer = await ac().decodeAudioData(await file.arrayBuffer());
+    Object.assign(item, await detectBpm(item.buffer));
+    item.loading = false;
+    picked = item; $("driveBtn").disabled = false;
+    playItem(item);
+  } catch (err) {
+    console.error(err);
+    playlist.splice(playlist.indexOf(item), 1);
+    renderPlaylist();
+    $("musicName").textContent = "Can’t read that file";
+  }
+};
+// ---------- 온보딩: 인트로 → 설정 4단계 → 테마 선택 → 게임 ----------
+const STEPS = ["camera"];
+let stepIdx = 0;
+const camCheck = { body: false, arms: false, grip: false, left: false, right: false };
+
+function show(name) {
+  document.body.dataset.screen = name;
+  if (name !== "game") $("howto").classList.remove("peek");
+  if (name === "theme") { renderThemes(); renderSongs(); $("driveBtn").disabled = !picked; }
+  if (name === "intro" || name === "setup" || name === "theme") {
+    if (!demo) { demo = true; reset(); }
+  }
+}
+function showStep(i) {
+  const prev = STEPS[stepIdx];
+  stepIdx = i;
+  const key = STEPS[i];
+  document.querySelectorAll(".step").forEach(el => el.classList.toggle("on", el.dataset.step === key));
+  document.querySelectorAll("#stepper li").forEach((li, j) => { li.classList.toggle("on", j === i); li.classList.toggle("done", j < i); });
+  $("backBtn").textContent = i === 0 ? "← Intro" : "Back";
+  placeCam(key === "camera" ? "slot" : "hud");
+  if (key === "camera") { needCalib = true; coachStage = -1; for (const k in camCheck) camCheck[k] = false; }
+}
+// 카메라 카드를 설정 화면 안(크게) 또는 게임 HUD(오른쪽 위)로 옮김
+function placeCam(where) {
+  const card = $("camCard");
+  if (where === "slot") {
+    $("camSlot").append(card); card.classList.add("big"); return;
+  }
+  document.body.append(card); card.classList.remove("big");
+}
+// 카메라 단계 코치: 지금 상태를 보고 "다음에 할 일" 하나만 안내
+// 단계: 0 카메라 켜기 → 1 프레임 안으로 → 2 윤곽선에 몸 맞추기 → 3 손바닥 펴고 핸들 잡기 → 4 왼쪽 → 5 오른쪽 → 6 완료
+const camLive = { seen: false, mid: 0.5, shW: 0, arms: false, holding: false, at: 0 };
+let coachStage = -1, fitFrames = 0;
+const COACH = [
+  ["📷", "Turn on your camera", "We’ll walk you through it one move at a time."],
+  ["🚶", "Step into the frame", "Face the screen so the camera can find you."],
+  ["🧍", "", ""],                                      // 2: 위치에 따라 문구가 바뀜
+  ["🖐️", "Open your palms, arms up", "Raise both hands to chest height, like holding a big steering wheel."],
+  ["⬅️", "Turn left", "Lower your left hand, raise your right — like turning a wheel."],
+  ["➡️", "Now turn right", "Lower your right hand, raise your left."],
+  ["✨", "You’re ready to drive!", "Place your palm on NEXT to continue."],
+];
+function fitAdvice() {
+  if (!camLive.arms) return ["Fit both arms in the frame", "Step back until your elbows and hands are inside the outline."];
+  const x = 1 - camLive.mid;                           // 화면은 거울처럼 보이므로 뒤집어서 판단
+  if (camLive.shW > 0.42) return ["Step back a little", "You’re too close — match your shoulders to the outline."];
+  if (camLive.shW < 0.16) return ["Come a bit closer", "Match your shoulders to the outline."];
+  if (x < 0.38) return ["Move to your right", "Center yourself inside the outline."];
+  if (x > 0.62) return ["Move to your left", "Center yourself inside the outline."];
+  return ["Perfect — hold it there", "You fit the outline."];
+}
+// 핸들 돌리기 / 완료 단계에만 보여주는 작은 일러스트
+const WHEEL_SVG = (dir) => `<svg viewBox="0 0 80 80" aria-hidden="true">
+  <g fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round">
+    <path class="ar" stroke="#ffd45c" stroke-width="4" d="${dir < 0 ? "M52 12 Q40 4 26 10 M26 10 L32 4 M26 10 L33 15" : "M28 12 Q40 4 54 10 M54 10 L48 4 M54 10 L47 15"}"/>
+    <g class="w" stroke-width="5">
+      <circle cx="40" cy="46" r="22"/>
+      <path d="M18 46 H62 M40 46 V68"/>
+      <circle cx="40" cy="46" r="5" fill="#fff"/>
+    </g>
+  </g></svg>`;
+const READY_SVG = `<svg viewBox="0 0 80 80" aria-hidden="true"><g fill="#ffd45c"><path class="s1" d="M38 20 Q38 44 62 44 Q38 44 38 68 Q38 44 14 44 Q38 44 38 20Z"/><path class="s2" d="M62 8 Q62 18 72 18 Q62 18 62 28 Q62 18 52 18 Q62 18 62 8Z"/><path class="s3" d="M18 13 Q18 20 25 20 Q18 20 18 27 Q18 20 11 20 Q18 20 18 13Z"/></g></svg>`;
+let artShown = null;
+function setCoachArt(st) {
+  const kind = st === 4 ? "left" : st === 5 ? "right" : st === 6 ? "ready" : null;
+  if (kind === artShown) return;
+  artShown = kind;
+  const el = $("coachArt");
+  el.hidden = !kind; el.className = "coach-art " + (kind || "");
+  el.innerHTML = kind === "left" ? WHEEL_SVG(-1) : kind === "right" ? WHEEL_SVG(1) : kind === "ready" ? READY_SVG : "";
+}
+function updateCoach() {
+  const fresh = performance.now() - camLive.at < 600;
+  let st;
+  if (!landmarker) st = 0;
+  else if (!fresh || !camLive.seen) st = Math.max(1, Math.min(coachStage, 1));
+  else if (coachStage < 3) {
+    const [t] = fitAdvice();
+    fitFrames = t.startsWith("Perfect") ? fitFrames + 1 : 0;
+    st = fitFrames > 20 ? 3 : 2;                         // 잠깐(약 0.7초) 자세를 유지하면 다음으로
+  } else st = coachStage;
+  // 핸들 단계는 "지금" 동작을 기준으로 한 단계씩 (예전에 우연히 한 동작은 세지 않음)
+  const holdingNow = performance.now() - lastSeen < 300;
+  if (st === 3 && holdingNow) st = 4;
+  else if (st === 4 && holdingNow && steer < -0.5) st = 5;
+  else if (st === 5 && holdingNow && steer > 0.5) st = 6;
+  if (st < coachStage && coachStage >= 3) st = coachStage;   // 한번 지난 단계로는 안 돌아감
+  coachStage = st;
+
+  let [em, title, text] = COACH[st];
+  if (st === 2) [title, text] = fitAdvice();
+  $("coachTitle").textContent = title;
+  setCoachArt(st);
+  $("coach").classList.toggle("done", st === 6);
+  // 윤곽선: 맞춘 부분은 초록, 지금 맞출 부분은 노란색 움직이는 점선
+  const o = $("camOutline"), set = (sel, cls) => o.querySelectorAll(sel).forEach(e => { e.classList.remove("ok", "focus"); if (cls) e.classList.add(cls); });
+  set(".o-head", st >= 2 ? "ok" : st === 1 ? "focus" : null);
+  set(".o-body", st >= 3 ? "ok" : st === 2 ? "focus" : null);
+  set(".o-arms", st >= 3 ? "ok" : st === 2 ? "focus" : null);
+  set(".o-hands", st >= 4 ? "ok" : st === 3 ? "focus" : null);
+  $("nextBtn").classList.toggle("ready", st === 6);
+}
+
+$("goSetup").onclick = () => { show("setup"); showStep(0); };
+$("quickStart").hidden = !hasSaved;
+$("quickStart").onclick = () => show("theme");
+$("backBtn").onclick = () => stepIdx === 0 ? (placeCam("hud"), show("intro")) : showStep(stepIdx - 1);
+$("nextBtn").onclick = () => {
+  if (stepIdx < STEPS.length - 1) return showStep(stepIdx + 1);
+  saveSettings(); placeCam("hud"); show("theme");
+};
+$("camOnBtn").onclick = async () => {
+  if (landmarker) return;
+  $("camOnBtn").disabled = true; $("camOnBtn").textContent = "Starting…";
+  try { await initPose(); $("camOff").hidden = true; $("camCard").classList.add("live"); }
+  catch (err) {
+    console.error(err);
+    $("camOnBtn").disabled = false; $("camOnBtn").textContent = "Try again";
+    $("status").textContent = "Camera/model error — use the keyboard";
+    $("camOffText").textContent = "Couldn’t start the camera. Allow camera access in the browser, or steer with ← →.";
+  }
+};
+
+// 공통: 세그먼트 버튼 (값이 숫자)
+function syncSeg() {
+  document.querySelectorAll(".seg").forEach(seg => {
+    seg.querySelectorAll("button").forEach(b => b.classList.toggle("on", +b.dataset.v === settings[seg.dataset.key]));
+  });
+}
+document.querySelectorAll(".seg").forEach(seg => seg.addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  settings[seg.dataset.key] = +b.dataset.v;
+  if (seg.dataset.key === "sens") applySens();
+  syncSeg(); saveSettings();
+}));
+
+// 노래 설정
+$("volume").value = settings.volume;
+$("volume").oninput = e => { settings.volume = +e.target.value; if (master) master.gain.value = settings.volume; saveSettings(); };
+const bpmSw = $("bpmSpeed");
+bpmSw.setAttribute("aria-checked", settings.bpmSpeed);
+bpmSw.onclick = () => { settings.bpmSpeed = !settings.bpmSpeed; bpmSw.setAttribute("aria-checked", settings.bpmSpeed); saveSettings(); };
+
+// 감도: 1(둔함) ~ 10(예민함) → 핸들 각도·회전 속도·반응 빠르기
+function applySens() {
+  const s = (settings.sens - 1) / 9;
+  WHEEL_MAX = 0.75 - 0.4 * s;      // ±43° ~ ±20°
+  MAX_TURN = 1.8 + 1.4 * s;        // 1.8 ~ 3.2 rad/s
+  TURN_EASE = 14 + 10 * s;          // 반응 지연을 줄이려고 크게 (예전 7~14 → 14~24)
+  $("sensRange").value = settings.sens;
+  $("sensVal").textContent = `${settings.sens} / 10`;
+}
+$("sensRange").oninput = e => { settings.sens = +e.target.value; applySens(); syncSeg(); saveSettings(); };
+
+// 감도 테스트 위젯 (매 프레임)
+function tickSetup() {
+  if (document.body.dataset.screen !== "setup") return;
+  if (STEPS[stepIdx] === "camera") {
+    updateCoach();
+    // 핸들 단계(3) 이후에만 윤곽선 팔이 따라 움직임. 각도 = 게임과 같은 조향 값 × 28° (감도 설정이 그대로 반영됨)
+    const steering = coachStage >= 3 || !!keySteer;
+    poseOutline(steering ? (keySteer || steer) * 28 * Math.PI / 180 : 0, steering);
+  }
+}
+// 윤곽선 팔: 어깨는 고정, 두 손은 핸들 테두리를 따라 돌고, 팔꿈치는 손을 반쯤 따라감
+let outlineA = 0;
+function poseOutline(target, steering) {
+  outlineA += (target - outlineA) * 0.3;
+  const a = outlineA, cx = 200, cy = 178, R = 54;
+  const L = { x: cx - R * Math.cos(a), y: cy - R * Math.sin(a) }, Rr = { x: cx + R * Math.cos(a), y: cy + R * Math.sin(a) };
+  const eL = { x: 96, y: 212 + (L.y - cy) * 0.5 }, eR = { x: 304, y: 212 + (Rr.y - cy) * 0.5 };
+  $("oArms").setAttribute("d", `M138 152 L${eL.x} ${eL.y} L${L.x} ${L.y} M262 152 L${eR.x} ${eR.y} L${Rr.x} ${Rr.y}`);
+  $("oHandL").setAttribute("transform", `translate(${L.x - 146} ${L.y - 178}) rotate(${a * 180 / Math.PI} 146 178)`);
+  $("oHandR").setAttribute("transform", `translate(${Rr.x - 254} ${Rr.y - 178}) rotate(${a * 180 / Math.PI} 254 178)`);
+  $("oWheel").setAttribute("transform", `rotate(${a * 180 / Math.PI} ${cx} ${cy})`);
+  $("camOutline").classList.toggle("steering", steering);
+}
+
+// 테마 화면, 게임 오버
+$("toSettings").onclick = () => { show("setup"); showStep(0); };
+
+// ---------- 박자 싱크 보정: 메트로놈 8박을 듣고 박자마다 탭 → 평균 차이를 화면 지연값으로 ----------
+function updateSyncInfo() {
+  $("syncInfo").textContent = settings.syncMs == null
+    ? `Auto (${Math.round(visualDelay() * 1000)} ms device delay)`
+    : `Calibrated: visuals ${settings.syncMs >= 0 ? "+" : ""}${settings.syncMs} ms`;
+}
+let syncRun = null;
+$("syncCalBtn").onclick = () => {
+  const ctx = ac(); ctx.resume();
+  const resumeItem = activeItem;               // 보정이 끝나면 듣던 곡을 다시 틀어줌
+  stopMusic();
+  const N = 8, start = ctx.currentTime + 0.6, gap = 0.6;       // 100 BPM 메트로놈
+  const beats = Array.from({ length: N }, (_, i) => start + i * gap);
+  beats.forEach(t => SYN.kick(t, 0.9));
+  const taps = [];
+  $("syncCal").hidden = false;
+  $("syncDots").replaceChildren(...beats.map(() => document.createElement("i")));
+  // 점은 "예정 시각"에 깜빡임 (보정 전이라 일부러 오디오 시계 그대로)
+  const timers = beats.map((t, i) => setTimeout(() => { const d = $("syncDots").children[i]; d?.classList.add("beat"); setTimeout(() => d?.classList.remove("beat"), 120); }, (t - ctx.currentTime) * 1000));
+  syncRun = { beats, taps, timers, resumeItem };
+  setTimeout(finishSync, (beats[N - 1] - ctx.currentTime + 0.8) * 1000);
+};
+function syncTap() {
+  if (!syncRun) return;
+  const now = audioCtx.currentTime;
+  const near = syncRun.beats.reduce((a, b) => Math.abs(b - now) < Math.abs(a - now) ? b : a);
+  if (Math.abs(near - now) < 0.3) {
+    syncRun.taps.push(now - near);
+    $("syncDots").children[syncRun.beats.indexOf(near)]?.classList.add("done");
+  }
+}
+function finishSync() {
+  if (!syncRun) return;
+  const t = syncRun.taps.slice().sort((a, b) => a - b);
+  if (t.length >= 4) {
+    const core = t.slice(1, -1);                                  // 가장 튀는 값 빼고 평균
+    settings.syncMs = Math.round(core.reduce((a, b) => a + b, 0) / core.length * 1000);
+    saveSettings();
+  }
+  const item = syncRun.resumeItem;
+  syncRun = null;
+  $("syncCal").hidden = true;
+  updateSyncInfo();
+  if (item) {
+    playItem(item);
+    if (settingsFrom === "pause") audioCtx.suspend();   // 일시정지 중이었으면 다시 멈춰 둠
+  }
+}
+$("syncTap").onclick = syncTap;
+$("syncAutoBtn").onclick = () => { settings.syncMs = null; saveSettings(); updateSyncInfo(); };
+addEventListener("keydown", e => { if (e.key === " " && syncRun) { e.preventDefault(); syncTap(); } });
+
+// ---------- 일시정지: 시간·움직임·음악을 모두 멈춤 ----------
+function pauseGame() {
+  if (!running || document.body.dataset.screen !== "game") return;
+  running = false;
+  audioCtx?.suspend();
+  show("pause");
+}
+function resumeGame() {
+  if (document.body.dataset.screen !== "pause") return;
+  audioCtx?.resume();
+  running = true; needCalib = true;
+  show("game");
+}
+function leavePause() { audioCtx?.resume(); running = false; }
+$("pauseBtn").onclick = pauseGame;
+$("resumeBtn").onclick = resumeGame;
+$("restartBtn").onclick = () => { leavePause(); startGame(); };
+$("pauseSongBtn").onclick = () => { leavePause(); show("theme"); };
+$("pauseSettingsBtn").onclick = () => openSettings();
+$("quitBtn").onclick = () => { leavePause(); stopMusic(); show("intro"); };
+
+// 설정 화면: 어느 화면에서 열었는지 기억했다가 Done 누르면 그 화면으로
+let settingsFrom = "intro";
+function openSettings() {
+  settingsFrom = document.body.dataset.screen;
+  updateSyncInfo();
+  if (settingsFrom === "setup") placeCam("hud");
+  show("settings");
+}
+document.querySelectorAll("[data-open-settings]").forEach(b => b.onclick = openSettings);
+$("closeSettings").onclick = () => {
+  saveSettings();
+  show(settingsFrom);
+  if (settingsFrom === "setup") showStep(stepIdx);
+};
+$("resetSettings").onclick = () => {
+  settings = { ...DEFAULTS }; saveSettings(); applySens(); syncSeg();
+  $("volume").value = settings.volume; bpmSw.setAttribute("aria-checked", settings.bpmSpeed);
+  if (master) master.gain.value = settings.volume;
+};
+$("driveBtn").onclick = () => { if (picked && picked !== activeItem) playItem(picked); showMission(); };
+
+// 출발 직전 미션 안내: 10초 뒤 자동 출발, 버튼(손바닥/Space)으로 바로 출발
+let missionTimer = null;
+function showMission() {
+  demo = false; stage = 1; setTempo(tempoFor(1));
+  reset();                                     // 텐트·제한 시간을 미리 정해서 안내에 보여줌
+  $("missionStage").textContent = stage;
+  $("missionTime").textContent = `${Math.round(timeLeft)}s`;
+  placeCam("hud"); show("mission");
+  let n = 10; $("goCount").textContent = n;   // 10초 뒤 자동 출발
+  clearInterval(missionTimer);
+  missionTimer = setInterval(() => { n--; $("goCount").textContent = n; if (n <= 0) beginRun(); }, 1000);
+}
+function beginRun() {
+  clearInterval(missionTimer);
+  if (document.body.dataset.screen !== "mission") return;
+  running = true; needCalib = true; titleT = 0;
+  show("game");
+}
+$("goBtn").onclick = beginRun;
+$("againBtn").onclick = () => startGame();
+$("nextStageBtn").onclick = nextStage;
+$("changeSongBtn").onclick = () => show("theme");
+$("settingsBtn").onclick = openSettings;
+$("helpBtn").onclick = () => $("howto").classList.toggle("peek");
+
+
+// ---------- 방향 표시(나침반) ----------
+function showWheel(a, holding) {
+  const n = $("needle");
+  n.classList.toggle("on", holding);
+  n.style.transform = `rotate(${a}rad)`;
+}
+
+// ---------- Keyboard fallback ----------
+let keySteer = 0;
+const held = new Set();
+function updateKeySteer() {
+  keySteer = (held.has("right") ? 1 : 0) - (held.has("left") ? 1 : 0);
+  if (keySteer || !landmarker) showWheel(keySteer * 0.9, !!keySteer);
+}
+const KEY_SIDE = { ArrowLeft: "left", a: "left", ArrowRight: "right", d: "right" };
+addEventListener("keydown", e => {
+  if (e.key in KEY_SIDE) { e.preventDefault(); held.add(KEY_SIDE[e.key]); updateKeySteer(); }
+  // Esc / P: 게임 중이면 일시정지, 일시정지 중이면 계속
+  if (e.key === "Escape" || e.key === "p" || e.key === "P") {
+    if (document.body.dataset.screen === "game") pauseGame();
+    else if (document.body.dataset.screen === "pause") resumeGame();
+  }
+  if (e.key === " " && !running) {
+    const scr = document.body.dataset.screen;
+    if (scr === "over") { e.preventDefault(); startGame(); }
+    else if (scr === "clear") { e.preventDefault(); nextStage(); }
+    else if (scr === "mission") { e.preventDefault(); beginRun(); }
+    else if (scr === "pause") { e.preventDefault(); resumeGame(); }
+    else if (scr === "theme" && picked) { e.preventDefault(); $("driveBtn").click(); }
+  }
+});
+addEventListener("keyup", e => {
+  if (e.key in KEY_SIDE) { held.delete(KEY_SIDE[e.key]); updateKeySteer(); }
+});
+// ---------- MediaPipe Pose (양팔 핸들) ----------
+const video = $("video"), camCanvas = $("camCanvas"), cctx = camCanvas.getContext("2d");
+let landmarker = null, lastVideoTime = -1;
+let steerSmoothed = 0, upFrames = 0, lastSeen = 0, needCalib = false, wheelZero = 0;
+let wheel = 0, fps = 0, lastFrameT = 0;
+const WHEEL_DEAD = 0.035;     // ±2° 안쪽은 직진 (손 떨림 무시)
+let WHEEL_MAX = 0.55;         // ±32° 꺾으면 최대 회전 – 감도 설정으로 바뀜
+const GRACE_MS = 350;         // 손이 잠깐 안 잡혀도 이 시간 동안은 마지막 핸들 값 유지
+
+// One Euro Filter: 가만히 있을 땐 강하게 떨림 제거, 빨리 돌릴 땐 지연 없이 따라감
+class OneEuro {
+  constructor(minCutoff = 1.0, beta = 0.8, dCutoff = 1.0) { Object.assign(this, { minCutoff, beta, dCutoff, x: null, dx: 0, t: 0 }); }
+  alpha(cutoff, dt) { const r = 2 * Math.PI * cutoff * dt; return r / (r + 1); }
+  filter(v, t) {
+    if (this.x === null) { this.x = v; this.t = t; return v; }
+    const dt = Math.max(1e-3, (t - this.t) / 1000); this.t = t;
+    const dv = (v - this.x) / dt;
+    this.dx += this.alpha(this.dCutoff, dt) * (dv - this.dx);
+    const cutoff = this.minCutoff + this.beta * Math.abs(this.dx);
+    this.x += this.alpha(cutoff, dt) * (v - this.x);
+    return this.x;
+  }
+}
+const wheelFilter = new OneEuro(3.5, 4);   // 가만히 있을 땐 떨림 제거, 움직이면 즉시 따라감
+
+async function initPose() {
+  $("status").textContent = "Loading model…";
+  const vision = await FilesetResolver.forVisionTasks(
+    "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm");
+  landmarker = await PoseLandmarker.createFromOptions(vision, {
+    baseOptions: {
+      // 반응 속도 우선: lite 모델 (full보다 2~3배 빨라 팔 움직임이 더 빨리 반영됨)
+      modelAssetPath: "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task",
+      delegate: "GPU",
+    },
+    runningMode: "VIDEO",
+    numPoses: 1,
+    minPoseDetectionConfidence: 0.4,
+    minPosePresenceConfidence: 0.4,
+    minTrackingConfidence: 0.4,
+  });
+  $("status").textContent = "Starting camera…";
+  const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 960, height: 540, facingMode: "user" } });
+  video.srcObject = stream;
+  await video.play();
+  camCanvas.width = video.videoWidth; camCanvas.height = video.videoHeight;
+  $("status").textContent = "Tracking";
+  requestAnimationFrame(poseLoop);
+}
+
+function poseLoop() {
+  if (video.currentTime !== lastVideoTime) {
+    lastVideoTime = video.currentTime;
+    const now = performance.now();
+    fps = fps * 0.9 + (1000 / Math.max(1, now - lastFrameT)) * 0.1; lastFrameT = now;
+    const res = landmarker.detectForVideo(video, now);
+    handleArms(res.landmarks[0], now);
+  }
+  requestAnimationFrame(poseLoop);
+}
+
+// 팔 하나의 "손잡이 위치" = 팔꿈치와 손목을 신뢰도(visibility)로 가중 평균
+// 손목만 쓰면 몸통 앞에서 자주 튀지만, 팔꿈치를 섞으면 훨씬 안정적
+function armGrip(lm, elbowIdx, wristIdx, W, H) {
+  const e = lm[elbowIdx], w = lm[wristIdx];
+  const we = Math.max(0, e.visibility) * 0.8, ww = Math.max(0, w.visibility) * 1.2;   // 손목을 조금 더 신뢰
+  const sum = we + ww;
+  if (sum < 0.5) return null;
+  const x = (e.x * we + w.x * ww) / sum, y = (e.y * we + w.y * ww) / sum;
+  return { x: (1 - x) * W, y: y * H, wristY: w.y * H };   // 거울 반전 + 픽셀 단위
+}
+
+// 랜드마크: 0 코, 11/12 왼·오른 어깨, 13/14 팔꿈치, 15/16 손목 (사람 기준)
+function handleArms(lm, now) {
+  const W = camCanvas.width, H = camCanvas.height;
+  cctx.clearRect(0, 0, W, H);
+  if (!lm) { letGo(now, "No one in view"); return; }
+  camCheck.body = true;
+  camLive.seen = true; camLive.at = performance.now();
+  // 손바닥 커서: 더 높이 든 손목을 사용
+  const wr = [lm[15], lm[16]].filter(p => p.visibility > 0.5).sort((a, b) => a.y - b.y)[0];
+  if (wr) { palmRaw.x = wr.x; palmRaw.y = wr.y; palmRaw.at = performance.now(); }
+  camLive.mid = (lm[11].x + lm[12].x) / 2; camLive.shW = Math.abs(lm[11].x - lm[12].x);
+
+  // 관절 선(스켈레톤)은 그리지 않음 – 설정 화면은 사람 윤곽선, 게임 중엔 핸들만 보여줌
+
+  // 사람의 오른팔은 반전된 화면에서 오른쪽에 보임
+  const Larm = armGrip(lm, 13, 15, W, H);   // 사람 왼팔 → 화면 왼쪽
+  const Rarm = armGrip(lm, 14, 16, W, H);   // 사람 오른팔 → 화면 오른쪽
+  const shoulderY = (lm[11].y + lm[12].y) / 2 * H;
+  const shoulderW = Math.hypot((lm[11].x - lm[12].x) * W, (lm[11].y - lm[12].y) * H);
+
+  // 재시작: 양 손목을 코보다 위로 0.5초 (만세)
+  const bothUp = lm[15].y < lm[0].y && lm[16].y < lm[0].y && lm[15].visibility > 0.4 && lm[16].visibility > 0.4;
+  upFrames = bothUp ? upFrames + 1 : 0;
+  if (!running && upFrames > 15 && document.body.dataset.screen === "over") { upFrames = 0; startGame(); }
+  if (!running && upFrames > 15 && document.body.dataset.screen === "clear") { upFrames = 0; nextStage(); }
+
+  // 핸들을 잡은 상태: 양팔이 보이고, 손목이 가슴 높이 근처까지 올라와 있음 (팔을 늘어뜨리면 놓은 것)
+  const raised = arm => arm && arm.wristY < shoulderY + shoulderW * 1.1;
+  if (Larm && Rarm) camCheck.arms = true;
+  camLive.arms = !!(Larm && Rarm && lm[15].visibility > 0.5 && lm[16].visibility > 0.5);
+  drawGrabNext(lm, W, H);
+  if (!(raised(Larm) && raised(Rarm)) || Rarm.x <= Larm.x) {
+    letGo(now, !Larm || !Rarm ? "Keep both arms in view" : "Raise your arms to grip the wheel");
+    return;
+  }
+  lastSeen = now;
+
+  const raw = Math.atan2(Rarm.y - Larm.y, Rarm.x - Larm.x);   // 오른팔이 내려가면 + = 우회전
+  if (needCalib) { wheelZero = Math.abs(raw) < 0.35 ? raw : 0; needCalib = false; wheelFilter.x = null; }
+
+  wheel = wheelFilter.filter(raw - wheelZero, now);
+  const mag = Math.max(0, Math.abs(wheel) - WHEEL_DEAD) / (WHEEL_MAX - WHEEL_DEAD);
+  steer = Math.sign(wheel) * Math.min(1, mag);   // 팔 각도에 정비례
+  camCheck.grip = true;
+  if (steer < -0.5) camCheck.left = true;
+  if (steer > 0.5) camCheck.right = true;
+
+  if (document.body.dataset.screen !== "setup") drawWheel(Larm, Rarm);   // 설정 화면에선 핸들도 숨김
+  showWheel(wheel, true);
+  $("status").textContent = "Steering";   // 각도·fps 같은 수치는 화면에 표시하지 않음
+}
+
+// ---------- 손바닥 커서: 들어 올린 손을 화면 위 커서로 ----------
+// 손목 좌표(카메라)를 화면 좌표로 옮겨서, data-palm 버튼 위에 1초 머물면 클릭
+const PALM_SCREENS = ["theme", "over", "clear", "mission", "pause"];
+const palmRaw = { x: 0.5, y: 0.5, at: 0 };
+const palmCur = { x: innerWidth / 2, y: innerHeight / 2 };
+let palmEl = null, palmT = 0, palmCool = 0, palmLastT = 0;
+// 카메라가 없을 때(미리보기·데모)는 마우스가 손바닥 역할을 대신함
+const palmMouse = { x: 0, y: 0, at: 0 };
+addEventListener("mousemove", e => { palmMouse.x = e.clientX; palmMouse.y = e.clientY; palmMouse.at = performance.now(); });
+function tickPalm() {
+  const now = performance.now(), dt = Math.min(0.1, (now - (palmLastT || now)) / 1000); palmLastT = now;
+  const cursor = $("palm");
+  const useCam = !!landmarker && now - palmRaw.at < 400;
+  const useMouse = !landmarker && now - palmMouse.at < 2500;
+  const on = PALM_SCREENS.includes(document.body.dataset.screen) && (useCam || useMouse);
+  $("palmHint").textContent = landmarker ? "✋ Move your palm to a card · hold to pick" : "✋ No camera — your mouse is the palm · hover & hold to pick";
+  cursor.classList.toggle("on", on);
+  if (!on) { palmT = 0; setPalmEl(null); return; }
+  let tx, ty;
+  if (useCam) {
+    // 화면은 거울처럼: x를 뒤집고, 카메라 가운데 영역을 화면 전체로 넓혀서 팔을 조금만 움직여도 끝까지 닿게
+    tx = Math.min(1, Math.max(0, ((1 - palmRaw.x) - 0.2) / 0.6)) * innerWidth;
+    ty = Math.min(1, Math.max(0, (palmRaw.y - 0.15) / 0.55)) * innerHeight;
+  } else { tx = palmMouse.x; ty = palmMouse.y; }
+  palmCur.x += (tx - palmCur.x) * 0.35; palmCur.y += (ty - palmCur.y) * 0.35;
+  cursor.style.transform = `translate(${palmCur.x}px, ${palmCur.y}px)`;
+
+  palmCool = Math.max(0, palmCool - dt);
+  const hit = document.elementFromPoint(palmCur.x, palmCur.y)?.closest("[data-palm]:not(:disabled)");
+  const keyOf = el => el ? (el.dataset.key || el.id || el) : null;
+  if (keyOf(hit) !== keyOf(palmEl)) { setPalmEl(hit); palmT = 0; }
+  else if (hit !== palmEl) { palmEl = hit; hit?.classList.add("palm-on"); }   // 같은 항목이 다시 그려진 경우: 타이머 유지
+  palmT = hit && palmCool <= 0 ? palmT + dt : 0;
+  const k = Math.min(1, palmT / 1.0);
+  $("palmFill").setAttribute("stroke-dasharray", `${k * 100} 100`);
+  cursor.classList.toggle("hover", !!hit);
+  if (k >= 1) { palmT = 0; palmCool = 0.8; hit.click(); }
+}
+function setPalmEl(el) {
+  palmEl?.classList.remove("palm-on");
+  palmEl = el;
+  el?.classList.add("palm-on");
+  previewFor(el);
+}
+// 손바닥이 닿는 순간(activate) 미리듣기: 무드 카드는 그 테마의 대표곡, 곡 카드는 그 곡
+function previewFor(el) {
+  const key = el?.dataset.key || "";
+  let item = null;
+  if (key.startsWith("theme:")) {
+    const id = key.slice(6);
+    if (activeItem?.theme === id) return;               // 이미 그 테마 곡이 나오고 있으면 그대로
+    item = playlist.find(it => it.theme === id && !it.loading);
+  } else if (key.startsWith("song:")) item = playlist[+key.slice(5)];
+  if (item && !item.loading && item !== activeItem) playItem(item);
+}
+
+// "NEXT" 원 잡기: 준비 완료 단계에서 화면 오른쪽 위 원에 손바닥을 1초 대면 다음 단계로
+// (카메라 캔버스는 CSS로 좌우 반전되므로 원본 좌표 x=0.22 → 화면에서는 오른쪽 위에 보임)
+const GRAB = { x: 0.22, y: 0.22, r: 0.085, hold: 1.0 };   // 화면 기준 오른쪽 위
+let grabT = 0, grabLast = 0;
+function drawGrabNext(lm, W, H) {
+  const active = document.body.dataset.screen === "setup" && STEPS[stepIdx] === "camera" && coachStage === 6;
+  const now = performance.now();
+  const dt = Math.min(0.1, (now - (grabLast || now)) / 1000); grabLast = now;
+  if (!active) { grabT = 0; return; }
+  const cx = GRAB.x * W, cy = GRAB.y * H, R = GRAB.r * W;
+  // 손목(15, 16) 중 하나라도 원 안에 들어오면 채워짐
+  const inside = [lm[15], lm[16]].some(p => p.visibility > 0.4 && Math.hypot((p.x - GRAB.x) * W, (p.y - GRAB.y) * H) < R * 1.15);
+  grabT = inside ? grabT + dt : Math.max(0, grabT - dt * 2);
+  const k = Math.min(1, grabT / GRAB.hold), pulse = 1 + Math.sin(now / 250) * 0.04;
+
+  cctx.save();
+  cctx.fillStyle = inside ? "rgba(126,232,176,.35)" : "rgba(255,255,255,.14)";
+  cctx.beginPath(); cctx.arc(cx, cy, R * pulse, 0, Math.PI * 2); cctx.fill();
+  cctx.lineWidth = 6; cctx.strokeStyle = "rgba(255,255,255,.85)"; cctx.setLineDash([12, 10]);
+  cctx.beginPath(); cctx.arc(cx, cy, R * pulse, 0, Math.PI * 2); cctx.stroke(); cctx.setLineDash([]);
+  if (k > 0) {                                           // 채워지는 링
+    cctx.lineWidth = 10; cctx.strokeStyle = "#7ee8b0"; cctx.lineCap = "round";
+    cctx.beginPath(); cctx.arc(cx, cy, R + 10, -Math.PI / 2, -Math.PI / 2 - k * Math.PI * 2, true); cctx.stroke();
+  }
+  // 글자는 캔버스가 반전돼 있으니 다시 뒤집어서 씀
+  cctx.translate(cx, cy); cctx.scale(-1, 1);
+  cctx.fillStyle = "#fff"; cctx.textAlign = "center"; cctx.textBaseline = "middle";
+  cctx.shadowColor = "rgba(0,0,0,.6)"; cctx.shadowBlur = 8;
+  cctx.font = "800 34px Outfit, sans-serif"; cctx.fillText("NEXT", 0, -8);
+  cctx.font = "700 14px 'Space Mono', monospace"; cctx.fillText("PLACE PALM", 0, 24);
+  cctx.restore();
+
+  if (k >= 1) { grabT = 0; $("nextBtn").click(); }
+}
+
+// 잠깐 놓친 건 무시하고 마지막 값 유지, 오래 놓치면 핸들이 가운데로 돌아옴
+function letGo(now, msg) {
+  if (now - lastSeen > GRACE_MS) { steer = 0; wheel *= 0.85; }
+  showWheel(wheel, false);
+  $("status").textContent = msg;
+}
+
+// 카메라 화면 위에 가상 핸들 (캔버스는 CSS로 반전되므로 x를 다시 뒤집어 그림)
+function drawWheel(L, R) {
+  const W = camCanvas.width;
+  const cx = W - (L.x + R.x) / 2, cy = (L.y + R.y) / 2, r = Math.hypot(R.x - L.x, R.y - L.y) / 2;
+  cctx.save();
+  cctx.translate(cx, cy);
+  cctx.scale(-1, 1);
+  cctx.rotate(wheel);
+  cctx.strokeStyle = "rgba(255,255,255,.85)";
+  cctx.lineWidth = 4;
+  cctx.beginPath(); cctx.arc(0, 0, r, 0, Math.PI * 2); cctx.stroke();
+  cctx.lineWidth = 3;
+  cctx.beginPath(); cctx.moveTo(-r, 0); cctx.lineTo(r, 0); cctx.moveTo(0, 0); cctx.lineTo(0, r); cctx.stroke();
+  cctx.fillStyle = "#ff4d2e";
+  cctx.beginPath(); cctx.arc(0, -r, 9, 0, Math.PI * 2); cctx.fill();
+  cctx.restore();
+}
+
+applySens(); syncSeg();   // 감도 값은 아래 MediaPipe 상수들이 선언된 뒤에 적용
+reset();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
