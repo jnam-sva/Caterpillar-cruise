@@ -14,7 +14,7 @@
 <body data-screen="intro">
 <canvas id="board" aria-label="Game view"></canvas>
 
-<!-- ===== 게임 중 HUD ===== -->
+<!-- ===== In-game HUD ===== -->
 <div class="hud tl">
   <div class="now glass">
     <span class="disc">♫</span>
@@ -39,7 +39,7 @@
 </div>
 <div class="hud bl logo">CATERPILLAR CRUISE<i>.</i></div>
 
-<!-- 가운데 위: 스테이지 · 남은 시간 · 텐트까지 거리 -->
+<!-- Top center: stage · time left · distance to the tent -->
 <div class="hud tc glass" id="stageHud">
   <div><span class="mono">Stage</span><b id="stageNum">1</b></div>
   <div class="timer"><span class="mono">Time</span><b id="timeLeft">0:45</b></div>
@@ -55,7 +55,7 @@
   <div class="cam">
     <video id="video" playsinline muted></video>
     <canvas id="camCanvas"></canvas>
-    <!-- 핸들 단계 일러스트: 카메라 화면 안 위쪽 가운데 -->
+    <!-- Wheel step illustration: top center inside the camera view -->
     <div class="coach-art" id="coachArt" hidden></div>
     <div class="off" id="camOff">
       <div>
@@ -63,12 +63,12 @@
         <button class="btn" id="camOnBtn">Turn on camera</button>
       </div>
     </div>
-    <!-- 몸을 맞출 사람 윤곽선 (카메라 설정 단계에서만) -->
+    <!-- Person outline to fit your body into (camera setup only) -->
     <svg class="outline" id="camOutline" viewBox="0 -30 400 300" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
       <g fill="none" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="10 9">
         <circle class="o-head" cx="200" cy="88" r="32"/>
         <path class="o-body" d="M138 150 Q200 128 262 150 L272 300 M138 150 L128 300"/>
-        <!-- 핸들 단계부터: 팔·손·핸들이 내 조향 각도에 맞춰 기울어짐 (머리·몸통은 고정) -->
+        <!-- From the wheel step on: arms, hands and wheel tilt with your steering (head and body stay still) -->
         <g class="o-wheel" id="oWheel"><circle cx="200" cy="178" r="54"/><path d="M146 178 H254 M200 178 V232"/></g>
         <path class="o-arms" id="oArms" d="M138 152 L96 212 L146 178 M262 152 L304 212 L254 178"/>
         <g class="o-hands">
@@ -86,7 +86,7 @@
   </div>
 </div>
 
-<!-- ===== 1. 인트로 ===== -->
+<!-- ===== 1. Intro ===== -->
 <section class="screen" id="s-intro" aria-label="Intro">
   <div>
     <h1 class="intro-title">
@@ -101,7 +101,7 @@
   </div>
 </section>
 
-<!-- ===== 2. 유저 설정 ===== -->
+<!-- ===== 2. Player setup ===== -->
 <section class="screen" id="s-setup" aria-label="Setup">
   <div class="panel glass">
     <ol class="stepper" id="stepper">
@@ -109,10 +109,10 @@
       <li><span class="mono">2 · Music</span></li>
     </ol>
 
-    <!-- ① 카메라 + 조향: 가이드, 카메라, 체크, 감도 테스트를 한 화면에 -->
+    <!-- ① Camera + steering: guide, camera, checks and sensitivity test on one screen -->
     <div class="step" data-step="camera">
       <div class="cam-wrap">
-        <!-- 지금 해야 할 일 하나만 크게 보여주는 안내 (카메라 바로 위, 가운데) -->
+        <!-- Hint that shows only the one thing to do now (centered, right above the camera) -->
         <div class="coach" id="coach">
           <h3 id="coachTitle">Turn on your camera</h3>
         </div>
@@ -136,7 +136,7 @@
   </div>
 </section>
 
-<!-- ===== 설정 (온보딩 어디서든 하단 링크로 열기) ===== -->
+<!-- ===== Settings (opens from the bottom link anywhere in onboarding) ===== -->
 <section class="screen" id="s-settings" aria-label="Settings">
   <div class="panel glass settings-panel">
     <h2 class="settings-title">Settings</h2>
@@ -184,7 +184,7 @@
   </div>
 </section>
 
-<!-- ===== 3. 노래 테마 선택 ===== -->
+<!-- ===== 3. Song theme selection ===== -->
 <section class="screen" id="s-theme" aria-label="Choose music">
   <div class="panel glass">
     <ol class="stepper">
@@ -206,7 +206,7 @@
   </div>
 </section>
 
-<!-- ===== 게임 오버 ===== -->
+<!-- ===== Game over ===== -->
 <section class="screen" id="s-over" aria-label="Game over">
   <div class="panel glass">
     <h2>CRASH!</h2>
@@ -226,7 +226,7 @@
   </div>
 </section>
 
-<!-- ===== 미션 안내 (출발 직전) ===== -->
+<!-- ===== Mission briefing (right before the start) ===== -->
 <section class="screen" id="s-mission" aria-label="Mission">
   <div class="panel glass mission">
     <span class="mono">Stage <span id="missionStage">1</span> · Mission</span>
@@ -257,7 +257,7 @@
         <path d="M0 -10 V0 L7 5" fill="none" stroke="#2a1a33" stroke-width="3" stroke-linecap="round"/>
       </g>
     </svg>
-    <!-- 큰 아이콘 + 짧은 한마디로 한눈에 -->
+    <!-- Big icons + a short line, readable at a glance -->
     <ul class="mission-tips">
       <li><b>⛺</b><strong>Go home</strong><span>Follow the arrow</span></li>
       <li><b>⏱</b><strong id="missionTime">—</strong><span>Time limit</span></li>
@@ -275,7 +275,7 @@
   </div>
 </section>
 
-<!-- ===== 스테이지 클리어 ===== -->
+<!-- ===== Stage clear ===== -->
 <section class="screen" id="s-clear" aria-label="Stage clear">
   <div class="panel glass">
     <h2><span class="em">⛺</span>STAGE <span id="clearNum">1</span> CLEAR!</h2>
@@ -292,7 +292,7 @@
   </div>
 </section>
 
-<!-- 손바닥 커서: 카메라로 손을 따라다니며, 버튼 위에서 핀치하면 선택 (손 모델이 없으면 1초 머물기) -->
+<!-- Palm cursor: follows your hand through the camera; pinch over a button to select (without the hand model, hover for 1 second) -->
 <div id="palm" aria-hidden="true">
   <svg viewBox="0 0 64 64">
     <circle class="track" cx="32" cy="32" r="28"/>
@@ -303,12 +303,12 @@
       <rect x="1.8" y="-17" width="4.5" height="16" rx="2.25"/><rect x="7" y="-13" width="4" height="12" rx="2"/>
       <rect x="-15" y="-1" width="4.5" height="11" rx="2.25" transform="rotate(-35 -12.75 4.5)"/>
     </g>
-    <!-- 핀치 손: 엄지와 검지가 벌어진 모양 → 집으면 끝이 맞닿음 (손 모델이 손을 볼 때만) -->
+    <!-- Pinch hand: thumb and index apart → tips touch when you pinch (only while the hand model sees a hand) -->
     <g class="pinch-g" transform="translate(32 33) scale(.8)"><g class="p-open" id="pinchOpen"></g><g class="p-closed" id="pinchShut"></g></g>
   </svg>
 </div>
 
-<!-- 게임 중: 설명 카드 -->
+<!-- In game: help card -->
 <div class="howto" id="howto">
   <div class="c glass"><div class="em">🛞</div><h4>Steer</h4><p>Lower one arm to turn that way. Drop both arms to go straight.</p></div>
   <div class="c glass"><div class="em">⛺</div><h4>Take it home</h4><p>The caterpillar wants to go home. Follow the big HOME arrow to its tent before time runs out.</p></div>
@@ -321,7 +321,7 @@
 <button class="pause-btn glass" id="pauseBtn" aria-label="Pause (Esc)">❚❚</button>
 <div class="pause-tip glass" id="pauseTip"><b><svg class="t-pose" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="2.6"/><path d="M2 10.5 H22 M12 8 V16 L8.5 22 M12 16 L15.5 22"/></svg></b><span>Arms out wide<br>to pause</span></div>
 
-<!-- ===== 일시정지 ===== -->
+<!-- ===== Pause ===== -->
 <section class="screen" id="s-pause" aria-label="Paused">
   <div class="panel glass pause-panel">
     <h2>Paused</h2>
@@ -351,24 +351,24 @@ import {
 import { initHands, readHands, hands, cursorHand, isPinched, pinchAmount } from "./js/hands.js";
 import { pinchSVG, drawPinchHand } from "./js/pinch-icon.js";
 
-// ---------- Game: 드라이브 시점 (카메라가 뱀을 따라가며 회전) ----------
-let VW = VIEW, VH = VIEW, CX = VW / 2, CY = VH * 0.66;   // 화면 크기와 뱀 머리 위치 (앞쪽을 더 많이 보이게 아래쪽)
+// ---------- Game: driving view (the camera follows the snake and rotates) ----------
+let VW = VIEW, VH = VIEW, CX = VW / 2, CY = VH * 0.66;   // Screen size and snake head position (lower on screen so you see more ahead)
 const board = document.getElementById("board");
 const ctx = board.getContext("2d");
 const $ = id => document.getElementById(id);
 
-// ---------- 설정 (온보딩에서 정하고 브라우저에 기억) ----------
+// ---------- Settings (chosen in onboarding, remembered by the browser) ----------
 let settings = { ...DEFAULTS }, hasSaved = false;
 try { const s = JSON.parse(localStorage.getItem("armsnake-settings")); if (s) { settings = { ...DEFAULTS, ...s }; hasSaved = true; } } catch {}
-if (settings.obstacles > 2) settings.obstacles = settings.obstacles >= 50 ? 2 : 1;   // 예전 저장값(콘 개수) → 단계
+if (settings.obstacles > 2) settings.obstacles = settings.obstacles >= 50 ? 2 : 1;   // Old saved value (cone count) → level
 function saveSettings() { try { localStorage.setItem("armsnake-settings", JSON.stringify(settings)); } catch {} }
 
-let MAX_TURN = 2.4;           // 핸들 끝까지 꺾었을 때 초당 회전량(rad) – 감도 설정으로 바뀜
-let TURN_EASE = 11;           // 회전 속도가 목표에 따라붙는 빠르기 – 작을수록 부드러움
-const headR = () => 12;       // 머리 크기 (충돌 판정에도 사용)
+let MAX_TURN = 2.4;           // Turn per second (rad) at full lock – changes with sensitivity
+let TURN_EASE = 11;           // How fast the turn rate catches up to the target – smaller is smoother
+const headR = () => 12;       // Head size (also used for collisions)
 
 let obstacles = [], demo = true;
-// 스테이지: 텐트(목적지)에 시간 안에 도착하면 다음 스테이지 (비트 빨라짐, 장애물 늘어남)
+// Stage: reach the tent (goal) in time for the next stage (faster beat, more obstacles)
 let stage = 1, tent = null, timeLeft = 0, tempo = 1, tripStart = 1;
 let boostT = 0;
 let mp = MP_MAX, invuln = 0, hitFlash = 0;
@@ -385,7 +385,7 @@ let best = 0;
 try { best = +localStorage.getItem("armsnake-best") || 0; } catch {}
 $("best").textContent = best;
 
-// 감긴 세계에서 가장 가까운 차이 (-WORLD/2 ~ WORLD/2)
+// Shortest difference in the wrapped world (-WORLD/2 ~ WORLD/2)
 const wrapDelta = d => ((d + WORLD / 2) % WORLD + WORLD) % WORLD - WORLD / 2;
 const wrap = v => ((v % WORLD) + WORLD) % WORLD;
 const wdist = (a, b) => Math.hypot(wrapDelta(a.x - b.x), wrapDelta(a.y - b.y));
@@ -393,7 +393,7 @@ const angleDiff = (a, b) => Math.atan2(Math.sin(b - a), Math.cos(b - a));
 
 function reset() {
   head = { x: WORLD / 2, y: WORLD / 2 };
-  // 출발 지점과 그 앞쪽이 나무·바위로 막혀 있지 않은 곳에서 시작
+  // Start where the spot and the path ahead are not blocked by trees or rocks
   for (let tries = 0; tries < 60 && (solidAt(head, 90) || solidAt({ x: head.x, y: head.y - 160 }, 70)); tries++) {
     head = { x: Math.random() * WORLD, y: Math.random() * WORLD };
   }
@@ -403,7 +403,7 @@ function reset() {
   for (let d = 0; d <= START_LEN; d += 4) trail.push({ x: head.x, y: head.y + d });
   length = START_LEN; baseSpeed = START_SPEED; speed = goalSpeed(); score = 0;
   $("score").textContent = 0;
-  // 장애물(트래픽 콘): 출발 지점 근처는 비워 둠
+  // Obstacles (traffic cones): keep the area near the start clear
   obstacles = [];
   placeStage();
   fruits = [];
@@ -414,12 +414,12 @@ function pickType() {
   const r = Math.random();
   return r < SHOE_CHANCE ? "shoe" : r < SHOE_CHANCE + GOLD_CHANCE ? "gold" : FRUIT_TYPES[Math.random() * FRUIT_TYPES.length | 0];
 }
-// 먹는 것 = 과일 + 젤리빈
-// 이번 스테이지의 텐트와 콘 배치 (뱀이 지금 있는 곳 기준)
+// Food = fruit + jelly beans
+// This stage's tent and cone layout (based on where the snake is now)
 function conesFor(n) { return Math.round(DENSITY * (settings.obstacles === 2 ? 25 + CONES_STEP * (n - 1) : settings.obstacles === 1 ? 6 * (n - 1) : 0)); }
 function placeStage() {
-  // 텐트: 지금 위치에서 700~1000px 떨어진 곳 (스테이지가 오를수록 조금 더 멀리)
-  // 텐트 거리 = 지금 속도로 약 22초(스테이지마다 +2.5초) 달려야 하는 거리 → 느린 곡·빠른 곡 모두 스테이지가 충분히 길게
+  // Tent: 700–1000px from the current position (a bit farther as stages go up)
+  // Tent distance = about 22 s of driving at the current speed (+2.5 s per stage) → stages stay long enough for both slow and fast songs
   const d = Math.min(3800, Math.max(800, goalSpeed() * driveSecs(stage)));
   tripStart = d;
   for (let tries = 0; tries < 40; tries++) {
@@ -434,7 +434,7 @@ function placeStage() {
     while (wdist(o, head) < 320 || wdist(o, tent) < TENT_R + 80);
     obstacles.push(o);
   }
-  // 제한 시간: 지금 속도로 곧장 가는 시간 × 여유(스테이지가 오를수록 빠듯) + 기본 6초
+  // Time limit: straight-line time at the current speed × slack (tighter as stages go up) + 6 s base
   const slack = Math.max(1.5, 2.4 - (stage - 1) * 0.12);
   timeLeft = Math.round(d / Math.max(40, goalSpeed()) * slack + 8);
 }
@@ -455,12 +455,12 @@ function goalSpeed() {
   return base * (demo ? 0.8 : settings.speed * stageSpeedMul(stage)) * (bpm ? 1 : tempo) * (boostT > 0 ? BOOST_MUL : 1);
 }
 
-// 데모용 자동 운전: 정면·좌·우 세 방향을 미리 살펴보고 막혀 있으면 덜 막힌 쪽으로 꺾음
+// Demo autopilot: looks ahead, left and right, and turns toward the less blocked side
 function demoSteer() {
   const blocked = (da) => {
     for (const d of [50, 100, 150]) {
       const p = { x: head.x + Math.cos(angle + da) * d, y: head.y + Math.sin(angle + da) * d };
-      if (solidAt(p, headR() + 10, true) || obstacles.some(o => wdist(o, p) < o.r + headR() + 10)) return 1 / d;   // 가까울수록 더 위험
+      if (solidAt(p, headR() + 10, true) || obstacles.some(o => wdist(o, p) < o.r + headR() + 10)) return 1 / d;   // Closer means more dangerous
     }
     return 0;
   };
@@ -471,37 +471,37 @@ function demoSteer() {
 }
 
 function update(dt) {
-  // 1) 핸들 → 회전 속도. 회전 속도 자체도 천천히 따라가서(관성) 커브가 매끄러움
-  // 데모(온보딩 화면 뒤): 뱀이 혼자 천천히 굽이굽이 달림
-  // 데모(메인·설정 화면 뒤): 완만하게 흔들리며 직진하되, 앞에 나무·바위·선인장이 있으면 피해 감
+  // 1) Wheel → turn rate. The turn rate itself follows slowly (inertia), so curves are smooth
+  // Demo (behind onboarding screens): the snake winds along slowly on its own
+  // Demo (behind the main and setup screens): sways gently going straight, steering around trees, rocks and cacti ahead
   const input = demo ? demoSteer() : (keySteer || steer);
   const targetTurn = input * MAX_TURN;
   turnRate += (targetTurn - turnRate) * (1 - Math.exp(-TURN_EASE * dt));
   angle += turnRate * dt;
 
-  // 1-2) 속도: 음악이 있으면 BPM에서, 없으면 열매 개수에서. 곡이 바뀌어도 부드럽게 변함
+  // 1-2) Speed: from the BPM with music, otherwise from the fruit count. Changes smoothly when the song changes
   boostT = Math.max(0, boostT - dt);
   speed += (goalSpeed() - speed) * (1 - Math.exp(-1.5 * dt));
 
-  // 2) 머리 전진
+  // 2) Move the head forward
   head = { x: wrap(head.x + Math.cos(angle) * speed * dt), y: wrap(head.y + Math.sin(angle) * speed * dt) };
   trail.unshift({ x: head.x, y: head.y });
 
-  // 3) 몸 길이만큼만 경로를 남기고 자르기
+  // 3) Keep only as much path as the body length and cut the rest
   let acc = 0;
   for (let i = 1; i < trail.length; i++) {
     acc += wdist(trail[i], trail[i-1]);
     if (acc > length) { trail.length = i + 1; break; }
   }
 
-  // 3-2) 시간과 목적지 (데모 중엔 없음)
+  // 3-2) Time and goal (not during the demo)
   if (!demo) {
     timeLeft -= dt;
     if (timeLeft <= 0) { timeLeft = 0; return gameOver(`Time’s up! Your tent was ${Math.round(wdist(head, tent) / 10)} m away.`); }
     if (wdist(head, tent) < TENT_R + headR()) return stageClear();
   }
 
-  // 4-0) 데모: 그래도 닿으면 옆으로 살짝 밀어내서 절대 위로 지나가지 않게 (MP 감소 없음)
+  // 4-0) Demo: if it still touches, nudge it sideways so it never drives over (no MP loss)
   if (demo) {
     const thing = solidAt(head, headR() * 0.9, true) || obstacles.find(o => wdist(o, head) < headR() + o.r);
     if (thing) {
@@ -511,11 +511,11 @@ function update(dt) {
       head = { x: wrap(head.x + Math.cos(n) * 4), y: wrap(head.y + Math.sin(n) * 4) };
     }
   }
-  // 4) 충돌: 장애물 (데모 중엔 없음)
+  // 4) Collisions: obstacles (not during the demo)
   if (!demo) {
     invuln = Math.max(0, invuln - dt);
     const cone = obstacles.find(o => wdist(o, head) < headR() + o.r);
-    // 자기 몸: 머리 바로 뒤 마디는 빼고 검사
+    // Own body: skip the segments right behind the head
     let body = null, accB = 0;
     for (let i = 1; i < trail.length && !body; i++) {
       accB += wdist(trail[i], trail[i-1]);
@@ -524,8 +524,8 @@ function update(dt) {
     const thing = cone || solidAt(head, headR() * 0.8) || body;
     if (thing && invuln <= 0) {
       mp = Math.max(0, mp - HIT_DAMAGE); invuln = 1.2; hitFlash = 1; updateMp(true);
-      // 튕겨 나오기: 부딪힌 면을 따라 옆으로 미끄러지듯 방향을 틀고 살짝 밀어냄
-      // (정면으로 되돌아가면 자기 몸을 물어버리므로 반사 대신 옆 방향)
+      // Bounce off: slide along the surface you hit and nudge away
+      // (turning straight back would bite its own body, so turn sideways instead of reflecting)
       const n = Math.atan2(wrapDelta(head.y - thing.y), wrapDelta(head.x - thing.x));
       const t1 = n + Math.PI / 2, t2 = n - Math.PI / 2;
       angle = Math.abs(angleDiff(angle, t1)) < Math.abs(angleDiff(angle, t2)) ? t1 : t2; turnRate = 0;
@@ -535,7 +535,7 @@ function update(dt) {
     }
   }
 
-  // 5) 열매 (황금 열매는 3점)
+  // 5) Fruit (golden fruit is worth 3 points)
   fruits.forEach((f, i) => {
     if (wdist(head, f) < headR() + FRUIT_R) {
       const pts = f.type === "gold" ? 3 : 1;
@@ -544,7 +544,7 @@ function update(dt) {
       score += pts; $("score").textContent = score;
       const bonus = f.type === "gold" ? 5 : 2;
       timeLeft += bonus;
-      if (f.type === "shoe") {                       // 운동화: 즉시 가속 + 5초 부스트
+      if (f.type === "shoe") {                       // Sneaker: instant speed-up + 5 s boost
         boostT = BOOST_TIME; speed *= 1.3; speedBanner();
       } else if (f.type === "jelly" && mp < MP_MAX) { mp = Math.min(MP_MAX, mp + JELLY_HEAL); updateMp(); floatText(`+${bonus}s  +${JELLY_HEAL} MP`); }
       else floatText(`+${bonus}s`);
@@ -561,10 +561,10 @@ function updateMp(hit) {
   $("mpBox").classList.toggle("low", mp <= 25);
   if (hit) { const b = $("mpBox"); b.classList.remove("hit"); void b.offsetWidth; b.classList.add("hit"); }
 }
-// 운동화를 먹으면 화면 가운데 큰 "SPEED UP!" 배너
+// Big "SPEED UP!" banner in the middle of the screen after eating a sneaker
 function speedBanner() {
   const el = document.createElement("div"); el.className = "speed-banner";
-  el.innerHTML = '<span class="zap">⚡</span>SPEED UP!<small>5 SECONDS · 1.5×</small>';   // 고정 문자열
+  el.innerHTML = '<span class="zap">⚡</span>SPEED UP!<small>5 SECONDS · 1.5×</small>';   // Fixed string
   document.body.append(el); setTimeout(() => el.remove(), 1400);
 }
 function floatText(t, color) {
@@ -573,7 +573,7 @@ function floatText(t, color) {
   document.body.append(el); setTimeout(() => el.remove(), 1000);
 }
 
-// 텐트 도착 → 클리어 화면 → 다음 스테이지
+// Reach the tent → clear screen → next stage
 let clearTimer = null;
 function stageClear() {
   running = false;
@@ -583,7 +583,7 @@ function stageClear() {
   $("clearLeft").textContent = `${left}s`;
   $("clearBonus").textContent = `+${bonus}`;
   const bpmNow = currentBpm();
-  // 다음 스테이지에서 얼마나 빨라지는지 (비트 상승분 × 스테이지 가산분)
+  // How much faster the next stage gets (beat increase × stage bonus)
   const baseFor = b => b && settings.bpmSpeed ? Math.min(MUSIC_MAX_SPEED, Math.max(MUSIC_MIN_SPEED, SPEED_BASE + (b - 60) * SPEED_PER_BPM)) : baseSpeed;
   const nextTempo = tempoFor(stage + 1);
   const beatUp = bpmNow ? baseFor(bpmNow / tempo * nextTempo) / baseFor(bpmNow) : nextTempo / tempo;
@@ -619,8 +619,8 @@ function gameOver(why) {
   show("over");
 }
 
-// ---------- 풍경: 장르마다 다른 장소 ----------
-// props: [종류, 개수, 색들]   particles: 화면에 흩날리는 것   dark: 밤 장면이면 헤드라이트 켜짐
+// ---------- Scenery: a different place for each genre ----------
+// props: [type, count, colors]   particles: things drifting across the screen   dark: night scene turns on the headlights
 const SCENES = {
   quiet:        { title: "Green Field",   ground: "#bfe0a0", dot: "rgba(40,90,30,.12)",     snake: "#ff8fb8", dark: false,
                   props: [["tuft", 220, ["#6fae4f", "#86c262"]], ["stone", 50, ["#d8e9c4", "#a9cf8c"]], ["tree", 45, ["#5f9e48", "#77b65a"]], ["flower", 90, ["#ffffff", "#ffd23f", "#ff9ebb"]]] },
@@ -634,7 +634,7 @@ const SCENES = {
                   props: [["block", 70, ["#262c40", "#2d3452"]], ["neon", 70, ["#ff4fd8", "#38e1ff", "#ffe14d"]], ["lamp", 40, ["#ffd59a"]]] },
   "Techno":     { title: "Concrete Yard", ground: "#262626", grid: "rgba(255,255,255,.07)", snake: "#7ee8c4", dark: true,
                   props: [["tile", 220, ["#ffffff"]], ["pole", 40, ["#e8e8e8"]]] },
-  // 사막: 모래색 바닥 + 모래 언덕 무늬 + 사암 바위 + 선인장, 반짝이는 모래알
+  // Desert: sand floor + dune pattern + sandstone rocks + cacti, glinting sand
   "Trap":       { title: "Neon Desert",   ground: "#ecc98f", dot: "rgba(150,95,40,.12)",   snake: "#ff7ab0", dark: false,
                   props: [["dune", 60, ["#f4d7a3", "#e1b878"]], ["glint", 200, ["#fff6d8", "#ffe39a"]], ["rock", 50, ["#c98e5a", "#b5794a"]], ["cactus", 80, ["#4fb784", "#3a9f6f"]]] },
   "Drum & Bass":{ title: "Lava Run",      ground: "#22100d", dot: "rgba(255,120,60,.07)", snake: "#ffd166", dark: true, particles: "sparks",
@@ -644,7 +644,7 @@ const SIZES = { tree: [24, 40], lamp: [5, 6], puddle: [26, 46], bench: [16, 20],
                 neon: [18, 32], tile: [26, 26], pole: [5, 5], dune: [60, 120], cactus: [12, 18], rock: [10, 24], glint: [2, 4],
                 crack: [40, 80], tuft: [5, 8], stone: [4, 8] };
 
-// 같은 장면은 항상 같은 배치가 나오도록 장면 이름으로 시드를 만든 난수
+// Seeded random from the scene name so the same scene always has the same layout
 function rng(seedStr) {
   let h = 1779033703;
   for (const c of seedStr) h = Math.imul(h ^ c.charCodeAt(0), 3432918353), h = h << 13 | h >>> 19;
@@ -661,14 +661,14 @@ function propsFor(key) {
     list.push({ type, x, y, size: a + r() * (b - a), rot: r() * 6.28, seed: r() * 100, color: colors[r() * colors.length | 0], n: i });
   }
   list.forEach((p, i) => p.idx = i);
-  // 칸(CELL)별로 나눠 두면 화면 근처 소품만 빠르게 찾을 수 있음 (세계가 넓어져도 느려지지 않게)
+  // Bucketing by CELL makes it fast to find props near the screen (stays fast as the world grows)
   list.cells = Array.from({ length: GRID_N * GRID_N }, () => []);
   for (const p of list) list.cells[cellOf(p.x) + cellOf(p.y) * GRID_N].push(p);
   propCache.set(key, list);
   return list;
 }
 const cellOf = v => Math.floor(wrap(v) / CELL) % GRID_N;
-// (x, y) 반경 r 안의 칸들에 있는 소품을 원래 순서(겹침 순서)대로 돌려줌
+// Return props in the cells within radius r of (x, y), in their original (layering) order
 function propsNear(key, x, y, r) {
   const list = propsFor(key), out = [], span = Math.ceil(r / CELL);
   const cx = cellOf(x), cy = cellOf(y);
@@ -679,31 +679,31 @@ function propsNear(key, x, y, r) {
   return out.sort((a, b) => a.idx - b.idx);
 }
 
-// ---------- 박자 정보 ----------
-// beatPhase: 지금 박자 안에서 어디쯤인지 (0 → 1). 나뭇잎이 한 박에 한 번씩 흔들리는 데 씀
+// ---------- Beat info ----------
+// beatPhase: where we are inside the current beat (0 → 1). Used to sway leaves once per beat
 let lastBeatTime = 0, beatCount = 0, barPulse = 0, phraseFlash = 0;
-// 1) 소리–화면 시간차 보정: 스피커·블루투스 이어폰은 소리가 늦게 나오므로 화면 효과도 그만큼 늦춤
-//    수동 보정값(syncMs)이 있으면 그것을, 없으면 브라우저가 알려주는 출력 지연을 사용
+// 1) Audio–visual latency: speakers and Bluetooth earphones play late, so visual effects are delayed by the same amount
+//    Use the manual value (syncMs) if set, otherwise the output latency the browser reports
 function visualDelay() {
   if (settings.syncMs != null) return settings.syncMs / 1000;
   return audioCtx ? (audioCtx.outputLatency || 0) + (audioCtx.baseLatency || 0) : 0;
 }
-// "지금 들리는" 오디오 시각
+// Audio time that you "hear right now"
 const heardTime = () => audioCtx.currentTime - visualDelay();
 function beatPhase() {
   if (music && audioCtx) return Math.min(1, Math.max(0, (heardTime() - lastBeatTime) / (60 / music.bpm)));
-  return (performance.now() / 2400) % 1;   // 음악이 없을 때는 아주 느리게
+  return (performance.now() / 2400) % 1;   // Very slow when there is no music
 }
-// 3) 예측 움직임: 박자 직전(마지막 25%)에 0 → 1로 차오름 → 웅크렸다가 박자에 "팡"
+// 3) Anticipation: fills 0 → 1 just before the beat (last 25%) → crouch, then "pop" on the beat
 function anticipation() {
   if (!music) return 0;
   const p = beatPhase(), t = Math.max(0, (p - 0.75) / 0.25);
   return t * t * (3 - 2 * t);
 }
 
-// ---------- 그리기 도구 ----------
+// ---------- Drawing helpers ----------
 function roundRect(x, y, w, h, r) { ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x, y, w, h, r) : ctx.rect(x, y, w, h); }
-// 두 색을 섞기 (#rrggbb, t: 0 → a, 1 → b)
+// Mix two colors (#rrggbb, t: 0 → a, 1 → b)
 function mixColor(a, b, t) {
   const h = c => [1, 3, 5].map(i => parseInt(c.slice(i, i + 2), 16));
   const [x, y] = [h(a), h(b)];
@@ -716,13 +716,13 @@ function glow(x, y, r, color, alpha) {
   ctx.globalAlpha = alpha; ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1;
 }
 
-// 소품마다: 박자(ph: 0→1, pulse: 박자 순간 1→0)에 맞춰 움직임
+// Each prop moves with the beat (ph: 0→1, pulse: 1→0 from the beat)
 function drawProp(p, x, y, ph, pulse, sc) {
-  // 먹을 수 없는 풍경은 움직임을 작게 → 먹이(크게 튀는 것)와 헷갈리지 않게
+  // Scenery you can't eat moves less → not confused with food (which bounces a lot)
   pulse *= 0.4;
   const s = p.size, wave = Math.sin(2 * Math.PI * ph + p.seed) * 0.5;
   switch (p.type) {
-    case "tree": {                         // 나뭇잎: 한 박에 한 번 좌우로 흔들림, 박자 순간 살짝 부풀어 오름
+    case "tree": {                         // Leaves: sway side to side once per beat and puff up slightly on the beat
       circle(x + 5, y + 6, s * 0.9, "rgba(0,0,0,.12)");
       const k = 1 + pulse * 0.05, sway = (0.06 + pulse * 0.2) * (music ? 1 : 0.4);
       ctx.fillStyle = p.color;
@@ -741,7 +741,7 @@ function drawProp(p, x, y, ph, pulse, sc) {
       glow(x, y, 46 * (1 + pulse * 0.5), p.color, 0.18 + pulse * 0.32);
       circle(x, y, s, "#fff3d6");
       break;
-    case "puddle": {                       // 박자마다 물결이 퍼짐
+    case "puddle": {                       // A ripple spreads on each beat
       ctx.fillStyle = p.color; ctx.beginPath(); ctx.ellipse(x, y, s, s * 0.6, p.rot, 0, Math.PI * 2); ctx.fill();
       if (music) {
         ctx.strokeStyle = `rgba(200,220,255,${(1 - ph) * 0.45})`; ctx.lineWidth = 1.2;
@@ -754,7 +754,7 @@ function drawProp(p, x, y, ph, pulse, sc) {
       ctx.fillStyle = "rgba(0,0,0,.1)"; ctx.fillRect(-s + 3, -5 + 3, s * 2, 10);
       ctx.fillStyle = p.color; ctx.fillRect(-s, -5, s * 2, 10);
       ctx.restore(); break;
-    case "flower": {                       // 꽃잎: 박자마다 활짝 피었다 오므라듦
+    case "flower": {                       // Petals: open wide and close on each beat
       const open = s * (0.55 + pulse * 0.45), tw = wave * 0.15;
       ctx.fillStyle = p.color;
       for (let i = 0; i < 5; i++) {
@@ -770,7 +770,7 @@ function drawProp(p, x, y, ph, pulse, sc) {
       ctx.fillStyle = (beatCount + p.n) % 3 === 0 ? `rgba(255,225,140,${0.25 + pulse * 0.6})` : "rgba(255,255,255,.05)";
       ctx.fillRect(x - s * 0.3, y - s * 0.3, s * 0.6, s * 0.6);
       break;
-    case "neon": {                         // 네온: 박자마다 색이 번갈아 켜짐
+    case "neon": {                         // Neon: colors switch on each beat
       const on = (beatCount + p.n) % 2 === 0;
       ctx.save(); ctx.translate(x, y); ctx.rotate(p.rot);
       ctx.strokeStyle = p.color; ctx.lineWidth = 3;
@@ -780,7 +780,7 @@ function drawProp(p, x, y, ph, pulse, sc) {
       ctx.restore(); ctx.globalAlpha = 1;
       break;
     }
-    case "tile": {                         // 바닥 타일: 박자마다 파도처럼 번쩍
+    case "tile": {                         // Floor tiles: flash like a wave on each beat
       const lit = ((Math.round(p.x / 40) + Math.round(p.y / 40) + beatCount) % 4 === 0);
       ctx.strokeStyle = "rgba(255,255,255,.08)"; ctx.lineWidth = 1;
       ctx.strokeRect(x - s / 2, y - s / 2, s, s);
@@ -791,7 +791,7 @@ function drawProp(p, x, y, ph, pulse, sc) {
       glow(x, y, 60, "#ffffff", music ? pulse * 0.45 : 0.05);
       circle(x, y, s, p.color);
       break;
-    case "cactus": {                       // 선인장: 박자에 맞춰 통통
+    case "cactus": {                       // Cactus: bounces with the beat
       const k = 1 + pulse * 0.12;
       circle(x + 4, y + 5, s, "rgba(0,0,0,.18)");
       ctx.save(); ctx.translate(x, y); ctx.rotate(p.rot + wave * 0.08); ctx.scale(k, k);
@@ -809,13 +809,13 @@ function drawProp(p, x, y, ph, pulse, sc) {
         i ? ctx.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr) : ctx.moveTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr);
       }
       ctx.fill(); break;
-    case "glint": {                        // 반짝이: 박자마다 일부가 번갈아 반짝
+    case "glint": {                        // Glints: some sparkle in turn on each beat
       const on = music && (beatCount + p.n) % 3 === 0;
       ctx.globalAlpha = on ? 0.35 + pulse * 0.65 : 0.25;
       circle(x, y, s * (on ? 1 + pulse : 1), p.color);
       ctx.globalAlpha = 1; break;
     }
-    case "crack": {                        // 용암 틈: 박자마다 달아오름
+    case "crack": {                        // Lava cracks: glow hot on each beat
       ctx.save(); ctx.translate(x, y); ctx.rotate(p.rot);
       ctx.strokeStyle = p.color; ctx.lineWidth = 2 + pulse * 3; ctx.lineCap = "round"; ctx.lineJoin = "round";
       ctx.globalAlpha = 0.45 + pulse * 0.55; ctx.shadowColor = p.color; ctx.shadowBlur = 4 + pulse * 14;
@@ -832,7 +832,7 @@ function drawProp(p, x, y, ph, pulse, sc) {
       }
       break;
     case "stone": circle(x, y, s, p.color); break;
-    case "dune":                           // 모래 언덕: 길쭉한 밝은/어두운 물결 (움직이지 않음)
+    case "dune":                           // Dunes: long light/dark ripples (do not move)
       ctx.save(); ctx.translate(x, y); ctx.rotate(p.rot);
       ctx.fillStyle = p.color; ctx.globalAlpha = 0.7;
       ctx.beginPath(); ctx.ellipse(0, 0, s, s * 0.22, 0, 0, Math.PI * 2); ctx.fill();
@@ -843,7 +843,7 @@ function drawProp(p, x, y, ph, pulse, sc) {
   }
 }
 
-// ---------- 반짝이 (모든 장면 공통, 화면 좌표) ----------
+// ---------- Twinkles (shared by all scenes, screen coordinates) ----------
 const twinkles = Array.from({ length: 14 }, () => ({ x: Math.random(), y: Math.random(), s: 1.5 + Math.random() * 2, seed: Math.random() * 6.28 }));
 function sparkle(x, y, r, color, alpha) {
   ctx.globalAlpha = alpha; ctx.fillStyle = color; ctx.beginPath();
@@ -857,10 +857,10 @@ function drawTwinkles(pulse, dark) {
     sparkle(p.x * VW, p.y * VH, p.s * (0.7 + a * 0.5), dark ? "#fff3c4" : "#ffffff", (dark ? 0.18 : 0.4) * a);
   }
 }
-// 먹은 자리: 반짝이가 터져 나감
+// Where food was eaten: twinkles burst out
 const pops = [];
 
-// ---------- 화면에 흩날리는 것 (화면 좌표) ----------
+// ---------- Things drifting across the screen (screen coordinates) ----------
 let particles = [], particleKind = null;
 const bursts = [];
 function initParticles(kind) {
@@ -878,7 +878,7 @@ function spawnParticle(kind, anywhere) {
   return base;
 }
 function updateDrawParticles(dt, ph, pulse) {
-  const swing = Math.sin(Math.PI * (beatCount + ph));   // 한 박에 한쪽으로: 박자마다 방향이 바뀌는 흔들림
+  const swing = Math.sin(Math.PI * (beatCount + ph));   // One side per beat: a sway that changes direction on each beat
   if (particleKind === "sparks" && pulse > 0.95 && particles.length < 160) {
     for (let i = 0; i < 12; i++) particles.push({ x: Math.random() * VW, y: VH + 5, vx: (Math.random() - 0.5) * 60, vy: -160 - Math.random() * 220, life: 0 });
   }
@@ -891,7 +891,7 @@ function updateDrawParticles(dt, ph, pulse) {
         ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x + p.len * 0.18, p.y - p.len); ctx.stroke();
         if (p.y > VH + 20) Object.assign(p, spawnParticle("rain"), { x: Math.random() * (VW + 100) });
         return true;
-      case "leaves": case "petals": {      // 낙엽·꽃잎: 박자마다 좌우로 한 번씩 흔들리며 떨어짐
+      case "leaves": case "petals": {      // Leaves and petals: fall while swaying side to side once per beat
         p.y += p.v * dt;
         const sx = p.x + swing * (particleKind === "leaves" ? 14 : 10) * (music ? 1 : 0.3);
         ctx.save(); ctx.translate(sx, p.y); ctx.rotate(swing * 0.9 + p.seed);
@@ -914,17 +914,17 @@ function updateDrawParticles(dt, ph, pulse) {
   });
 }
 
-// ---------- 열매 ----------
+// ---------- Fruit ----------
 const FRUIT_COLORS = { cherry: "#e0293d", lemon: "#f5d33a", grape: "#8b4fc2", orange: "#ff8a1f", berry: "#3a6fe0", gold: "#ffcf3a", shoe: "#3fa9ff" };
 const fruitColor = f => f.type === "jelly" ? f.jelly : FRUIT_COLORS[f.type];
 function drawFruit(f, x, y, pulse, ph) {
-  // 박자 직전엔 살짝 오므라들고(pre), 박자에 커짐(pulse)
+  // Shrinks a little just before the beat (pre) and grows on the beat (pulse)
   const k = 1 + pulse * 0.3 - anticipation() * 0.1, bob = Math.sin(2 * Math.PI * ph + f.seed) * 3;
-  const c = fruitColor(f), R = 15;                // 그림은 15px 기준으로 그리고 전체를 FRUIT_R에 맞춰 확대
-  ctx.save(); ctx.translate(x, y); ctx.rotate(Math.PI / 2 + camAngle);   // 화면에서 항상 똑바로 보이게
+  const c = fruitColor(f), R = 15;                // Drawn at 15px and scaled to FRUIT_R
+  ctx.save(); ctx.translate(x, y); ctx.rotate(Math.PI / 2 + camAngle);   // Always upright on screen
   ctx.scale(FRUIT_R / 15, FRUIT_R / 15);
 
-  // "먹어!" 표시: 바닥의 밝은 원판 + 밖으로 퍼지는 링 + 흰 테두리
+  // "Eat me!" marker: bright disc underneath + ring spreading out + white outline
   circle(0, 4, R * 1.55, "rgba(255,255,255,.22)");
   const t = (performance.now() / 1000 + f.seed) % 1.2 / 1.2;
   ctx.strokeStyle = c; ctx.lineWidth = 3 * (1 - t); ctx.globalAlpha = 1 - t;
@@ -932,20 +932,20 @@ function drawFruit(f, x, y, pulse, ph) {
   ctx.strokeStyle = "#fff"; ctx.lineWidth = 2.5;
   ctx.beginPath(); ctx.arc(0, 4, R * 1.55, 0, Math.PI * 2); ctx.stroke();
 
-  // 운동화는 특별 아이템: 파란 빛 + 뒤로 흐르는 속도선 + "SPEED UP!" 라벨
+  // The sneaker is a special item: blue glow + speed lines trailing back + "SPEED UP!" label
   if (f.type === "shoe") {
     glow(0, 4, R * 3.2, "#7fd0ff", 0.55 + pulse * 0.3);
     const tt = performance.now() / 1000;
     ctx.strokeStyle = "rgba(255,255,255,.9)"; ctx.lineWidth = 2.5; ctx.lineCap = "round";
-    for (let j = 0; j < 3; j++) {                       // 왼쪽으로 흐르는 바람 줄
+    for (let j = 0; j < 3; j++) {                       // Wind lines flowing to the left
       const off = ((tt * 2 + j / 3) % 1);
       ctx.globalAlpha = 1 - off;
       const yy = -6 + j * 7, x0 = -R * 1.9 - off * 10;
       ctx.beginPath(); ctx.moveTo(x0, yy); ctx.lineTo(x0 - 8 - j * 3, yy); ctx.stroke();
     }
     ctx.globalAlpha = 1;
-    // 라벨: 위아래로 통통 + 박자에 커짐
-    const ly = -R * 2.2 + Math.sin(tt * 6) * 1.2, ls = 0.7 * (1 + pulse * 0.08);   // 라벨은 작게 (70%)
+    // Label: bobs up and down + grows on the beat
+    const ly = -R * 2.2 + Math.sin(tt * 6) * 1.2, ls = 0.7 * (1 + pulse * 0.08);   // Label is small (70%)
     ctx.save(); ctx.translate(0, ly); ctx.scale(ls, ls); ctx.rotate(-0.06);
     ctx.font = "800 11px Outfit, sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
     const w = ctx.measureText("SPEED UP!").width + 14;
@@ -956,7 +956,7 @@ function drawFruit(f, x, y, pulse, ph) {
     ctx.restore();
   }
 
-  // 먹이 주위를 도는 작은 반짝이
+  // Small twinkles circling the food
   const oa = performance.now() / 500 + f.seed;
   sparkle(Math.cos(oa) * R * 1.9, 4 + Math.sin(oa) * R * 1.9, 3.2, "#fff6c2", 0.85);
   ctx.translate(0, bob); ctx.scale(k, k);
@@ -980,7 +980,7 @@ function drawFruit(f, x, y, pulse, ph) {
     case "berry":
       sh(col => circle(0, 0, R * 0.9, col || c));
       circle(0, -3, 3.5, "#1f3f86"); circle(-5, -5, 2.4, "rgba(255,255,255,.5)"); break;
-    case "jelly": {                        // 젤리빈: 콩 모양 + 반짝 하이라이트
+    case "jelly": {                        // Jelly bean: bean shape + shiny highlight
       const jc = f.jelly;
       const bean = col => {
         ctx.fillStyle = col || jc; ctx.beginPath();
@@ -994,20 +994,20 @@ function drawFruit(f, x, y, pulse, ph) {
       ctx.fillStyle = "rgba(255,255,255,.6)"; ctx.beginPath(); ctx.ellipse(-R * 0.5, -R * 0.3, R * 0.28, R * 0.12, -0.4, 0, Math.PI * 2); ctx.fill();
       break;
     }
-    case "shoe": {                         // 운동화 (옆모습): 파란 갑피 + 흰 밑창 + 끈 + 번개
+    case "shoe": {                         // Sneaker (side view): blue upper + white sole + laces + lightning bolt
       ctx.scale(1.3, 1.3); ctx.translate(0, 1);
       sh(col => {
         ctx.fillStyle = col || "#3fa9ff"; ctx.beginPath();
         ctx.moveTo(-15, 5); ctx.lineTo(-13, -6); ctx.quadraticCurveTo(-11, -12, -5, -11);
         ctx.lineTo(-1, -5); ctx.quadraticCurveTo(8, -4, 14, 1); ctx.quadraticCurveTo(17, 4, 15, 6); ctx.closePath(); ctx.fill();
       });
-      ctx.fillStyle = "#ffffff"; ctx.beginPath();          // 밑창
+      ctx.fillStyle = "#ffffff"; ctx.beginPath();          // Sole
       ctx.moveTo(-16, 4); ctx.lineTo(16, 4); ctx.quadraticCurveTo(17, 9, 13, 9); ctx.lineTo(-14, 9); ctx.quadraticCurveTo(-17, 8, -16, 4); ctx.fill();
       ctx.strokeStyle = "#2a1a33"; ctx.lineWidth = 1.6; ctx.beginPath();
       ctx.moveTo(-16, 4); ctx.lineTo(16, 4); ctx.stroke();
-      ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 1.8; ctx.lineCap = "round"; ctx.beginPath();   // 끈
+      ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 1.8; ctx.lineCap = "round"; ctx.beginPath();   // Laces
       ctx.moveTo(-4, -7); ctx.lineTo(0, -9); ctx.moveTo(-1, -4); ctx.lineTo(3, -6.5); ctx.moveTo(2, -2); ctx.lineTo(6, -4); ctx.stroke();
-      ctx.fillStyle = "#ffd45c"; ctx.beginPath();          // 옆면 번개
+      ctx.fillStyle = "#ffd45c"; ctx.beginPath();          // Lightning bolt on the side
       ctx.moveTo(-9, -4); ctx.lineTo(-12, 1); ctx.lineTo(-9, 1); ctx.lineTo(-11, 4); ctx.lineTo(-5, -1); ctx.lineTo(-8, -1); ctx.closePath(); ctx.fill();
       break;
     }
@@ -1021,7 +1021,7 @@ function drawFruit(f, x, y, pulse, ph) {
   ctx.restore();
 }
 
-// 목적지: 뱀의 텐트 (위에서 본 모습) + 박자에 맞춰 퍼지는 신호 링
+// Goal: the snake's tent (seen from above) + beacon rings pulsing with the beat
 function drawTent(x, y, pulse) {
   const r = TENT_R;
   const t = (performance.now() / 1000) % 1.5 / 1.5;
@@ -1030,11 +1030,11 @@ function drawTent(x, y, pulse) {
   glow(x, y, r * 2.6, "#ffe28a", 0.35 + pulse * 0.25);
   ctx.save(); ctx.translate(x, y); ctx.rotate(Math.PI / 2 + camAngle);
   ctx.fillStyle = "rgba(0,0,0,.25)"; ctx.fillRect(-r + 6, -r + 8, r * 2, r * 2);
-  // 지붕 4면 (위에서 본 피라미드)
+  // Four roof faces (a pyramid seen from above)
   const faces = [["#ff7a45", [[-r, -r], [r, -r]]], ["#e85a2a", [[r, -r], [r, r]]], ["#c9461f", [[r, r], [-r, r]]], ["#ff9563", [[-r, r], [-r, -r]]]];
   for (const [col, [[ax, ay], [bx, by]]] of faces) { ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(ax, ay); ctx.lineTo(bx, by); ctx.fill(); }
   ctx.strokeStyle = "#fff"; ctx.lineWidth = 2.5; ctx.strokeRect(-r, -r, r * 2, r * 2);
-  // 입구와 깃발
+  // Entrance and flag
   ctx.fillStyle = "#3a1d12"; ctx.beginPath(); ctx.moveTo(-8, r); ctx.lineTo(0, r - 14); ctx.lineTo(8, r); ctx.fill();
   ctx.strokeStyle = "#fff"; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, -r - 18); ctx.stroke();
   ctx.fillStyle = "#ffcf3a"; ctx.beginPath(); ctx.moveTo(0, -r - 18); ctx.lineTo(16, -r - 12); ctx.lineTo(0, -r - 6); ctx.fill();
@@ -1044,7 +1044,7 @@ function drawTent(x, y, pulse) {
   ctx.restore();
 }
 
-// 애벌레 머리 위 말풍선 (화면 좌표)
+// Speech bubble above the caterpillar's head (screen coordinates)
 function drawSay(text, x, y, a) {
   ctx.save(); ctx.globalAlpha = a;
   ctx.font = "800 17px Outfit, sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
@@ -1054,12 +1054,12 @@ function drawSay(text, x, y, a) {
   ctx.beginPath(); ctx.roundRect(-w / 2, -h / 2, w, h, 12);
   ctx.moveTo(-7, h / 2); ctx.lineTo(0, h / 2 + 10); ctx.lineTo(7, h / 2);
   ctx.fill(); ctx.stroke();
-  ctx.fillStyle = "#fff6fb"; ctx.fillRect(-5, h / 2 - 3, 10, 4);   // 꼬리와 몸 사이 선 지우기
+  ctx.fillStyle = "#fff6fb"; ctx.fillRect(-5, h / 2 - 3, 10, 4);   // Erase the line between the tail and the bubble
   ctx.fillStyle = "#2a1a33"; ctx.fillText(text, 0, 1);
   ctx.restore();
 }
 
-// 장애물: 트래픽 콘 (움직이지 않음)
+// Obstacle: traffic cone (does not move)
 function drawCone(x, y) {
   circle(x + 3, y + 4, 14, "rgba(0,0,0,.25)");
   circle(x, y, 13, "#ff7a1a");
@@ -1068,17 +1068,17 @@ function drawCone(x, y) {
   ctx.strokeStyle = "rgba(0,0,0,.25)"; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(x, y, 13, 0, Math.PI * 2); ctx.stroke();
 }
 
-// ---------- 장면 전환 ----------
+// ---------- Scene transition ----------
 let sceneKey = null, fade = 0, fadeFrom = null, titleT = 99;
 function currentSceneKey() { return activeItem ? genreFor(activeItem.bpm).name : "quiet"; }
 
-// ---------- 그리기 ----------
+// ---------- Drawing ----------
 let dpr = 1;
 function fitCanvas() {
   dpr = window.devicePixelRatio || 1;
   const w = Math.round(board.clientWidth * dpr), h = Math.round(board.clientHeight * dpr);
   if (w && h && (board.width !== w || board.height !== h)) { board.width = w; board.height = h; }
-  const k = Math.min(board.width, board.height) / VIEW;   // 화면 비율과 상관없이 짧은 변 기준으로 같은 크기
+  const k = Math.min(board.width, board.height) / VIEW;   // Same size regardless of aspect ratio, based on the short side
   VW = board.width / k; VH = board.height / k; CX = VW / 2; CY = VH * 0.66;
   ctx.setTransform(k, 0, 0, k, 0, 0);
 }
@@ -1091,23 +1091,23 @@ function draw(dt) {
     sceneKey = key; initParticles(SCENES[key].particles);
   }
   const sc = SCENES[sceneKey], ph = beatPhase(), pulse = Math.min(1.6, beatPulse * settings.fx);
-  const pre = anticipation() * settings.fx;          // 박자 직전 웅크림 (0~1)
+  const pre = anticipation() * settings.fx;          // Crouch just before the beat (0–1)
 
-  // 카메라는 뱀 방향을 살짝 늦게 따라감 → 운전할 때처럼 회전이 부드러움
-  // 데모 중엔 화면을 돌리지 않고 북쪽 고정(세상만 흘러감), 게임 중엔 진행 방향을 따라 회전
+  // The camera follows the snake's heading with a slight lag → smooth turns, like driving
+  // During the demo the view doesn't rotate and stays north-up (only the world scrolls); in game it rotates with the heading
   camAngle += angleDiff(camAngle, demo ? -Math.PI / 2 : angle) * (1 - Math.exp(-(demo ? 1.5 : 8) * dt));
 
   ctx.fillStyle = sc.ground; ctx.fillRect(0, 0, VW, VH);
 
   ctx.save();
   ctx.translate(CX, CY);
-  // 다운비트마다 화면이 살짝 줌인 (4마디마다 조금 더 크게)
+  // Zoom in slightly on every downbeat (a bit more every 4 bars)
   const punch = 1 + Math.min(1.6, barPulse) * 0.022 * settings.fx;
   ctx.scale(punch, punch);
-  ctx.rotate(-Math.PI / 2 - camAngle);     // 진행 방향이 항상 화면 위쪽
-  const R = Math.hypot(Math.max(CX, VW - CX), Math.max(CY, VH - CY)) + 50;   // 화면 모서리까지 + 여유
+  ctx.rotate(-Math.PI / 2 - camAngle);     // The heading always points up on screen
+  const R = Math.hypot(Math.max(CX, VW - CX), Math.max(CY, VH - CY)) + 50;   // To the screen corners + margin
 
-  // 바닥 무늬 (움직임이 느껴지게)
+  // Floor pattern (so you can feel the motion)
   const step = 40, x0 = Math.floor((head.x - R) / step) * step, y0 = Math.floor((head.y - R) / step) * step;
   if (sc.grid) {
     ctx.strokeStyle = sc.grid; ctx.lineWidth = 1; ctx.beginPath();
@@ -1119,14 +1119,14 @@ function draw(dt) {
     for (let gx = x0; gx < head.x + R; gx += step) for (let gy = y0; gy < head.y + R; gy += step) ctx.fillRect(gx - head.x - 1, gy - head.y - 1, 2, 2);
   }
 
-  // 소품
+  // Props
   for (const p of propsNear(sceneKey, head.x, head.y, R + 80)) {
     const x = wrapDelta(p.x - head.x), y = wrapDelta(p.y - head.y);
     if (x * x + y * y > R * R) continue;
     drawProp(p, x, y, ph, pulse, sc);
   }
 
-  // 헤드라이트 (밤 장면)
+  // Headlights (night scenes)
   if (sc.dark) {
     ctx.save(); ctx.rotate(angle + Math.PI / 2);
     const g = ctx.createRadialGradient(0, -40, 10, 0, -160, 260);
@@ -1135,24 +1135,24 @@ function draw(dt) {
     ctx.restore();
   }
 
-  // 텐트 (목적지)
+  // Tent (goal)
   if (tent && !demo) {
     const x = wrapDelta(tent.x - head.x), y = wrapDelta(tent.y - head.y);
     if (x * x + y * y < (R + 80) * (R + 80)) drawTent(x, y, pulse);
   }
 
-  // 장애물
+  // Obstacles
   for (const o of obstacles) {
     const x = wrapDelta(o.x - head.x), y = wrapDelta(o.y - head.y);
     if (x * x + y * y < R * R) drawCone(x, y);
   }
 
-  // 먹이
+  // Food
   for (const f of fruits) {
     const x = wrapDelta(f.x - head.x), y = wrapDelta(f.y - head.y);
     if (x * x + y * y < R * R) drawFruit(f, x, y, pulse, ph);
   }
-  // 먹은 자리 퍼지는 링
+  // Rings spreading where food was eaten
   for (let i = bursts.length - 1; i >= 0; i--) {
     const b = bursts[i]; b.t += dt;
     if (b.t > 0.5) { bursts.splice(i, 1); continue; }
@@ -1163,20 +1163,20 @@ function draw(dt) {
     }
   }
 
-  // 뱀 (머리 기준 상대 좌표를 이어 붙여서 벽을 넘어도 끊기지 않음)
+  // Snake (joined in head-relative coordinates so it doesn't break across the world edge)
   const pts = [{ x: 0, y: 0 }];
   for (let i = 1; i < trail.length; i++) pts.push({ x: pts[i-1].x + wrapDelta(trail[i].x - trail[i-1].x), y: pts[i-1].y + wrapDelta(trail[i].y - trail[i-1].y) });
   ctx.lineCap = "round"; ctx.lineJoin = "round";
-  if (invuln > 0 && Math.floor(invuln * 10) % 2) ctx.globalAlpha = 0.35;   // 부딪힌 직후 깜빡임 (무적 시간)
+  if (invuln > 0 && Math.floor(invuln * 10) % 2) ctx.globalAlpha = 0.35;   // Blink right after a hit (invulnerable time)
   const path = () => { ctx.beginPath(); ctx.moveTo(0, 0); for (const p of pts) ctx.lineTo(p.x, p.y); ctx.stroke(); };
-  // 애벌레: 동그란 마디가 이어지고, 꿈틀대는 물결 + 작은 다리 + 더듬이
+  // Caterpillar: round segments in a row, a wiggling wave + small legs + antennae
   const now = performance.now() / 1000;
   const jc = sc.snake;
   const edge = mixColor(jc, "#2a1a33", 0.55), alt = mixColor(jc, "#ffffff", 0.22);
-  const th0 = Math.PI / 2 + camAngle;   // 광택은 화면 기준 왼쪽 위
+  const th0 = Math.PI / 2 + camAngle;   // Highlight sits top-left on screen
   const lx = (dx, dy) => dx * Math.cos(th0) - dy * Math.sin(th0), ly = (dx, dy) => dx * Math.sin(th0) + dy * Math.cos(th0);
 
-  // 1) 경로에서 SEG 간격으로 마디 위치 + 진행 방향
+  // 1) Segment positions along the path every SEG + heading
   const segs = [];
   let accD = 0, nextAt = SEG;
   for (let i = 1; i < pts.length; i++) {
@@ -1184,10 +1184,10 @@ function draw(dt) {
     if (accD >= nextAt) { segs.push({ x: pts[i].x, y: pts[i].y, a: Math.atan2(pts[i-1].y - pts[i].y, pts[i-1].x - pts[i].x) }); nextAt += SEG; }
   }
   const n = segs.length;
-  // 꿈틀: 마디마다 시간차를 둔 물결 (박자에 맞춰 살짝 더 통통)
-  // 몸통: 박자 직전 살짝 납작(pre) → 박자에 통통(pulse)
+  // Wiggle: a wave with a time offset per segment (a bit plumper with the beat)
+  // Body: slightly flat just before the beat (pre) → plump on the beat (pulse)
   const rOf = i => 9.5 * (1 - 0.25 * (i / Math.max(1, n))) * (1 + 0.08 * Math.sin(now * 8 - i * 0.9) + pulse * 0.12 - pre * 0.1);
-  // 다리: 마디 양옆에 작은 점, 걷는 것처럼 번갈아 앞뒤로
+  // Legs: small dots on both sides of each segment, stepping back and forth like walking
   for (let i = n - 1; i >= 0; i--) {
     const g = segs[i], r = rOf(i), step = Math.sin(now * 10 - i * 1.3) * 2.2;
     for (const sd of [-1, 1]) {
@@ -1195,12 +1195,12 @@ function draw(dt) {
       circle(g.x + px * (r + 1.5) + Math.cos(g.a) * step * sd, g.y + py * (r + 1.5) + Math.sin(g.a) * step * sd, 2.3, edge);
     }
   }
-  // 몸 마디: 테두리 → 색 (두 가지 색을 번갈아) → 광택
+  // Body segments: outline → color (two alternating colors) → highlight
   for (let i = n - 1; i >= 0; i--) circle(segs[i].x, segs[i].y, rOf(i) + 2, edge);
   for (let i = n - 1; i >= 0; i--) circle(segs[i].x, segs[i].y, rOf(i), i % 2 ? alt : jc);
   for (let i = n - 1; i >= 0; i--) { const r = rOf(i); circle(segs[i].x + lx(-r * .35, -r * .35), segs[i].y + ly(-r * .35, -r * .35), r * 0.25, "rgba(255,255,255,.45)"); }
 
-  // 머리 + 더듬이 (박자마다 톡 튐)
+  // Head + antennae (bounce on each beat)
   const R0 = headR() + pulse * 2.2 - pre * 1.6;
   const cos = Math.cos(angle), sin = Math.sin(angle);
   ctx.strokeStyle = edge; ctx.lineWidth = 2.2; ctx.lineCap = "round";
@@ -1218,38 +1218,38 @@ function draw(dt) {
   ctx.globalAlpha = 1;
   ctx.restore();
 
-  // 방향 표시는 텐트만 (열매 화살표는 없음)
+  // Only the tent gets a direction marker (no fruit arrows)
   const th = -Math.PI / 2 - camAngle, ct = Math.cos(th), st = Math.sin(th);
 
-  // 텐트 방향: 화면 밖이면 큰 화살표 + 거리
+  // Tent direction: when off screen, a big arrow + distance
   if (tent && !demo) {
     const x = wrapDelta(tent.x - head.x), y = wrapDelta(tent.y - head.y);
     const sx = x * ct - y * st + CX, sy = x * st + y * ct + CY;
-    const m = 108, BR = 44;                        // 화면 가장자리 여백, 배지 반지름 (크게, 멀리서도 눈에 띄게)
+    const m = 108, BR = 44;                        // Margin from the screen edge, badge radius (big, easy to spot from far away)
     if (sx < m || sy < m || sx > VW - m || sy > VH - m) {
       const dx = sx - CX, dy = sy - CY;
       const tt = Math.min((dx > 0 ? VW - m - CX : CX - m) / Math.abs(dx || 1e-6), (dy > 0 ? VH - m - CY : CY - m) / Math.abs(dy || 1e-6));
       const ex = CX + dx * tt, ey = CY + dy * tt, a = Math.atan2(dy, dx);
       const now = performance.now(), bounce = Math.sin(now / 160) * 6;
       ctx.save(); ctx.translate(ex, ey);
-      // 퍼져 나가는 신호 링 두 겹
+      // Two beacon rings spreading out
       for (const off of [0, 0.5]) {
         const p = (now / 1400 + off) % 1;
         ctx.globalAlpha = (1 - p) * 0.8; ctx.strokeStyle = "#ffd45c"; ctx.lineWidth = 5;
         ctx.beginPath(); ctx.arc(0, 0, BR + p * 44, 0, Math.PI * 2); ctx.stroke();
       }
       ctx.globalAlpha = 1;
-      // 화살표: 배지 바깥에서 텐트 쪽으로 통통
+      // Arrow: bounces outside the badge toward the tent
       ctx.save(); ctx.rotate(a); ctx.translate(BR + 14 + bounce, 0);
       ctx.fillStyle = "#ffd45c"; ctx.strokeStyle = "#2a1a33"; ctx.lineWidth = 4; ctx.lineJoin = "round";
       ctx.beginPath(); ctx.moveTo(30, 0); ctx.lineTo(-2, -22); ctx.lineTo(-2, 22); ctx.closePath(); ctx.fill(); ctx.stroke();
       ctx.restore();
-      // 스티커 배지: 노란 원 + 굵은 외곽선 + 텐트
+      // Sticker badge: yellow circle + thick outline + tent
       circle(3, 6, BR, "rgba(42,26,51,.45)");
       circle(0, 0, BR, "#ffd45c");
       ctx.strokeStyle = "#2a1a33"; ctx.lineWidth = 5; ctx.beginPath(); ctx.arc(0, 0, BR, 0, Math.PI * 2); ctx.stroke();
       ctx.font = "44px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("⛺", 0, 2);
-      // 이름표: HOME · 거리
+      // Name tag: HOME · distance
       const label = `HOME · ${Math.round(wdist(head, tent) / 10)}m`;
       ctx.font = "800 17px Outfit, sans-serif";
       const lw = ctx.measureText(label).width + 22;
@@ -1259,9 +1259,9 @@ function draw(dt) {
     }
   }
 
-  // 흩날리는 것 + 반짝이
+  // Drifting things + twinkles
   updateDrawParticles(dt, ph, pulse);
-  // 부스트 중: 화면에 바람 줄무늬
+  // While boosting: wind streaks on screen
   if (boostT > 0 && !demo) {
     const t = performance.now() / 1000, a = Math.min(1, boostT) * 0.35;
     ctx.strokeStyle = `rgba(255,255,255,${a})`; ctx.lineWidth = 2; ctx.lineCap = "round";
@@ -1273,7 +1273,7 @@ function draw(dt) {
   }
   drawTwinkles(pulse, sc.dark);
 
-  // 4마디마다: 화면 가장자리에 반짝 빛
+  // Every 4 bars: a flash of light at the screen edges
   if (phraseFlash > 0) {
     const g = ctx.createRadialGradient(CX, VH / 2, Math.min(VW, VH) * 0.35, CX, VH / 2, Math.max(VW, VH) * 0.75);
     g.addColorStop(0, "rgba(255,240,200,0)"); g.addColorStop(1, `rgba(255,240,200,${phraseFlash * 0.28 * settings.fx})`);
@@ -1281,7 +1281,7 @@ function draw(dt) {
     phraseFlash = Math.max(0, phraseFlash - dt * 2.5);
   }
 
-  // 부딪힘: 화면 가장자리가 빨갛게
+  // Hit: the screen edges turn red
   if (hitFlash > 0) {
     const g = ctx.createRadialGradient(CX, VH / 2, Math.min(VW, VH) * 0.3, CX, VH / 2, Math.max(VW, VH) * 0.7);
     g.addColorStop(0, "rgba(255,40,20,0)"); g.addColorStop(1, `rgba(255,40,20,${hitFlash * 0.45})`);
@@ -1289,22 +1289,22 @@ function draw(dt) {
     hitFlash = Math.max(0, hitFlash - dt * 2.2);
   }
 
-  // 장면 전환: 이전 바닥색이 서서히 사라짐
+  // Scene transition: the previous floor color fades out
   if (fade > 0 && fadeFrom) {
     ctx.globalAlpha = fade; ctx.fillStyle = fadeFrom; ctx.fillRect(0, 0, VW, VH); ctx.globalAlpha = 1;
   }
   fade = Math.max(0, fade - dt / 1.2);
 
-  // 애벌레 말풍선: 출발 직후 "Take me home!", 10초 남으면 "Hurry home!"
+  // Caterpillar speech bubble: "Take me home!" right after the start, "Hurry home!" with 10 s left
   if (!demo && tent && document.body.dataset.screen === "game") {
     const hurry = timeLeft <= 10;
     const sayA = titleT < 4 ? Math.min(1, titleT / 0.3, (4 - titleT) / 0.5) : hurry ? 1 : 0;
     if (sayA > 0) drawSay(hurry && titleT >= 4 ? "Hurry home! ⛺" : "Take me home! ⛺", CX, CY - 46, sayA);
   }
 
-  // 장면 이름 (도착한 곳 표지판처럼)
+  // Scene name (like a sign for the place you arrived at)
   titleT += dt;
-  if (titleT < 3 && !demo && document.body.dataset.screen === "game") {   // 게임 중에만 장소 표지판
+  if (titleT < 3 && !demo && document.body.dataset.screen === "game") {   // Place sign only during the game
     const a = titleT < 0.5 ? titleT / 0.5 : titleT > 2.3 ? (3 - titleT) / 0.7 : 1;
     ctx.globalAlpha = a; ctx.textAlign = "center";
     ctx.fillStyle = sc.dark ? "#f6f5f1" : "#161616";
@@ -1317,7 +1317,7 @@ function draw(dt) {
 }
 
 function loop(t) {
-  const dt = Math.min(0.05, (t - lastT) / 1000 || 0);  // 탭 전환 시 순간이동 방지
+  const dt = Math.min(0.05, (t - lastT) / 1000 || 0);  // Prevent teleporting after switching tabs
   lastT = t;
   tickBeats(dt);
   tickSetup();
@@ -1338,15 +1338,15 @@ function startGame() {
 // ---------- Music & BPM ----------
 let audioCtx = null;
 let music = null;             // { kind: "file" | "beat", bpm, ... }
-let beatQueue = [];           // 곧 울릴 박자 시각(audioCtx 시간)
-let beatPulse = 0;            // 박자마다 1 → 서서히 0 (화면 효과용)
+let beatQueue = [];           // Upcoming beat times (audioCtx time)
+let beatPulse = 0;            // 1 on each beat → slowly back to 0 (for visual effects)
 let schedTimer = null;
 const ac = () => (audioCtx ??= new AudioContext());
 const currentBpm = () => music?.bpm ?? null;
 
-// 곡의 BPM 찾기:
-// 저음(킥·베이스)만 남김 → 소리가 "갑자기 커지는 순간"(onset)을 뽑음
-// → 그 신호가 몇 BPM 간격으로 가장 잘 반복되는지(자기상관) 비교
+// Finding a song's BPM:
+// Keep only the low end (kick and bass) → pick out the moments where the sound suddenly gets louder (onsets)
+// → compare which BPM spacing repeats that signal best (autocorrelation)
 async function detectBpm(buffer) {
   const SR = 11025, HOP = 128, fps = SR / HOP;
   const off = new OfflineAudioContext(1, Math.ceil(buffer.duration * SR), SR);
@@ -1372,13 +1372,13 @@ async function detectBpm(buffer) {
     const lag = fps * 60 / bpm, l0 = Math.floor(lag), f = lag - l0;
     let sum = 0;
     for (let i = 0; i + l0 + 1 < n; i++) sum += env[i] * (env[i + l0] * (1 - f) + env[i + l0 + 1] * f);
-    // 절반/두 배 BPM으로 잘못 잡는 걸 줄이려고 사람이 느끼는 템포(약 120) 근처에 가중치
+    // Weight toward the tempo people feel (around 120) to avoid picking half or double the BPM
     sum *= Math.exp(-0.5 * (Math.log2(bpm / 120) / 0.9) ** 2);
     if (sum > best) { best = sum; bestBpm = bpm; }
   }
 
-  // 정밀 보정: 후보 주변을 0.05 BPM 단위로, 1~8박 뒤까지 한꺼번에 맞춰봄
-  // (1박 간격만 보면 ±2 BPM 오차 → 30초면 박자가 반 박 넘게 밀림)
+  // Fine tuning: around the candidate in 0.05 BPM steps, checking 1–8 beats ahead at once
+  // (checking only one beat apart gives ±2 BPM error → over half a beat of drift after 30 seconds)
   const ac1 = lag => { const l0 = Math.floor(lag), f = lag - l0; let s = 0;
     for (let i = 0; i + l0 + 1 < n; i += 2) s += env[i] * (env[i + l0] * (1 - f) + env[i + l0 + 1] * f);
     return s; };
@@ -1391,7 +1391,7 @@ async function detectBpm(buffer) {
   }
   bestBpm = fine;
 
-  // 첫 박자 위치(위상): 박자 격자를 밀어보며 onset과 가장 잘 겹치는 지점
+  // First beat position (phase): slide the beat grid to where it lines up best with the onsets
   const period = fps * 60 / bestBpm;
   let bestOff = 0, bestScore = -Infinity;
   for (let k = 0; k < period; k++) {
@@ -1402,7 +1402,7 @@ async function detectBpm(buffer) {
   return { bpm: bestBpm, offset: bestOff / fps };
 }
 
-// ---------- 장르 태그: BPM 범위로 결정 ----------
+// ---------- Genre tag: decided by BPM range ----------
 const GENRES = [
   { max: 80,  name: "Lo-fi",       color: "#8fa3b8" },
   { max: 100, name: "Hip-hop",     color: "#b8935a" },
@@ -1419,7 +1419,7 @@ function tagEl(bpm) {
   return el;
 }
 
-// ---------- 신스 악기 (Web Audio로 직접 합성) ----------
+// ---------- Synth instruments (synthesized directly with Web Audio) ----------
 let master = null, noiseBuf = null;
 function out() {
   if (!master) {
@@ -1479,7 +1479,7 @@ const SYN = {
     o.frequency.setValueAtTime(note(m) * 1.5, t); o.frequency.exponentialRampToValueAtTime(note(m), t + 0.05);
     o.connect(g).connect(out()); o.start(t); o.stop(t + d + 0.05);
   },
-  lead(t, m, d) {   // 반짝이는 신스 (K-pop 아르페지오)
+  lead(t, m, d) {   // Sparkly synth (K-pop arpeggio)
     const o = ac().createOscillator(), lp = ac().createBiquadFilter(), g = envGain(t, 0.07, 0.003, d);
     o.type = "square"; o.frequency.value = note(m); lp.type = "lowpass"; lp.frequency.value = 3200;
     o.connect(lp).connect(g).connect(out()); o.start(t); o.stop(t + d + 0.05);
@@ -1493,8 +1493,8 @@ const SYN = {
   },
 };
 
-// ---------- 내장 곡: 16스텝 패턴 (x = 세게, o = 약하게) ----------
-// chords: 마디별 코드(MIDI 번호), bass: 마디별 근음
+// ---------- Built-in songs: 16-step patterns (x = loud, o = soft) ----------
+// chords: chord per bar (MIDI numbers), bass: root note per bar
 const TRACKS = [
   { name: "Rainy Window", theme: "chill", bpm: 72, swing: 0.18,
     kick: "x.....x...x.....", snare: "....x.......x...", hat: "o.o.o.o.o.o.o.o.",
@@ -1520,7 +1520,7 @@ const TRACKS = [
   { name: "Afterburn", theme: "release", bpm: 174,
     kick: "x.........x.....", snare: "....x.......x...", hat: "x.x.x.x.x.x.x.x.",
     chords: [[62,65,69],[62,65,69],[58,62,65],[60,64,67]], bass: [26,26,22,24], bassSteps: "x...............", bassType: "sawtooth", bassLen: 16, chordSteps: "x..............." },
-  // K-pop 느낌: 밝은 코드 + 반짝이는 신스 아르페지오(arp)
+  // K-pop feel: bright chords + sparkly synth arpeggio (arp)
   { name: "Starlight", theme: "kpop", bpm: 104,
     kick: "x.....x.x...x...", clap: "....x.......x...", hat: "x.o.x.o.x.o.x.o.",
     chords: [[65,69,72],[64,67,71],[62,65,69],[67,71,74]], bass: [41,40,38,43], bassSteps: "x..x..x.x..x..x.", chordSteps: "x.......x.......",
@@ -1539,7 +1539,7 @@ function playStep(tr, step, t, stepDur) {
   hit(tr.clap, v => SYN.clap(t, v));
   hit(tr.hat, v => SYN.hat(t, v));
   hit(tr.openHat, v => SYN.hat(t, v, true));
-  if (tr.roll?.[i] === "x") SYN.hat(t + stepDur / 2, 0.6);           // 트랩 하이햇 롤
+  if (tr.roll?.[i] === "x") SYN.hat(t + stepDur / 2, 0.6);           // Trap hi-hat roll
   if (tr.bass && tr.bassSteps[i] === "x") {
     const len = (tr.bassLen ?? 2) * stepDur;
     tr.sub ? SYN.sub(t, tr.bass[bar], len * 3) : SYN.bass(t, tr.bass[bar], len, tr.bassType);
@@ -1548,9 +1548,9 @@ function playStep(tr, step, t, stepDur) {
   if (tr.chords && tr.chordSteps?.[i] === "x") SYN.chord(t, tr.chords[bar], tr.chordSteps === "x..............." ? stepDur * 15 : stepDur * 2.5);
 }
 
-// ---------- 플레이리스트 ----------
-// 내장 곡 + 사용자가 추가한 곡(분석한 BPM과 함께 저장)
-// 테마(분위기)별로 묶음. 장소(풍경)는 곡의 BPM 장르로 정해짐
+// ---------- Playlist ----------
+// Built-in songs + songs the player added (saved with their analyzed BPM)
+// Grouped by theme (mood). The place (scenery) comes from the song's BPM genre
 const THEMES = [
   { id: "chill",   title: "Mellow & Chill",         note: "slow and easy" },
   { id: "groove",  title: "A Little Bit of Groove", note: "nod along" },
@@ -1559,11 +1559,11 @@ const THEMES = [
 ];
 const themeOf = id => THEMES.find(t => t.id === id);
 const playlist = TRACKS.map(t => ({ kind: "track", name: t.name, bpm: t.bpm, theme: t.theme, track: t }));
-let addTheme = "chill";       // "+" 를 누른 테마에 새 곡이 들어감
+let addTheme = "chill";       // New songs go into the theme whose "+" was pressed
 let activeItem = null;
 
-// 테마 화면: 테마 카드 4개 + 고른 테마의 곡 목록
-// 테마 카드: 파스텔 단색 + 굵은 외곽선 + 작은 일러스트 (스티커 같은 게임 카드)
+// Theme screen: 4 theme cards + the song list of the chosen theme
+// Theme cards: solid pastel + thick outline + small illustration (like sticker game cards)
 const INK = "#2a1a33";
 const THEME_LOOK = {
   chill: { bg: "#a9dcff", hl: "#cfeeff", tilt: "-2deg", art: `<svg viewBox="0 0 80 80">
@@ -1592,14 +1592,14 @@ function renderThemes() {
     b.className = "theme" + (pickTheme === th.id ? " on" : "");
     b.dataset.palm = ""; b.dataset.key = "theme:" + th.id;
     b.style.setProperty("--bg", look.bg); b.style.setProperty("--tilt", look.tilt);
-    const art = document.createElement("div"); art.className = "art"; art.innerHTML = look.art;   // 고정 SVG 문자열
+    const art = document.createElement("div"); art.className = "art"; art.innerHTML = look.art;   // Fixed SVG string
     const t = document.createElement("b"); t.textContent = th.title;
     const n = document.createElement("span"); n.className = "mono"; n.textContent = th.note;
     const pick = document.createElement("span"); pick.className = "pick"; pick.textContent = "PICKED!";
     b.append(art, t, n, pick);
     b.onclick = () => {
       pickTheme = th.id; addTheme = th.id;
-      // 미리듣기 중인 대표곡을 그대로 선택한 곡으로 → 바로 Drive 가능
+      // Use the preview song as the selected song → you can drive right away
       if (activeItem?.theme !== th.id) previewFor(b);
       if (activeItem?.theme === th.id) { picked = activeItem; $("driveBtn").disabled = false; }
       renderThemes(); renderSongs();
@@ -1633,7 +1633,7 @@ function renderSongs() {
     li.onclick = () => {
       if (item.loading) return;
       picked = item;
-      if (item !== activeItem) playItem(item);              // 고르면 바로 미리 들어볼 수 있음
+      if (item !== activeItem) playItem(item);              // Picking a song lets you preview it right away
       $("driveBtn").disabled = false;
       renderSongs();
     };
@@ -1682,7 +1682,7 @@ function playBuffer(item, start) {
   source.buffer = item.buffer;
   source.connect(out());
   source.start(start);
-  // 곡이 끝나면 처음부터 다시 (박자 격자도 다시 맞춤)
+  // When the song ends, start over (and realign the beat grid)
   source.onended = () => {
     if (music?.source !== source) return;
     const s2 = ac().currentTime + 0.05;
@@ -1693,7 +1693,7 @@ function playBuffer(item, start) {
   beatQueue = [];
 }
 
-// 스테이지 템포: 내장 곡은 BPM 자체를, 내 노래 파일은 재생 속도를 올림
+// Stage tempo: built-in songs raise the BPM itself, your own song files raise the playback rate
 function setTempo(m) {
   tempo = m;
   if (!music || !activeItem) return;
@@ -1702,7 +1702,7 @@ function setTempo(m) {
   $("bpmVal").textContent = Math.round(music.bpm);
 }
 
-// 0.1초 앞까지 박자/스텝을 미리 예약 (setInterval은 들쭉날쭉해서 오디오 시계 기준으로 예약)
+// Schedule beats/steps up to 0.1 s ahead (setInterval is jittery, so schedule on the audio clock)
 function startScheduler() {
   clearInterval(schedTimer);
   schedTimer = setInterval(() => {
@@ -1722,7 +1722,7 @@ function startScheduler() {
   }, 25);
 }
 
-// 매 프레임: 지금 시각을 지난 박자가 있으면 펄스
+// Every frame: pulse if a beat time has passed
 function tickBeats(dt) {
   beatPulse *= Math.exp(-dt * 7);
   barPulse *= Math.exp(-dt * 5);
@@ -1731,7 +1731,7 @@ function tickBeats(dt) {
     const now = heardTime();
     while (beatQueue.length && beatQueue[0].t <= now) hit = beatQueue.shift();
     if (hit) {
-      // 2) 강약: 마디 첫 박(다운비트)은 세게, 나머지 박은 약하게. 4마디마다 크게 한 번
+      // 2) Accents: the first beat of the bar (downbeat) is strong, the rest are soft. A big one every 4 bars
       const down = hit.n % 4 === 0, phrase = hit.n % 16 === 0;
       beatPulse = down ? 1 : 0.5;
       if (down) barPulse = phrase ? 1.6 : 1;
@@ -1776,7 +1776,7 @@ $("fileIn").onchange = async e => {
     $("musicName").textContent = "Can’t read that file";
   }
 };
-// ---------- 온보딩: 인트로 → 설정 4단계 → 테마 선택 → 게임 ----------
+// ---------- Onboarding: intro → 4 setup steps → theme selection → game ----------
 const STEPS = ["camera"];
 let stepIdx = 0;
 const camCheck = { body: false, arms: false, grip: false, left: false, right: false };
@@ -1799,7 +1799,7 @@ function showStep(i) {
   placeCam(key === "camera" ? "slot" : "hud");
   if (key === "camera") { needCalib = true; coachStage = -1; for (const k in camCheck) camCheck[k] = false; }
 }
-// 카메라 카드를 설정 화면 안(크게) 또는 게임 HUD(오른쪽 위)로 옮김
+// Move the camera card into the setup screen (large) or the game HUD (top right)
 function placeCam(where) {
   const card = $("camCard");
   if (where === "slot") {
@@ -1807,14 +1807,14 @@ function placeCam(where) {
   }
   document.body.append(card); card.classList.remove("big");
 }
-// 카메라 단계 코치: 지금 상태를 보고 "다음에 할 일" 하나만 안내
-// 단계: 0 카메라 켜기 → 1 프레임 안으로 → 2 윤곽선에 몸 맞추기 → 3 손바닥 펴고 핸들 잡기 → 4 왼쪽 → 5 오른쪽 → 6 완료
+// Camera step coach: look at the current state and show only the one "next thing to do"
+// Steps: 0 turn on camera → 1 get in frame → 2 fit the outline → 3 open palms and grab the wheel → 4 left → 5 right → 6 done
 const camLive = { seen: false, mid: 0.5, shW: 0, arms: false, holding: false, at: 0 };
 let coachStage = -1, fitFrames = 0;
 const COACH = [
   ["📷", "Turn on your camera", "We’ll walk you through it one move at a time."],
   ["🚶", "Step into the frame", "Face the screen so the camera can find you."],
-  ["🧍", "", ""],                                      // 2: 위치에 따라 문구가 바뀜
+  ["🧍", "", ""],                                      // 2: the text changes with your position
   ["🖐️", "Open your palms, arms up", "Raise both hands to chest height, like holding a big steering wheel."],
   ["⬅️", "Turn left", "Lower your left hand, raise your right — like turning a wheel."],
   ["➡️", "Now turn right", "Lower your right hand, raise your left."],
@@ -1822,14 +1822,14 @@ const COACH = [
 ];
 function fitAdvice() {
   if (!camLive.arms) return ["Fit both arms in the frame", "Step back until your elbows and hands are inside the outline."];
-  const x = 1 - camLive.mid;                           // 화면은 거울처럼 보이므로 뒤집어서 판단
+  const x = 1 - camLive.mid;                           // The screen is mirrored, so flip before deciding
   if (camLive.shW > 0.42) return ["Step back a little", "You’re too close — match your shoulders to the outline."];
   if (camLive.shW < 0.16) return ["Come a bit closer", "Match your shoulders to the outline."];
   if (x < 0.38) return ["Move to your right", "Center yourself inside the outline."];
   if (x > 0.62) return ["Move to your left", "Center yourself inside the outline."];
   return ["Perfect — hold it there", "You fit the outline."];
 }
-// 핸들 돌리기 / 완료 단계에만 보여주는 작은 일러스트
+// Small illustration shown only in the wheel and done steps
 const WHEEL_SVG = (dir) => `<svg viewBox="0 0 80 80" aria-hidden="true">
   <g fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round">
     <path class="ar" stroke="#ffd45c" stroke-width="4" d="${dir < 0 ? "M52 12 Q40 4 26 10 M26 10 L32 4 M26 10 L33 15" : "M28 12 Q40 4 54 10 M54 10 L48 4 M54 10 L47 15"}"/>
@@ -1857,14 +1857,14 @@ function updateCoach() {
   else if (coachStage < 3) {
     const [t] = fitAdvice();
     fitFrames = t.startsWith("Perfect") ? fitFrames + 1 : 0;
-    st = fitFrames > 20 ? 3 : 2;                         // 잠깐(약 0.7초) 자세를 유지하면 다음으로
+    st = fitFrames > 20 ? 3 : 2;                         // Hold the pose briefly (about 0.7 s) to move on
   } else st = coachStage;
-  // 핸들 단계는 "지금" 동작을 기준으로 한 단계씩 (예전에 우연히 한 동작은 세지 않음)
+  // Wheel steps go one at a time based on what you do "now" (a move made earlier by chance doesn't count)
   const holdingNow = performance.now() - lastSeen < 300;
   if (st === 3 && holdingNow) st = 4;
   else if (st === 4 && holdingNow && steer < -0.5) st = 5;
   else if (st === 5 && holdingNow && steer > 0.5) st = 6;
-  if (st < coachStage && coachStage >= 3) st = coachStage;   // 한번 지난 단계로는 안 돌아감
+  if (st < coachStage && coachStage >= 3) st = coachStage;   // Never go back to a step already passed
   coachStage = st;
 
   let [em, title, text] = COACH[st];
@@ -1872,7 +1872,7 @@ function updateCoach() {
   $("coachTitle").textContent = title;
   setCoachArt(st);
   $("coach").classList.toggle("done", st === 6);
-  // 윤곽선: 맞춘 부분은 초록, 지금 맞출 부분은 노란색 움직이는 점선
+  // Outline: matched parts are green, the part to match now is a moving yellow dashed line
   const o = $("camOutline"), set = (sel, cls) => o.querySelectorAll(sel).forEach(e => { e.classList.remove("ok", "focus"); if (cls) e.classList.add(cls); });
   set(".o-head", st >= 2 ? "ok" : st === 1 ? "focus" : null);
   set(".o-body", st >= 3 ? "ok" : st === 2 ? "focus" : null);
@@ -1901,7 +1901,7 @@ $("camOnBtn").onclick = async () => {
   }
 };
 
-// 공통: 세그먼트 버튼 (값이 숫자)
+// Shared: segmented buttons (numeric values)
 function syncSeg() {
   document.querySelectorAll(".seg").forEach(seg => {
     seg.querySelectorAll("button").forEach(b => b.classList.toggle("on", +b.dataset.v === settings[seg.dataset.key]));
@@ -1914,35 +1914,35 @@ document.querySelectorAll(".seg").forEach(seg => seg.addEventListener("click", e
   syncSeg(); saveSettings();
 }));
 
-// 노래 설정
+// Song settings
 $("volume").value = settings.volume;
 $("volume").oninput = e => { settings.volume = +e.target.value; if (master) master.gain.value = settings.volume; saveSettings(); };
 const bpmSw = $("bpmSpeed");
 bpmSw.setAttribute("aria-checked", settings.bpmSpeed);
 bpmSw.onclick = () => { settings.bpmSpeed = !settings.bpmSpeed; bpmSw.setAttribute("aria-checked", settings.bpmSpeed); saveSettings(); };
 
-// 감도: 1(둔함) ~ 10(예민함) → 핸들 각도·회전 속도·반응 빠르기
+// Sensitivity: 1 (dull) ~ 10 (sharp) → wheel angle, turn speed, response speed
 function applySens() {
   const s = (settings.sens - 1) / 9;
   WHEEL_MAX = 0.75 - 0.4 * s;      // ±43° ~ ±20°
   MAX_TURN = 1.8 + 1.4 * s;        // 1.8 ~ 3.2 rad/s
-  TURN_EASE = 14 + 10 * s;          // 반응 지연을 줄이려고 크게 (예전 7~14 → 14~24)
+  TURN_EASE = 14 + 10 * s;          // Large to cut response lag (was 7–14 → now 14–24)
   $("sensRange").value = settings.sens;
   $("sensVal").textContent = `${settings.sens} / 10`;
 }
 $("sensRange").oninput = e => { settings.sens = +e.target.value; applySens(); syncSeg(); saveSettings(); };
 
-// 감도 테스트 위젯 (매 프레임)
+// Sensitivity test widget (every frame)
 function tickSetup() {
   if (document.body.dataset.screen !== "setup") return;
   if (STEPS[stepIdx] === "camera") {
     updateCoach();
-    // 핸들 단계(3) 이후에만 윤곽선 팔이 따라 움직임. 각도 = 게임과 같은 조향 값 × 28° (감도 설정이 그대로 반영됨)
+    // Outline arms follow only from the wheel step (3). Angle = the same steering value as the game × 28° (reflects the sensitivity setting)
     const steering = coachStage >= 3 || !!keySteer;
     poseOutline(steering ? (keySteer || steer) * 28 * Math.PI / 180 : 0, steering);
   }
 }
-// 윤곽선 팔: 어깨는 고정, 두 손은 핸들 테두리를 따라 돌고, 팔꿈치는 손을 반쯤 따라감
+// Outline arms: shoulders stay fixed, hands move around the wheel rim, elbows follow the hands halfway
 let outlineA = 0;
 function poseOutline(target, steering) {
   outlineA += (target - outlineA) * 0.3;
@@ -1956,10 +1956,10 @@ function poseOutline(target, steering) {
   $("camOutline").classList.toggle("steering", steering);
 }
 
-// 테마 화면, 게임 오버
+// Theme screen, game over
 $("toSettings").onclick = () => { show("setup"); showStep(0); };
 
-// ---------- 박자 싱크 보정: 메트로놈 8박을 듣고 박자마다 탭 → 평균 차이를 화면 지연값으로 ----------
+// ---------- Beat sync calibration: listen to 8 metronome beats and tap on each → average offset becomes the visual delay ----------
 function updateSyncInfo() {
   $("syncInfo").textContent = settings.syncMs == null
     ? `Auto (${Math.round(visualDelay() * 1000)} ms device delay)`
@@ -1968,15 +1968,15 @@ function updateSyncInfo() {
 let syncRun = null;
 $("syncCalBtn").onclick = () => {
   const ctx = ac(); ctx.resume();
-  const resumeItem = activeItem;               // 보정이 끝나면 듣던 곡을 다시 틀어줌
+  const resumeItem = activeItem;               // Resume the song that was playing after calibration
   stopMusic();
-  const N = 8, start = ctx.currentTime + 0.6, gap = 0.6;       // 100 BPM 메트로놈
+  const N = 8, start = ctx.currentTime + 0.6, gap = 0.6;       // 100 BPM metronome
   const beats = Array.from({ length: N }, (_, i) => start + i * gap);
   beats.forEach(t => SYN.kick(t, 0.9));
   const taps = [];
   $("syncCal").hidden = false;
   $("syncDots").replaceChildren(...beats.map(() => document.createElement("i")));
-  // 점은 "예정 시각"에 깜빡임 (보정 전이라 일부러 오디오 시계 그대로)
+  // Dots blink at the "scheduled" time (on the raw audio clock on purpose, since this is before calibration)
   const timers = beats.map((t, i) => setTimeout(() => { const d = $("syncDots").children[i]; d?.classList.add("beat"); setTimeout(() => d?.classList.remove("beat"), 120); }, (t - ctx.currentTime) * 1000));
   syncRun = { beats, taps, timers, resumeItem };
   setTimeout(finishSync, (beats[N - 1] - ctx.currentTime + 0.8) * 1000);
@@ -1994,7 +1994,7 @@ function finishSync() {
   if (!syncRun) return;
   const t = syncRun.taps.slice().sort((a, b) => a - b);
   if (t.length >= 4) {
-    const core = t.slice(1, -1);                                  // 가장 튀는 값 빼고 평균
+    const core = t.slice(1, -1);                                  // Drop the most extreme values, then average
     settings.syncMs = Math.round(core.reduce((a, b) => a + b, 0) / core.length * 1000);
     saveSettings();
   }
@@ -2004,14 +2004,14 @@ function finishSync() {
   updateSyncInfo();
   if (item) {
     playItem(item);
-    if (settingsFrom === "pause") audioCtx.suspend();   // 일시정지 중이었으면 다시 멈춰 둠
+    if (settingsFrom === "pause") audioCtx.suspend();   // If it was paused before, pause it again
   }
 }
 $("syncTap").onclick = syncTap;
 $("syncAutoBtn").onclick = () => { settings.syncMs = null; saveSettings(); updateSyncInfo(); };
 addEventListener("keydown", e => { if (e.key === " " && syncRun) { e.preventDefault(); syncTap(); } });
 
-// ---------- 일시정지: 시간·움직임·음악을 모두 멈춤 ----------
+// ---------- Pause: stops time, motion and music ----------
 function pauseGame() {
   if (!running || document.body.dataset.screen !== "game") return;
   running = false;
@@ -2032,7 +2032,7 @@ $("pauseSongBtn").onclick = () => { leavePause(); show("theme"); };
 $("pauseSettingsBtn").onclick = () => openSettings();
 $("quitBtn").onclick = () => { leavePause(); stopMusic(); show("intro"); };
 
-// 설정 화면: 어느 화면에서 열었는지 기억했다가 Done 누르면 그 화면으로
+// Settings screen: remember which screen opened it and go back there on Done
 let settingsFrom = "intro";
 function openSettings() {
   settingsFrom = document.body.dataset.screen;
@@ -2053,15 +2053,15 @@ $("resetSettings").onclick = () => {
 };
 $("driveBtn").onclick = () => { if (picked && picked !== activeItem) playItem(picked); showMission(); };
 
-// 출발 직전 미션 안내: 10초 뒤 자동 출발, 버튼(손바닥/Space)으로 바로 출발
+// Mission briefing before the start: auto start after 10 s, or start now with the button (palm/Space)
 let missionTimer = null;
 function showMission() {
   demo = false; stage = 1; setTempo(tempoFor(1));
-  reset();                                     // 텐트·제한 시간을 미리 정해서 안내에 보여줌
+  reset();                                     // Decide the tent and time limit first so the briefing can show them
   $("missionStage").textContent = stage;
   $("missionTime").textContent = `${Math.round(timeLeft)}s`;
   placeCam("hud"); show("mission");
-  let n = 10; $("goCount").textContent = n;   // 10초 뒤 자동 출발
+  let n = 10; $("goCount").textContent = n;   // Auto start after 10 s
   clearInterval(missionTimer);
   missionTimer = setInterval(() => { n--; $("goCount").textContent = n; if (n <= 0) beginRun(); }, 1000);
 }
@@ -2079,7 +2079,7 @@ $("settingsBtn").onclick = openSettings;
 $("helpBtn").onclick = () => $("howto").classList.toggle("peek");
 
 
-// ---------- 방향 표시(나침반) ----------
+// ---------- Direction marker (compass) ----------
 function showWheel(a, holding) {
   const n = $("needle");
   n.classList.toggle("on", holding);
@@ -2095,7 +2095,7 @@ function updateKeySteer() {
 }
 addEventListener("keydown", e => {
   if (e.key in KEY_SIDE) { e.preventDefault(); held.add(KEY_SIDE[e.key]); updateKeySteer(); }
-  // Esc / P: 게임 중이면 일시정지, 일시정지 중이면 계속
+  // Esc / P: pause during the game, resume while paused
   if (e.key === "Escape" || e.key === "p" || e.key === "P") {
     if (document.body.dataset.screen === "game") pauseGame();
     else if (document.body.dataset.screen === "pause") resumeGame();
@@ -2112,14 +2112,14 @@ addEventListener("keydown", e => {
 addEventListener("keyup", e => {
   if (e.key in KEY_SIDE) { held.delete(KEY_SIDE[e.key]); updateKeySteer(); }
 });
-// ---------- MediaPipe Pose (양팔 핸들) ----------
+// ---------- MediaPipe Pose (two-arm wheel) ----------
 const video = $("video"), camCanvas = $("camCanvas"), cctx = camCanvas.getContext("2d");
 let landmarker = null, lastVideoTime = -1;
 let steerSmoothed = 0, upFrames = 0, lastSeen = 0, needCalib = false, wheelZero = 0;
 let wheel = 0, fps = 0, lastFrameT = 0;
-let WHEEL_MAX = 0.55;         // ±32° 꺾으면 최대 회전 – 감도 설정으로 바뀜
+let WHEEL_MAX = 0.55;         // Full turn at ±32° – changes with sensitivity
 
-// One Euro Filter: 가만히 있을 땐 강하게 떨림 제거, 빨리 돌릴 땐 지연 없이 따라감
+// One Euro Filter: removes jitter strongly when still, follows without lag when turning fast
 class OneEuro {
   constructor(minCutoff = 1.0, beta = 0.8, dCutoff = 1.0) { Object.assign(this, { minCutoff, beta, dCutoff, x: null, dx: 0, t: 0 }); }
   alpha(cutoff, dt) { const r = 2 * Math.PI * cutoff * dt; return r / (r + 1); }
@@ -2133,7 +2133,7 @@ class OneEuro {
     return this.x;
   }
 }
-const wheelFilter = new OneEuro(3.5, 4);   // 가만히 있을 땐 떨림 제거, 움직이면 즉시 따라감
+const wheelFilter = new OneEuro(3.5, 4);   // Removes jitter when still, follows instantly when moving
 
 async function initPose() {
   $("status").textContent = "Loading model…";
@@ -2141,7 +2141,7 @@ async function initPose() {
     "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm");
   landmarker = await PoseLandmarker.createFromOptions(vision, {
     baseOptions: {
-      // 반응 속도 우선: lite 모델 (full보다 2~3배 빨라 팔 움직임이 더 빨리 반영됨)
+      // Responsiveness first: lite model (2–3× faster than full, so arm moves show up sooner)
       modelAssetPath: "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task",
       delegate: "GPU",
     },
@@ -2151,7 +2151,7 @@ async function initPose() {
     minPosePresenceConfidence: 0.4,
     minTrackingConfidence: 0.4,
   });
-  // 손 모델(핀치·두 손바닥)은 뒤에서 따로 로딩: 늦거나 실패해도 핸들 조작은 바로 시작
+  // The hand model (pinch) loads separately in the background: even if it is slow or fails, wheel control starts right away
   initHands(vision).catch(err => console.warn("Hand model failed, palm hold is used instead", err));
   $("status").textContent = "Starting camera…";
   const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 960, height: 540, facingMode: "user" } });
@@ -2174,15 +2174,15 @@ function poseLoop() {
   requestAnimationFrame(poseLoop);
 }
 
-// 손 모델은 핀치가 필요한 화면에서만 돌림 (게임 중엔 쉬어서 핸들 인식이 느려지지 않게)
+// Run the hand model only on screens that need pinch (it rests during the game so wheel tracking doesn't slow down)
 function handsWanted() {
   const scr = document.body.dataset.screen;
   if (PALM_SCREENS.includes(scr)) return true;
   return scr === "setup" && coachStage === 6;
 }
 
-// 일시정지 동작: 두 팔을 양옆으로 쭉 펴서 어깨 높이로 수평 (T자) 0.6초
-// 핸들을 잡을 땐 두 손이 가까이 모여 있어서, 팔을 넓게 벌린 이 자세와 헷갈리지 않음
+// Pause gesture: stretch both arms out to the sides, level with the shoulders (T-pose), for 0.6 s
+// While holding the wheel the hands stay close together, so this wide pose is never confused with steering
 let pauseHold = 0, pauseHoldLast = 0, armsWide = false;
 function checkPausePose(now) {
   const dt = Math.min(0.2, (now - (pauseHoldLast || now)) / 1000); pauseHoldLast = now;
@@ -2194,29 +2194,29 @@ function checkPausePose(now) {
   if (k >= 1) { pauseHold = 0; $("pauseBtn").style.setProperty("--k", 0); $("pauseTip").classList.remove("charging"); pauseGame(); }
 }
 
-// 팔 하나의 "손잡이 위치" = 팔꿈치와 손목을 신뢰도(visibility)로 가중 평균
-// 손목만 쓰면 몸통 앞에서 자주 튀지만, 팔꿈치를 섞으면 훨씬 안정적
+// One arm's "grip point" = elbow and wrist averaged, weighted by visibility
+// Using only the wrist jumps around in front of the body; mixing in the elbow is much steadier
 function armGrip(lm, elbowIdx, wristIdx, W, H) {
   const e = lm[elbowIdx], w = lm[wristIdx];
-  const we = Math.max(0, e.visibility) * 0.8, ww = Math.max(0, w.visibility) * 1.2;   // 손목을 조금 더 신뢰
+  const we = Math.max(0, e.visibility) * 0.8, ww = Math.max(0, w.visibility) * 1.2;   // Trust the wrist a bit more
   const sum = we + ww;
   if (sum < 0.5) return null;
   const x = (e.x * we + w.x * ww) / sum, y = (e.y * we + w.y * ww) / sum;
-  return { x: (1 - x) * W, y: y * H, wristY: w.y * H };   // 거울 반전 + 픽셀 단위
+  return { x: (1 - x) * W, y: y * H, wristY: w.y * H };   // Mirror + pixel units
 }
 
-// 랜드마크: 0 코, 11/12 왼·오른 어깨, 13/14 팔꿈치, 15/16 손목 (사람 기준)
+// Landmarks: 0 nose, 11/12 left/right shoulder, 13/14 elbows, 15/16 wrists (from the person's side)
 function handleArms(lm, now) {
   const W = camCanvas.width, H = camCanvas.height;
   cctx.clearRect(0, 0, W, H);
   if (!lm) { armsWide = false; checkPausePose(now); letGo(now, "No one in view"); return; }
   camCheck.body = true;
   camLive.seen = true; camLive.at = performance.now();
-  // 손바닥 커서: 더 높이 든 손목을 사용
+  // Palm cursor: use the higher wrist
   const wr = [lm[15], lm[16]].filter(p => p.visibility > 0.5).sort((a, b) => a.y - b.y)[0];
   if (wr) { palmRaw.x = wr.x; palmRaw.y = wr.y; palmRaw.at = performance.now(); }
   camLive.mid = (lm[11].x + lm[12].x) / 2; camLive.shW = Math.abs(lm[11].x - lm[12].x);
-  // 일시정지 자세(T자): 두 손목 사이가 어깨너비의 2.4배 이상 + 팔꿈치·손목이 모두 어깨 높이 근처
+  // Pause pose (T-pose): wrists more than 2.4× shoulder width apart + elbows and wrists all near shoulder height
   {
     const sY = (lm[11].y + lm[12].y) / 2 * H, sW = Math.hypot((lm[11].x - lm[12].x) * W, (lm[11].y - lm[12].y) * H);
     const level = i => lm[i].visibility > 0.4 && Math.abs(lm[i].y * H - sY) < sW * 0.45;
@@ -2224,21 +2224,21 @@ function handleArms(lm, now) {
     checkPausePose(now);
   }
 
-  // 관절 선(스켈레톤)은 그리지 않음 – 설정 화면은 사람 윤곽선, 게임 중엔 핸들만 보여줌
+  // Joint lines (skeleton) are not drawn – the setup screen shows the person outline, the game shows only the wheel
 
-  // 사람의 오른팔은 반전된 화면에서 오른쪽에 보임
-  const Larm = armGrip(lm, 13, 15, W, H);   // 사람 왼팔 → 화면 왼쪽
-  const Rarm = armGrip(lm, 14, 16, W, H);   // 사람 오른팔 → 화면 오른쪽
+  // The person's right arm appears on the right of the mirrored screen
+  const Larm = armGrip(lm, 13, 15, W, H);   // Person's left arm → left of screen
+  const Rarm = armGrip(lm, 14, 16, W, H);   // Person's right arm → right of screen
   const shoulderY = (lm[11].y + lm[12].y) / 2 * H;
   const shoulderW = Math.hypot((lm[11].x - lm[12].x) * W, (lm[11].y - lm[12].y) * H);
 
-  // 재시작: 양 손목을 코보다 위로 0.5초 (만세)
+  // Restart: both wrists above the nose for 0.5 s (hands up)
   const bothUp = lm[15].y < lm[0].y && lm[16].y < lm[0].y && lm[15].visibility > 0.4 && lm[16].visibility > 0.4;
   upFrames = bothUp ? upFrames + 1 : 0;
   if (!running && upFrames > 15 && document.body.dataset.screen === "over") { upFrames = 0; startGame(); }
   if (!running && upFrames > 15 && document.body.dataset.screen === "clear") { upFrames = 0; nextStage(); }
 
-  // 핸들을 잡은 상태: 양팔이 보이고, 손목이 가슴 높이 근처까지 올라와 있음 (팔을 늘어뜨리면 놓은 것)
+  // Holding the wheel: both arms visible and wrists raised near chest height (arms hanging down = let go)
   const raised = arm => arm && arm.wristY < shoulderY + shoulderW * 1.1;
   if (Larm && Rarm) camCheck.arms = true;
   camLive.arms = !!(Larm && Rarm && lm[15].visibility > 0.5 && lm[16].visibility > 0.5);
@@ -2249,46 +2249,46 @@ function handleArms(lm, now) {
   }
   lastSeen = now;
 
-  const raw = Math.atan2(Rarm.y - Larm.y, Rarm.x - Larm.x);   // 오른팔이 내려가면 + = 우회전
+  const raw = Math.atan2(Rarm.y - Larm.y, Rarm.x - Larm.x);   // Right arm lower = + = turn right
   if (needCalib) { wheelZero = Math.abs(raw) < 0.35 ? raw : 0; needCalib = false; wheelFilter.x = null; }
 
   wheel = wheelFilter.filter(raw - wheelZero, now);
   const mag = Math.max(0, Math.abs(wheel) - WHEEL_DEAD) / (WHEEL_MAX - WHEEL_DEAD);
-  steer = Math.sign(wheel) * Math.min(1, mag);   // 팔 각도에 정비례
+  steer = Math.sign(wheel) * Math.min(1, mag);   // Directly proportional to the arm angle
   camCheck.grip = true;
   if (steer < -0.5) camCheck.left = true;
   if (steer > 0.5) camCheck.right = true;
 
-  if (document.body.dataset.screen !== "setup") drawWheel(Larm, Rarm);   // 설정 화면에선 핸들도 숨김
+  if (document.body.dataset.screen !== "setup") drawWheel(Larm, Rarm);   // Hide the wheel on the setup screen too
   showWheel(wheel, true);
-  $("status").textContent = "Steering";   // 각도·fps 같은 수치는 화면에 표시하지 않음
+  $("status").textContent = "Steering";   // Numbers like angle or fps are not shown on screen
 }
 
-// ---------- 손바닥 커서: 들어 올린 손을 화면 위 커서로 ----------
-// 손 좌표(카메라)를 화면 좌표로 옮겨서, data-palm 버튼 위에서 핀치하면 클릭
-// 손 모델이 아직 없을 때(로딩 중·실패)나 마우스일 때는 1초 머물면 클릭
+// ---------- Palm cursor: the raised hand becomes an on-screen cursor ----------
+// Map hand coordinates (camera) to screen coordinates; pinch over a data-palm button to click
+// While the hand model isn't ready (loading or failed) or with a mouse, hovering for 1 s clicks
 const palmRaw = { x: 0.5, y: 0.5, at: 0 };
 $("pinchOpen").innerHTML = pinchSVG(0); $("pinchShut").innerHTML = pinchSVG(1);
 const palmCur = { x: innerWidth / 2, y: innerHeight / 2 };
 let palmEl = null, palmT = 0, palmCool = 0, palmLastT = 0, wasPinched = false;
-// 카메라가 없을 때(미리보기·데모)는 마우스가 손바닥 역할을 대신함
+// Without a camera (preview or demo), the mouse stands in for the palm
 const palmMouse = { x: 0, y: 0, at: 0 };
 addEventListener("mousemove", e => { palmMouse.x = e.clientX; palmMouse.y = e.clientY; palmMouse.at = performance.now(); });
 function tickPalm() {
   const now = performance.now(), dt = Math.min(0.1, (now - (palmLastT || now)) / 1000); palmLastT = now;
   const cursor = $("palm");
-  const lead = hands.ready && now - hands.at < 300 ? cursorHand() : null;   // 손 모델이 보는 손
+  const lead = hands.ready && now - hands.at < 300 ? cursorHand() : null;   // The hand the hand model sees
   const useCam = !!landmarker && (!!lead || now - palmRaw.at < 400);
   const useMouse = !landmarker && now - palmMouse.at < 2500;
   const on = PALM_SCREENS.includes(document.body.dataset.screen) && (useCam || useMouse);
   $("palmHint").textContent = hands.ready ? "👌 Point at a card · pinch to pick"
     : landmarker ? "✋ Move your palm to a card · hold to pick" : "✋ No camera — your mouse is the palm · hover & hold to pick";
   cursor.classList.toggle("on", on);
-  cursor.classList.toggle("pinch-mode", hands.ready);   // 핀치로 고를 수 있으면 커서도 핀치 모양
+  cursor.classList.toggle("pinch-mode", hands.ready);   // When pinch can select, the cursor takes the pinch shape too
   if (!on) { palmT = 0; wasPinched = false; setPalmEl(null); return; }
   let tx, ty;
   if (useCam) {
-    // 화면은 거울처럼: x를 뒤집고, 카메라 가운데 영역을 화면 전체로 넓혀서 팔을 조금만 움직여도 끝까지 닿게
+    // Mirror the screen: flip x and stretch the central camera area to the whole screen, so small arm moves reach the edges
     const src = lead ? lead.palm : palmRaw;
     tx = Math.min(1, Math.max(0, ((1 - src.x) - 0.2) / 0.6)) * innerWidth;
     ty = Math.min(1, Math.max(0, (src.y - 0.15) / 0.55)) * innerHeight;
@@ -2300,10 +2300,10 @@ function tickPalm() {
   const hit = document.elementFromPoint(palmCur.x, palmCur.y)?.closest("[data-palm]:not(:disabled)");
   const keyOf = el => el ? (el.dataset.key || el.id || el) : null;
   if (keyOf(hit) !== keyOf(palmEl)) { setPalmEl(hit); palmT = 0; }
-  else if (hit !== palmEl) { palmEl = hit; hit?.classList.add("palm-on"); }   // 같은 항목이 다시 그려진 경우: 타이머 유지
+  else if (hit !== palmEl) { palmEl = hit; hit?.classList.add("palm-on"); }   // Same item redrawn: keep the timer
   cursor.classList.toggle("hover", !!hit);
   if (lead) {
-    // 핀치: 엄지와 검지가 가까워질수록 링이 차고, 붙는 순간 클릭 (집은 채로 옮겨 와서는 클릭 안 됨)
+    // Pinch: the ring fills as thumb and index get closer, and it clicks the moment they touch (carrying a held pinch over doesn't click)
     const pinched = isPinched();
     $("palmFill").setAttribute("stroke-dasharray", `${(hit ? pinchAmount() : 0) * 100} 100`);
     cursor.classList.toggle("pinch", pinched);
@@ -2323,20 +2323,20 @@ function setPalmEl(el) {
   el?.classList.add("palm-on");
   previewFor(el);
 }
-// 손바닥이 닿는 순간(activate) 미리듣기: 무드 카드는 그 테마의 대표곡, 곡 카드는 그 곡
+// Preview when the palm reaches a card (activate): a mood card plays its theme's main song, a song card plays that song
 function previewFor(el) {
   const key = el?.dataset.key || "";
   let item = null;
   if (key.startsWith("theme:")) {
     const id = key.slice(6);
-    if (activeItem?.theme === id) return;               // 이미 그 테마 곡이 나오고 있으면 그대로
+    if (activeItem?.theme === id) return;               // Leave it as is if that theme's song is already playing
     item = playlist.find(it => it.theme === id && !it.loading);
   } else if (key.startsWith("song:")) item = playlist[+key.slice(5)];
   if (item && !item.loading && item !== activeItem) playItem(item);
 }
 
-// "NEXT" 원 잡기: 준비 완료 단계에서 화면 오른쪽 위 원에 손바닥을 1초 대면 다음 단계로
-// (카메라 캔버스는 CSS로 좌우 반전되므로 원본 좌표 x=0.22 → 화면에서는 오른쪽 위에 보임)
+// Grabbing the "NEXT" circle: in the ready step, pinch in the top-right circle (or hold a hand there for 1 s) to move on
+// (the camera canvas is mirrored with CSS, so raw x=0.22 shows up at the top right on screen)
 let grabT = 0, grabLast = 0;
 function drawGrabNext(lm, W, H) {
   const active = document.body.dataset.screen === "setup" && STEPS[stepIdx] === "camera" && coachStage === 6;
@@ -2344,10 +2344,10 @@ function drawGrabNext(lm, W, H) {
   const dt = Math.min(0.1, (now - (grabLast || now)) / 1000); grabLast = now;
   if (!active) { grabT = 0; return; }
   const cx = GRAB.x * W, cy = GRAB.y * H, R = GRAB.r * W;
-  // 손목(15, 16) 중 하나라도 원 안에 들어오면 채워짐
+  // Fills when either wrist (15, 16) is inside the circle
   const inside = [lm[15], lm[16]].some(p => p.visibility > 0.4 && Math.hypot((p.x - GRAB.x) * W, (p.y - GRAB.y) * H) < R * 1.15);
   grabT = inside ? grabT + dt : Math.max(0, grabT - dt * 2);
-  // 손 모델이 있으면 원 안에서 핀치해도 바로 다음 단계 (메뉴에서 쓸 핀치를 여기서 처음 배움)
+  // With the hand model, pinching inside the circle moves on right away (this is where you first learn the pinch used in menus)
   const lead = hands.ready && now - hands.at < 300 ? cursorHand() : null;
   const pinchIn = lead && Math.hypot((lead.palm.x - GRAB.x) * W, (lead.palm.y - GRAB.y) * H) < R * 1.4;
   if (pinchIn && isPinched()) grabT = GRAB.hold;
@@ -2358,15 +2358,15 @@ function drawGrabNext(lm, W, H) {
   cctx.beginPath(); cctx.arc(cx, cy, R * pulse, 0, Math.PI * 2); cctx.fill();
   cctx.lineWidth = 6; cctx.strokeStyle = "rgba(255,255,255,.85)"; cctx.setLineDash([12, 10]);
   cctx.beginPath(); cctx.arc(cx, cy, R * pulse, 0, Math.PI * 2); cctx.stroke(); cctx.setLineDash([]);
-  if (k > 0) {                                           // 채워지는 링
+  if (k > 0) {                                           // Filling ring
     cctx.lineWidth = 10; cctx.strokeStyle = "#7ee8b0"; cctx.lineCap = "round";
     cctx.beginPath(); cctx.arc(cx, cy, R + 10, -Math.PI / 2, -Math.PI / 2 - k * Math.PI * 2, true); cctx.stroke();
   }
-  // 글자는 캔버스가 반전돼 있으니 다시 뒤집어서 씀
+  // The canvas is mirrored, so flip again to draw text
   cctx.translate(cx, cy); cctx.scale(-1, 1);
   cctx.fillStyle = "#fff"; cctx.textAlign = "center"; cctx.textBaseline = "middle";
   cctx.shadowColor = "rgba(0,0,0,.6)"; cctx.shadowBlur = 8;
-  // 동작 그림: 핀치 손이 벌렸다 집었다 반복 (원 안에서 손을 모으면 실제 손 모양을 따라감)
+  // Move illustration: the pinch hand opens and closes in a loop (follows your real hand when you pinch inside the circle)
   cctx.save(); cctx.translate(0, -R * 0.4);
   if (hands.ready) drawPinchHand(cctx, pinchIn ? pinchAmount() : pinchDemo(now), R / 52);
   else drawPalm(cctx, R / 40);
@@ -2378,12 +2378,12 @@ function drawGrabNext(lm, W, H) {
   if (k >= 1 && grabT >= GRAB.hold) { grabT = 0; $("nextBtn").click(); }
 }
 
-// 시범 동작: 벌림 → 집음 → 잠깐 유지 → 벌림 (1.6초 주기)
+// Demo move: open → pinch → hold briefly → open (1.6 s cycle)
 function pinchDemo(now) {
   const p = (now / 1000) % 1.6, ease = x => x * x * (3 - 2 * x);
   return p < 0.5 ? ease(p / 0.5) : p < 0.9 ? 1 : p < 1.3 ? 1 - ease((p - 0.9) / 0.4) : 0;
 }
-// 손 모델이 없을 때: 펼친 손바닥 그림
+// Without the hand model: an open palm drawing
 function drawPalm(c, s) {
   c.save(); c.scale(s, s); c.fillStyle = "#fff6fb";
   const r = (x, y, w, h) => { c.beginPath(); c.roundRect(x, y, w, h, Math.min(w, h) / 2); c.fill(); };
@@ -2392,14 +2392,14 @@ function drawPalm(c, s) {
   c.restore();
 }
 
-// 잠깐 놓친 건 무시하고 마지막 값 유지, 오래 놓치면 핸들이 가운데로 돌아옴
+// Ignore short dropouts and keep the last value; after a long dropout the wheel returns to center
 function letGo(now, msg) {
   if (now - lastSeen > GRACE_MS) { steer = 0; wheel *= 0.85; }
   showWheel(wheel, false);
   $("status").textContent = msg;
 }
 
-// 카메라 화면 위에 가상 핸들 (캔버스는 CSS로 반전되므로 x를 다시 뒤집어 그림)
+// Virtual wheel over the camera view (the canvas is mirrored with CSS, so flip x again to draw)
 function drawWheel(L, R) {
   const W = camCanvas.width;
   const cx = W - (L.x + R.x) / 2, cy = (L.y + R.y) / 2, r = Math.hypot(R.x - L.x, R.y - L.y) / 2;
@@ -2417,7 +2417,7 @@ function drawWheel(L, R) {
   cctx.restore();
 }
 
-applySens(); syncSeg();   // 감도 값은 아래 MediaPipe 상수들이 선언된 뒤에 적용
+applySens(); syncSeg();   // Apply sensitivity after the MediaPipe constants below are declared
 reset();
 requestAnimationFrame(loop);
 </script>

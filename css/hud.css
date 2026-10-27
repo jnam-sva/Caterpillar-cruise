@@ -1,4 +1,4 @@
-/* ---------- 게임 중 HUD ---------- */
+/* ---------- In-game HUD ---------- */
 .hud { position: fixed; z-index: 5; transition: opacity .3s; }
 body:not([data-screen="game"]):not([data-screen="over"]):not([data-screen="clear"]) .hud { opacity: 0; pointer-events: none; }
 .tl { top: 20px; left: 20px; display: flex; flex-direction: column; gap: 12px; align-items: flex-start; }
@@ -52,7 +52,7 @@ body:not([data-screen="game"]):not([data-screen="over"]):not([data-screen="clear
 @keyframes zap { 50% { transform: scale(1.4) rotate(15deg); } }
 @keyframes floatUp { to { transform: translate(-50%, -26px); opacity: 0; } }
 
-/* 카메라 카드: 게임 중엔 오른쪽 위, 카메라 설정 단계에선 크게 */
+/* Camera card: top right during the game, large during camera setup */
 #camCard { position: fixed; z-index: 5; top: 20px; right: 20px; width: min(300px, 32vw); padding: 8px; transition: opacity .3s; }
 body:not([data-screen="game"]):not([data-screen="over"]):not([data-screen="theme"]) #camCard:not(.big) { opacity: 0; pointer-events: none; }
 body[data-screen="theme"] #camCard.live { z-index: 9; width: 200px; }
@@ -74,5 +74,5 @@ body[data-screen="theme"] #camCard:not(.live) { opacity: 0; pointer-events: none
 .needle.on { border-color: var(--text); }
 .needle.on::before { background: var(--text); }
 .needle.on::after { background: var(--accent); }
-.speed { display: none; }                    /* 속도 수치는 숨김 */
-#camCard.big .cam-foot { display: none; }    /* 설정 화면 카메라 아래 상태줄 숨김 */
+.speed { display: none; }                    /* Speed value is hidden */
+#camCard.big .cam-foot { display: none; }    /* Hide the status bar under the camera on the setup screen */

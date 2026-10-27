@@ -1,31 +1,31 @@
-// 핀치 손 그림: 메뉴 커서(SVG)와 온보딩 NEXT 원(캔버스)이 같은 모양을 씀
-// 좌표는 가운데가 (0, 0)인 64×64 칸 기준. k = 0 벌림 → 1 엄지·검지 끝이 맞닿음
+// Pinch hand drawing: the menu cursor (SVG) and the onboarding NEXT circle (canvas) share the same shape
+// Coordinates use a 64×64 box centered on (0, 0). k = 0 open → 1 thumb and index tips touch
 const INK = "#2a1a33", SKIN = "#fff6fb", OK = "#7ee8b0";
 const lerp = (a, b, k) => +(a + (b - a) * k).toFixed(2);
 
-// 손을 이루는 조각들 (그리는 순서대로) — 🤏처럼 왼쪽을 향한 옆모습: 위가 검지, 아래가 엄지
+// Parts of the hand (in drawing order) — side view facing left like 🤏: index finger on top, thumb below
 function parts(k) {
   const L = (a, b) => lerp(a, b, k);
   return [
-    { type: "fill", d: "M-6 -9 Q4 -12 12 -6 L25 9 Q28 15 22 19 L14 23 Q6 25 1 18 L-6 6 Q-9 -3 -6 -9 Z" },   // 손등 → 손목 (오른쪽 아래)
-    ...[[2, 13], [7, 17.5], [12.5, 21]].map(([x, y]) => ({ type: "finger", w: 5, d: `M${x + 4} ${y - 2} L${x - 1} ${y}` })),   // 말아 쥔 세 손가락
-    { type: "finger", d: `M-1 5 C-8 7 ${L(-15, -14)} ${L(8, 2)} ${L(-23, -21)} ${L(6, 0.5)}` },          // 엄지
-    { type: "finger", d: `M-2 -7 C-9 -9 ${L(-15, -14)} ${L(-11, -6)} ${L(-24, -22)} ${L(-9, -1.5)}` },   // 검지
+    { type: "fill", d: "M-6 -9 Q4 -12 12 -6 L25 9 Q28 15 22 19 L14 23 Q6 25 1 18 L-6 6 Q-9 -3 -6 -9 Z" },   // Back of the hand → wrist (bottom right)
+    ...[[2, 13], [7, 17.5], [12.5, 21]].map(([x, y]) => ({ type: "finger", w: 5, d: `M${x + 4} ${y - 2} L${x - 1} ${y}` })),   // Three curled fingers
+    { type: "finger", d: `M-1 5 C-8 7 ${L(-15, -14)} ${L(8, 2)} ${L(-23, -21)} ${L(6, 0.5)}` },          // Thumb
+    { type: "finger", d: `M-2 -7 C-9 -9 ${L(-15, -14)} ${L(-11, -6)} ${L(-24, -22)} ${L(-9, -1.5)}` },   // Index finger
   ];
 }
 const TOUCH = [-22.5, -0.5], SQUEEZE = "M-31 -12 l3 3 M-31 9 l3 -3";
 
-// SVG 조각 문자열 (커서용)
+// SVG markup (for the cursor)
 export function pinchSVG(k) {
   const svg = parts(k).map(p => p.type === "finger"
     ? `<path d="${p.d}" fill="none" stroke="${INK}" stroke-width="${(p.w || 7) + 3.5}" stroke-linecap="round"/><path d="${p.d}" fill="none" stroke="${SKIN}" stroke-width="${p.w || 7}" stroke-linecap="round"/>`
     : `<path d="${p.d}" fill="${SKIN}" stroke="${INK}" stroke-width="${p.w || 3}" stroke-linejoin="round"/>`).join("");
   return svg + (k > 0.9
-    ? `<circle cx="${TOUCH[0]}" cy="${TOUCH[1]}" r="3.4" fill="${OK}"/>`                                   // 맞닿은 곳
-    : `<path d="${SQUEEZE}" stroke="${OK}" stroke-width="2.5" stroke-linecap="round" opacity="${1 - k}"/>`);   // "모으세요" 표시
+    ? `<circle cx="${TOUCH[0]}" cy="${TOUCH[1]}" r="3.4" fill="${OK}"/>`                                   // Where the tips touch
+    : `<path d="${SQUEEZE}" stroke="${OK}" stroke-width="2.5" stroke-linecap="round" opacity="${1 - k}"/>`);   // "Squeeze" marks
 }
 
-// 캔버스에 그리기 (온보딩 NEXT 원용). s = 크기 배율
+// Draw on a canvas (for the onboarding NEXT circle). s = scale
 export function drawPinchHand(c, k, s) {
   c.save(); c.scale(s, s); c.lineCap = "round"; c.lineJoin = "round";
   for (const p of parts(k)) {
