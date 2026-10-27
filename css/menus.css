@@ -1,0 +1,148 @@
+/* 3. 테마 선택 */
+/* ---------- Music 단계: 게임 레벨 선택 느낌 ---------- */
+#s-theme .panel { width: min(900px, 100%); }
+.music-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.music-title { font-family: "DynaPuff", "Outfit", sans-serif; font-weight: 700; font-size: 34px; color: #fff6fb; text-shadow: 0 3px 0 #5b2a63; }
+.palm-hint { color: var(--gold); text-transform: none; letter-spacing: .02em; font-size: 12px; }
+.themes { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin: 18px 0 20px; padding: 12px 8px 20px; }
+@media (max-width: 760px) { .themes { grid-template-columns: 1fr 1fr; } }
+.theme {
+  --ink: #2a1a33;
+  position: relative; display: flex; flex-direction: column; align-items: center; text-align: center;
+  padding: 14px 12px 14px; border-radius: 26px; background: var(--bg); color: var(--ink);
+  border: 3px solid var(--ink); box-shadow: 0 6px 0 var(--ink);
+  transform: rotate(var(--tilt)); transition: transform .18s cubic-bezier(.2,1.4,.4,1), box-shadow .18s;
+}
+.theme.palm-on, .songs li.palm-on, .btn.palm-on { outline: 4px solid var(--ok); outline-offset: 4px; }
+.theme:hover, .theme.palm-on { transform: rotate(0) translateY(-4px) scale(1.03); box-shadow: 0 10px 0 var(--ink); }
+/* 선택된 카드: 흰 테두리는 그림자와 겹치지 않도록 outline으로 (네 변 모두 온전히 보이게) */
+.theme.on { transform: rotate(0) translateY(-6px) scale(1.05); box-shadow: 0 10px 0 var(--ink); outline: 5px solid rgba(255,255,255,.9); outline-offset: 3px; }
+.theme.on.palm-on { outline-color: var(--ok); }
+.theme .art { width: 78px; height: 78px; margin-bottom: 6px; }
+.theme .art svg { width: 100%; height: 100%; overflow: visible; }
+.theme.on .art svg, .theme:hover .art svg { animation: wobble .9s ease-in-out infinite; }
+@keyframes wobble { 25% { transform: rotate(-6deg) scale(1.04); } 75% { transform: rotate(6deg) scale(1.04); } }
+.theme b { font-family: "DynaPuff", "Outfit", sans-serif; font-weight: 700; font-size: 18px; line-height: 1.1; }
+.theme .mono { color: rgba(42,26,51,.7); margin-top: 6px; font-size: 9px; }
+.theme .pick { position: absolute; top: -12px; right: -8px; padding: 4px 9px; border-radius: 999px; background: var(--gold); color: var(--ink); border: 2px solid var(--ink); font: 700 10px "Space Mono", monospace; transform: rotate(8deg); display: none; }
+.theme.on .pick { display: block; }
+
+.songs { list-style: none; display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }
+.songs li {
+  --ink: #2a1a33;
+  display: grid; grid-template-columns: 46px 1fr auto; gap: 12px; align-items: center;
+  padding: 10px 14px 10px 10px; border-radius: 18px; cursor: pointer; color: var(--ink);
+  background: #fff6e6; border: 3px solid var(--ink); box-shadow: 0 4px 0 var(--ink);
+  transition: transform .15s cubic-bezier(.2,1.4,.4,1), box-shadow .15s, background .2s;
+}
+.songs li:hover, .songs li.palm-on { transform: translateY(-3px); box-shadow: 0 7px 0 var(--ink); }
+.songs li { position: relative; }
+/* 선택된 곡: 색 + 굵은 노란 테두리 + 살짝 떠오름 */
+.songs li.on {
+  background: var(--hl, #ffe08a); transform: translateY(-3px);
+  outline: 4px solid var(--gold); outline-offset: 3px; box-shadow: 0 7px 0 var(--ink);
+}
+/* 지금 재생 중인 곡: 오른쪽 위 스티커 */
+.songs li.playing::after {
+  content: "♪ PLAYING"; position: absolute; top: -12px; right: 12px; padding: 3px 8px; border-radius: 999px;
+  background: var(--gold); color: var(--ink); border: 2px solid var(--ink);
+  font: 700 9px "Space Mono", monospace; letter-spacing: .04em; transform: rotate(4deg);
+}
+.songs li .disc { width: 46px; height: 46px; border-radius: 50%; position: relative;
+  background: radial-gradient(circle, var(--hl, #ffd45c) 0 5px, #2a1a33 6px 9px, #3c2a47 10px 12px, #2a1a33 13px 15px, #3c2a47 16px 18px, #2a1a33 19px); }
+.songs li .disc::after { content: ""; position: absolute; inset: 0; border-radius: 50%; background: linear-gradient(135deg, rgba(255,255,255,.28), transparent 45%); }
+.songs li.playing .disc { animation: spin 1.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.songs li .nm { font-family: "Outfit", sans-serif; font-weight: 800; font-size: 16px; line-height: 1.15; }
+.songs li .scene { font: 700 10px "Space Mono", monospace; letter-spacing: .04em; text-transform: uppercase; color: rgba(42,26,51,.6); margin-top: 3px; }
+.songs li .bpmn { font: 700 13px "Space Mono", monospace; text-align: right; }
+.songs li .bpmn small { display: block; font-size: 9px; opacity: .6; }
+.songs li.add { grid-template-columns: 46px 1fr; background: transparent; color: var(--text); border-style: dashed; border-color: rgba(255,255,255,.35); box-shadow: none; }
+.songs li.add .disc { background: none; border: 2px dashed rgba(255,255,255,.4); display: grid; place-items: center; font-size: 20px; }
+.songs li.add .disc::after { display: none; }
+.songs li.loading { opacity: .6; cursor: wait; }
+.songs li.empty { display: block; background: transparent; box-shadow: none; cursor: default; transform: none; }
+.empty { grid-column: 1 / -1; padding: 22px; text-align: center; color: var(--muted); font-size: 14px; border: 2px dashed var(--glass-line); border-radius: 18px; }
+.btn.drive { font-family: "DynaPuff", "Outfit", sans-serif; font-size: 18px; padding: 14px 34px; background: var(--gold); color: #2a1a33; border: 3px solid #2a1a33; box-shadow: 0 5px 0 #2a1a33; }
+.btn.drive:not(:disabled) { animation: readyPulse 1.4s ease-in-out infinite; }
+
+/* ---------- 손바닥 커서 ---------- */
+#palm { position: fixed; z-index: 30; left: 0; top: 0; width: 64px; height: 64px; margin: -32px 0 0 -32px; pointer-events: none; opacity: 0; transition: opacity .25s; }
+#palm.on { opacity: 1; }
+#palm svg { width: 100%; height: 100%; filter: drop-shadow(0 3px 6px rgba(0,0,0,.45)); }
+#palm .track { fill: rgba(42,26,51,.55); stroke: rgba(255,255,255,.7); stroke-width: 3; }
+#palm .fill { fill: none; stroke: var(--ok); stroke-width: 6; stroke-linecap: round; transform: rotate(-90deg); transform-origin: 32px 32px; }
+#palm .hand rect { fill: #fff6fb; }
+#palm.hover .track { fill: rgba(126,232,176,.45); }
+.tag {
+  display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;
+  font: 700 9px "Space Mono", monospace; letter-spacing: .06em; text-transform: uppercase;
+  padding: 3px 7px 3px 6px; border-radius: 999px; background: rgba(255,255,255,.08); color: var(--text);
+}
+.tag::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--g); }
+.empty { padding: 24px; text-align: center; color: var(--muted); font-size: 14px; border: 1px dashed var(--glass-line); border-radius: 12px; }
+
+/* 게임 오버 */
+#s-over .panel, #s-clear .panel { width: min(460px, 100%); text-align: center; }
+#s-clear h2 { font-family: "Outfit", sans-serif; font-weight: 800; font-size: 40px; letter-spacing: -.03em; }
+#s-clear h2 .em { display: block; font-size: 56px; margin-bottom: 6px; }
+.next-list { list-style: none; display: grid; gap: 6px; margin: 18px 0 22px; text-align: left; }
+.next-list li { padding: 10px 14px; border-radius: 12px; background: rgba(255,255,255,.06); font-size: 14px; display: flex; justify-content: space-between; }
+.next-list li b { font-family: "Outfit"; font-weight: 700; }
+#s-over h2 { font-family: "Outfit", sans-serif; font-weight: 800; font-size: 44px; letter-spacing: -.03em; }
+#overWhy { margin-top: 6px; color: var(--muted); font-size: 14px; }
+.final { display: flex; justify-content: center; gap: 30px; margin: 22px 0 26px; }
+.final b { display: block; font-family: "Outfit", sans-serif; font-weight: 800; font-size: 48px; }
+.final .new { color: var(--gold); }
+.over-actions { display: flex; flex-direction: column; gap: 10px; align-items: center; }
+.over-actions .sub { display: flex; gap: 8px; }
+
+/* 게임 중 설명 카드 */
+.howto {
+  position: fixed; z-index: 5; left: 50%; bottom: 20px; transform: translate(-50%, calc(100% + 40px)); opacity: 0; pointer-events: none;
+  display: flex; gap: 10px; width: max-content; max-width: calc(100vw - 40px); overflow-x: auto; padding: 4px;
+  transition: transform .45s cubic-bezier(.2,.8,.2,1), opacity .3s;
+}
+.howto.peek { transform: translateX(-50%); opacity: 1; pointer-events: auto; }
+.howto .c { flex: none; width: 168px; padding: 14px 14px 13px; }
+.howto .c .em { font-size: 22px; line-height: 1; }
+.howto .c h4 { font-family: "Outfit", sans-serif; font-size: 12px; font-weight: 700; margin: 10px 0 4px; }
+.howto .c p { font-size: 12px; line-height: 1.5; color: var(--muted); }
+.help { position: fixed; z-index: 6; right: 20px; bottom: 20px; width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; font-family: "Outfit"; font-weight: 700; }
+body:not([data-screen="game"]) .help { display: none; }
+.pause-btn { position: fixed; z-index: 6; right: 20px; bottom: 68px; width: 38px; height: 38px; border-radius: 50%;
+  display: grid; place-items: center; font-size: 12px; letter-spacing: -2px; }
+body:not([data-screen="game"]) .pause-btn { display: none; }
+body[data-screen="pause"] #s-pause { opacity: 1; pointer-events: auto; }
+body[data-screen="pause"] .hud { opacity: .35; }
+.pause-panel { width: min(440px, 100%); text-align: center; }
+.pause-panel h2 { font-family: "DynaPuff", "Outfit", sans-serif; font-weight: 700; font-size: 40px; color: #fff6fb; text-shadow: 0 3px 0 #5b2a63; }
+.pause-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 18px; }
+.pause-grid .btn { padding: 12px 10px; font-size: 13px; }
+
+@keyframes rise { from { opacity: 0; transform: translateY(12px); } }
+@media (max-width: 760px) { #camCard:not(.big) { width: 150px; } .now { max-width: 220px; } .scorebox b { font-size: 24px; } .panel { padding: 20px; } }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+@media (max-height: 820px) {
+  /* 음악 고르기 · 미션 화면도 낮은 화면에선 촘촘하게 */
+  #s-theme.screen, #s-mission.screen { padding: 12px; }
+  #s-theme .panel, #s-mission .panel { padding: 16px 22px; max-height: calc(100vh - 24px); }
+  #s-theme .stepper { margin-bottom: 8px; }
+  .music-title { font-size: 26px; }
+  .themes { margin: 8px 0 10px; padding: 8px 6px 14px; gap: 14px; }
+  .theme { padding: 8px 10px 10px; }
+  .theme .art { width: 44px; height: 44px; margin-bottom: 2px; }
+  .theme b { font-size: 15px; }
+  .theme .mono { margin-top: 2px; }
+  .songs { gap: 8px; }
+  .songs li { padding: 6px 12px 6px 8px; grid-template-columns: 34px 1fr auto; }
+  .songs li .disc { width: 34px; height: 34px; }
+  #s-theme .panel-foot, #s-mission .panel-foot { margin-top: 12px; }
+  .mission h2 { font-size: 24px; }
+  .mission-art { max-width: 280px; margin: 0 auto; }
+  .mission-tips { margin: 8px 0 12px; gap: 8px; }
+  .mission-tips li { padding: 8px 6px; }
+  .mission-tips b { font-size: 26px; }
+  .mission-tips strong { font-size: 15px; }
+  #missionTime { font-size: 20px; }
+}

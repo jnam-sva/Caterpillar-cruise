@@ -6,452 +6,10 @@
 <title>Caterpillar Cruise</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=DynaPuff:wght@600;700&family=Instrument+Serif:ital@0;1&family=IBM+Plex+Sans+KR:wght@400;500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
-<style>
-  :root {
-    --glass: rgba(40, 24, 56, .74);
-    --glass-strong: rgba(36, 22, 50, .93);
-    --glass-line: rgba(255, 214, 250, .18);
-    --text: #fff6fb;
-    --muted: rgba(255, 238, 250, .62);
-    --accent: #ff6fa8;
-    --gold: #ffd45c;
-    --ok: #7ee8b0;
-    --radius: 24px;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body { height: 100%; overflow: hidden; background: #111; }
-  body { color: var(--text); font-family: "IBM Plex Sans KR", sans-serif; -webkit-font-smoothing: antialiased; }
-  .mono { font-family: "Space Mono", monospace; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
-  .glass {
-    background: var(--glass); border: 1px solid var(--glass-line); border-radius: var(--radius);
-    backdrop-filter: blur(14px) saturate(1.2); -webkit-backdrop-filter: blur(14px) saturate(1.2);
-    box-shadow: 0 4px 0 rgba(20, 8, 30, .25);
-  }
-  button { font: inherit; color: inherit; cursor: pointer; border: 0; background: none; }
-  [hidden] { display: none !important; }
-
-  #board { position: fixed; inset: 0; z-index: 0; width: 100vw; height: 100vh; display: block; }
-
-  /* ---------- 게임 중 HUD ---------- */
-  .hud { position: fixed; z-index: 5; transition: opacity .3s; }
-  body:not([data-screen="game"]):not([data-screen="over"]):not([data-screen="clear"]) .hud { opacity: 0; pointer-events: none; }
-  .tl { top: 20px; left: 20px; display: flex; flex-direction: column; gap: 12px; align-items: flex-start; }
-  .bl { left: 20px; bottom: 20px; font-size: 14px !important; opacity: .85; }
-  .logo { font-family: "DynaPuff", "Outfit", sans-serif; font-weight: 700; font-size: 20px; letter-spacing: .01em; text-shadow: 0 2px 12px rgba(0,0,0,.35); }
-  .logo i { color: var(--accent); font-style: normal; }
-  .scorebox { display: flex; gap: 6px; padding: 10px 16px; }
-  .scorebox div { min-width: 70px; }
-  .scorebox b { display: block; font-family: "Outfit", sans-serif; font-weight: 700; font-size: 34px; line-height: 1.05; font-variant-numeric: tabular-nums; }
-  .scorebox .pop { animation: pop .35s cubic-bezier(.2,1.6,.4,1); }
-  @keyframes pop { 40% { transform: scale(1.35); color: var(--gold); } }
-  .mpbox { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; padding: 10px 14px; width: 240px; }
-  .mpbar { height: 12px; border-radius: 12px; background: rgba(255,255,255,.12); overflow: hidden; }
-  .mpbar i { display: block; height: 100%; width: 100%; border-radius: 12px; background: linear-gradient(90deg, #8fd8ff, #b6f5a8); transition: width .3s cubic-bezier(.2,.8,.2,1), background .3s; }
-  .mpbox.low .mpbar i { background: linear-gradient(90deg, #ff4d2e, #ffb347); }
-  .mpbox b { font-family: "Outfit", sans-serif; font-weight: 700; font-size: 15px; min-width: 3ch; text-align: right; font-variant-numeric: tabular-nums; }
-  .mpbox.hit { animation: shake .35s; }
-  @keyframes shake { 20% { transform: translateX(-6px); } 40% { transform: translateX(6px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(3px); } }
-  .now { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; padding: 10px 14px 10px 12px; max-width: 340px; }
-  .now .disc { width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; background: rgba(255,255,255,.1); font-size: 15px; }
-  .now .name { font-weight: 500; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .now .sub { margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .now .bpm { text-align: right; }
-  .now .bpm b { font-family: "Outfit", sans-serif; font-weight: 700; font-size: 22px; display: flex; align-items: center; gap: 6px; justify-content: flex-end; }
-  #beatDot { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,.25); transition: background .25s, transform .25s; }
-  #beatDot.on { background: var(--accent); transform: scale(1.6); transition: none; }
-
-  .tc { top: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 22px; padding: 10px 22px; text-align: center; }
-  .tc b { display: block; font-family: "Outfit", sans-serif; font-weight: 700; font-size: 22px; line-height: 1.1; font-variant-numeric: tabular-nums; }
-  .tc .timer b { font-size: 30px; min-width: 3.2ch; }
-  .boost-pill { position: absolute; left: 50%; bottom: -16px; transform: translateX(-50%); padding: 4px 12px; border-radius: 999px;
-    background: #3fa9ff; color: #fff; border: 2px solid #2a1a33; font: 700 11px "Space Mono", monospace; letter-spacing: .06em; white-space: nowrap;
-    animation: pop .35s cubic-bezier(.2,1.6,.4,1); }
-  .tc.hurry .timer b { color: var(--accent); animation: tick 1s steps(1) infinite; }
-  @keyframes tick { 50% { opacity: .45; } }
-  .float { position: fixed; z-index: 6; left: 50%; top: 92px; transform: translateX(-50%); font-family: "Outfit"; font-weight: 800; font-size: 18px; color: var(--gold); pointer-events: none; animation: floatUp 1s ease-out forwards; text-shadow: 0 2px 10px rgba(0,0,0,.5); }
-  .speed-banner {
-    position: fixed; z-index: 7; left: 50%; top: 36%; transform: translate(-50%, -50%); pointer-events: none; text-align: center;
-    font-family: "DynaPuff", "Outfit", sans-serif; font-weight: 700; font-size: 56px; color: #fff; letter-spacing: .01em;
-    padding: 10px 34px 12px; border-radius: 28px; background: #3fa9ff; border: 4px solid #2a1a33; box-shadow: 0 7px 0 #2a1a33;
-    animation: bannerPop 1.4s cubic-bezier(.2,1.5,.4,1) forwards;
-  }
-  .speed-banner .zap { display: inline-block; margin-right: 8px; animation: zap .3s ease-in-out 3; }
-  .speed-banner small { display: block; font: 700 12px "Space Mono", monospace; letter-spacing: .1em; opacity: .9; margin-top: 2px; }
-  @keyframes bannerPop {
-    0% { transform: translate(-50%, -50%) scale(.3) rotate(-8deg); opacity: 0; }
-    18% { transform: translate(-50%, -50%) scale(1.08) rotate(3deg); opacity: 1; }
-    30%, 75% { transform: translate(-50%, -50%) scale(1) rotate(-2deg); opacity: 1; }
-    100% { transform: translate(-50%, -90%) scale(.9); opacity: 0; }
-  }
-  @keyframes zap { 50% { transform: scale(1.4) rotate(15deg); } }
-  @keyframes floatUp { to { transform: translate(-50%, -26px); opacity: 0; } }
-
-  /* 카메라 카드: 게임 중엔 오른쪽 위, 카메라 설정 단계에선 크게 */
-  #camCard { position: fixed; z-index: 5; top: 20px; right: 20px; width: min(300px, 32vw); padding: 8px; transition: opacity .3s; }
-  body:not([data-screen="game"]):not([data-screen="over"]):not([data-screen="theme"]) #camCard:not(.big) { opacity: 0; pointer-events: none; }
-  body[data-screen="theme"] #camCard.live { z-index: 9; width: 200px; }
-  body[data-screen="theme"] #camCard:not(.live) { opacity: 0; pointer-events: none; }
-  #camCard.big { position: relative; top: auto; right: auto; width: 100%; z-index: auto; }
-  .cam { position: relative; aspect-ratio: 4/3; background: #000; border-radius: 12px; overflow: hidden; }
-  .cam video, .cam canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
-  .cam video { filter: grayscale(1) brightness(.85); opacity: .7; }
-  .cam .live { position: absolute; top: 8px; left: 8px; display: flex; align-items: center; gap: 6px; }
-  .cam .live::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); animation: blink 1.4s infinite; }
-  .cam .off { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; padding: 16px; color: var(--muted); font-size: 13px; }
-  @keyframes blink { 50% { opacity: .2; } }
-  .cam-foot { display: flex; align-items: center; gap: 10px; padding: 8px 4px 2px; }
-  #status { flex: 1; text-transform: none; letter-spacing: .02em; font-size: 11px; }
-  .compass { width: 30px; height: 30px; position: relative; flex: none; }
-  .needle { position: absolute; inset: 0; border: 2px solid rgba(255,255,255,.3); border-radius: 50%; transition: border-color .2s; }
-  .needle::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 2px; margin-top: -1px; background: rgba(255,255,255,.3); }
-  .needle::after { content: ""; position: absolute; left: 50%; top: -4px; width: 6px; height: 6px; margin-left: -3px; border-radius: 50%; background: rgba(255,255,255,.3); }
-  .needle.on { border-color: var(--text); }
-  .needle.on::before { background: var(--text); }
-  .needle.on::after { background: var(--accent); }
-  .speed { display: none; }                    /* 속도 수치는 숨김 */
-  #camCard.big .cam-foot { display: none; }    /* 설정 화면 카메라 아래 상태줄 숨김 */
-
-  /* ---------- 온보딩 화면들 ---------- */
-  .screen {
-    position: fixed; inset: 0; z-index: 8; display: grid; place-items: center; padding: 24px;
-    background: radial-gradient(ellipse at center, rgba(0,0,0,.25), rgba(0,0,0,.55));
-    opacity: 0; pointer-events: none; transition: opacity .4s;
-  }
-  body[data-screen="intro"] #s-intro, body[data-screen="setup"] #s-setup,
-  body[data-screen="theme"] #s-theme, body[data-screen="over"] #s-over, body[data-screen="clear"] #s-clear,
-  body[data-screen="settings"] #s-settings, body[data-screen="mission"] #s-mission { opacity: 1; pointer-events: auto; }
-  .mission { width: min(680px, 100%); text-align: center; }
-  .mission h2 { font-family: "DynaPuff", "Outfit", sans-serif; font-weight: 700; font-size: 30px; line-height: 1.15; margin: 6px 0 4px; color: #fff6fb; text-shadow: 0 3px 0 #5b2a63; }
-  .mission-art { width: 100%; max-width: 420px; height: auto; margin: 6px auto 4px; display: block; overflow: visible; }
-  .mission-art .m-cat { animation: crawl 2.4s ease-in-out infinite; }
-  @keyframes crawl { 50% { transform: translate(8px, -3px); } }
-  .mission-art .m-tent { transform-box: fill-box; transform-origin: center bottom; animation: tentBob 1.2s ease-in-out infinite; }
-  @keyframes tentBob { 50% { transform: scale(1.06); } }
-  .mission-tips { list-style: none; display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 14px 0 20px; }
-  .mission-tips li {
-    display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 16px 8px 14px; border-radius: 18px;
-    background: #fff6e6; color: #2a1a33; border: 3px solid #2a1a33; box-shadow: 0 4px 0 #2a1a33;
-  }
-  .mission-tips li:nth-child(odd) { transform: rotate(-1.5deg); } .mission-tips li:nth-child(even) { transform: rotate(1.5deg); }
-  .mission-tips b { font-size: 40px; line-height: 1.1; }
-  .mission-tips strong { font-family: "Outfit", sans-serif; font-weight: 800; font-size: 18px; line-height: 1.15; }
-  .mission-tips span { font: 700 11px "Space Mono", monospace; text-transform: uppercase; letter-spacing: .04em; color: rgba(42,26,51,.6); }
-  #missionTime { font-size: 26px; color: #e0563a; }
-  @media (max-width: 600px) { .mission-tips { grid-template-columns: 1fr 1fr; } }
-  .settings-panel { width: min(620px, 100%); }
-  .sync-ctl { display: flex; gap: 12px; align-items: center; }
-  .sync-ctl .btn { padding: 9px 16px; font-size: 13px; }
-  .sync-cal { text-align: center; padding: 14px; margin: 4px 0 8px; border-radius: 14px; background: rgba(255,255,255,.06); }
-  .sync-cal p { font-size: 13px; color: var(--muted); margin-bottom: 10px; }
-  .sync-dots { display: flex; justify-content: center; gap: 8px; margin-bottom: 12px; }
-  .sync-dots i { width: 14px; height: 14px; border-radius: 50%; background: rgba(255,255,255,.18); transition: transform .08s, background .15s; }
-  .sync-dots i.beat { background: var(--gold); transform: scale(1.35); }
-  .sync-dots i.done { background: var(--ok); }
-  .settings-title { font-family: "Outfit", sans-serif; font-weight: 800; font-size: 28px; letter-spacing: -.02em; }
-  .settings-lead { margin: 4px 0 8px; color: var(--muted); font-size: 13px; }
-  .set-link { font-size: 13px; }
-  #s-intro .link { color: var(--text); text-shadow: 0 1px 6px rgba(0,0,0,.45); }
-  .panel { width: min(860px, 100%); max-height: calc(100vh - 48px); overflow-y: auto; padding: 28px; background: var(--glass-strong); }
-
-  .btn {
-    font-family: "Outfit", sans-serif; font-weight: 700; font-size: 14px; letter-spacing: .02em;
-    padding: 14px 30px; border-radius: 999px; background: #fff6fb; color: #3a1d3a;
-    box-shadow: 0 4px 0 rgba(20,8,30,.45); transition: transform .1s, box-shadow .1s, opacity .2s;
-  }
-  .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 0 rgba(20,8,30,.45); }
-  .btn:active { transform: translateY(4px); box-shadow: 0 1px 0 rgba(20,8,30,.45); }
-  .btn:disabled { opacity: .35; cursor: default; transform: none; box-shadow: 0 4px 0 rgba(20,8,30,.45); }
-  .btn.ready { animation: readyPulse 1.2s ease-in-out infinite; }
-  @keyframes readyPulse { 50% { box-shadow: 0 4px 0 rgba(20,8,30,.45), 0 0 0 8px rgba(126,232,176,.35); } }
-  .btn.ghost { background: transparent; color: var(--text); border: 1px solid var(--glass-line); box-shadow: none; }
-  .btn.ghost:hover { background: rgba(255,255,255,.08); }
-  .link { font-size: 13px; color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
-  .link:hover { color: var(--text); }
-
-  /* 카메라 가이드 */
-  .guide { display: grid; grid-template-columns: 96px 1fr; gap: 18px; align-items: center; margin: 12px 0 16px; padding: 10px 16px; border-radius: 16px; background: rgba(255,255,255,.05); }
-  .guide .guide-steps { grid-template-columns: repeat(3, 1fr); gap: 14px; }
-  .sens-box { margin-top: 10px; padding: 12px; border-radius: 12px; background: rgba(255,255,255,.05); }
-  .sens-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 8px; }
-  .sens-box input[type=range] { width: 100%; }
-  .mini-test { display: flex; gap: 12px; align-items: center; margin-top: 10px; }
-  .mini-test .big-wheel { width: 46px; height: 46px; border-width: 4px; flex: none; }
-  .mini-test .big-wheel::before { height: 4px; margin-top: -2px; }
-  .mini-test .big-wheel::after { width: 8px; height: 8px; margin-left: -4px; top: -8px; }
-  .mini-test .bar { max-width: none; margin-bottom: 6px; }
-  .fig { width: 100%; color: var(--text); }
-  .fig .drive { transform-origin: 80px 80px; animation: steerDemo 3s ease-in-out infinite; }
-  @keyframes steerDemo { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-18deg); } 75% { transform: rotate(18deg); } }
-  .guide-steps { list-style: none; counter-reset: g; display: grid; gap: 10px; }
-  .guide-steps li { counter-increment: g; display: grid; grid-template-columns: 26px 1fr; column-gap: 10px; }
-  .guide-steps li::before { content: counter(g); grid-row: span 2; width: 24px; height: 24px; border-radius: 50%; background: var(--text); color: #3a1d3a; font: 600 13px/24px "Outfit", sans-serif; text-align: center; }
-  .guide-steps b { font-weight: 500; font-size: 14px; }
-  .guide-steps span { font-size: 12px; color: var(--muted); line-height: 1.5; }
-  @media (max-width: 720px) { .guide { grid-template-columns: 1fr; } .guide .guide-steps { grid-template-columns: 1fr; } .guide .fig { max-width: 120px; margin: 0 auto; } }
-  /* 카메라 안 사람 윤곽선: 아직 맞추는 중 = 흰 점선, 맞춘 부분 = 초록 */
-  .outline { display: none; position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
-  #camCard.big.live .outline { display: block; }   /* 카메라가 켜진 뒤에만 */
-  .outline g > * , .outline g g > * { stroke: rgba(255,255,255,.75); transition: stroke .3s; }
-  .outline .o-wheel { opacity: 0; transition: opacity .3s; }
-  .outline.steering .o-wheel { opacity: 1; }
-  .outline .ok, .outline .ok > * { stroke: var(--ok); stroke-dasharray: none; }
-  .outline .focus, .outline .focus > * { stroke: var(--gold); animation: dash 1s linear infinite; }
-  @keyframes dash { to { stroke-dashoffset: -38; } }
-  .cam .off { flex-direction: column; }
-  .cam .off p { margin-bottom: 14px; font-size: 12px; line-height: 1.6; }
-  #camCard:not(.big) .off .btn { display: none; }
-
-  /* 단계별 안내: 카메라 바로 위, 가운데 */
-  .coach { display: flex; align-items: center; justify-content: center; text-align: center; gap: 12px; height: 56px; margin: 0 0 10px; }
-  .coach.done h3 { color: var(--ok); }
-  .coach-art { display: none; }
-  #camCard.big .coach-art:not([hidden]) {
-    display: block; position: absolute; z-index: 3; top: 12px; left: 50%; transform: translateX(-50%);
-  }
-  .coach-art svg { width: 72px; height: 72px; display: block; filter: drop-shadow(0 2px 8px rgba(0,0,0,.6)); }
-  .coach-art .w { transform-origin: 40px 46px; }
-  .coach-art.left .w { animation: wl 1.6s ease-in-out infinite; }
-  .coach-art.right .w { animation: wr 1.6s ease-in-out infinite; }
-  @keyframes wl { 0%, 15% { transform: rotate(0); } 55%, 80% { transform: rotate(-35deg); } 100% { transform: rotate(0); } }
-  @keyframes wr { 0%, 15% { transform: rotate(0); } 55%, 80% { transform: rotate(35deg); } 100% { transform: rotate(0); } }
-  .coach-art .ar { animation: arr 1.6s ease-in-out infinite; }
-  @keyframes arr { 0%, 15% { opacity: .2; } 50%, 85% { opacity: 1; } 100% { opacity: .2; } }
-  /* 준비 완료: 반짝이 ✨ 세 개가 차례로 반짝 */
-  .coach-art.ready path { transform-box: fill-box; transform-origin: center; animation: twinkleIn .5s cubic-bezier(.2,1.6,.4,1) both, twinkle 1.6s .5s ease-in-out infinite; }
-  .coach-art.ready .s2 { animation-delay: .15s, .8s; fill: #fff6c2; }
-  .coach-art.ready .s3 { animation-delay: .3s, 1.1s; fill: #ffffff; }
-  @keyframes twinkleIn { from { transform: scale(0) rotate(-45deg); opacity: 0; } }
-  @keyframes twinkle { 50% { transform: scale(.75) rotate(12deg); opacity: .75; } }
-  .coach h3 { font-family: "Outfit", sans-serif; font-weight: 800; font-size: 24px; letter-spacing: -.02em; line-height: 1.15; }
-  /* 카메라 크기는 화면 높이에 맞춰 자동 조절 → 노트북 화면이 낮아도 스크롤 없이 버튼까지 다 보이게 */
-  .cam-wrap { width: min(576px, 100%, calc((100vh - 400px) * 1.333)); min-width: 240px; margin: 0 auto; }
-  @media (max-height: 820px) {
-    #s-setup .panel { padding: 18px 24px; }
-    #s-setup .stepper { margin-bottom: 10px; }
-    #s-setup .coach { height: 46px; margin-bottom: 6px; }
-    #s-setup .coach h3 { font-size: 20px; }
-    #s-setup .sens-row { margin-top: 8px; padding: 6px 12px; }
-    #s-setup .panel-foot { margin-top: 12px; }
-    #s-setup .btn { padding: 10px 22px; }
-    .cam-wrap { width: min(576px, 100%, calc((100vh - 300px) * 1.333)); }
-    .cam-wrap .tip, .sens-tip { display: none; }
-    #s-setup.screen { padding: 12px; }
-    #s-setup .panel { max-height: calc(100vh - 24px); }
-  }
-  .sens-row { display: flex; align-items: center; gap: 14px; margin-top: 12px; padding: 10px 14px; border-radius: 14px; background: rgba(255,255,255,.05); }
-  .sens-row { justify-content: center; }
-  .sens-tip { margin-left: auto; text-transform: none; letter-spacing: .02em; }
-  .sens-row .seg button { padding: 6px 11px; }
-
-  /* 1. 인트로 */
-  #s-intro { text-align: center; background: radial-gradient(ellipse at center, rgba(20,40,10,.28), rgba(20,40,10,.05) 70%); }
-  .intro-title {
-    font-family: "DynaPuff", "Outfit", sans-serif; font-weight: 700; font-size: clamp(44px, 8.6vw, 132px);
-    line-height: .95; letter-spacing: .01em; color: #fff6fb;
-    text-shadow: 0 .06em 0 #5b2a63, 0 .12em 0 rgba(30, 8, 40, .35), 0 .2em 40px rgba(30, 0, 40, .35);
-  }
-  .intro-title .sp { display: inline-block; color: var(--gold); font-size: .5em; vertical-align: top; animation: twinkle 1.6s ease-in-out infinite; }
-  @keyframes twinkle { 50% { transform: scale(.6) rotate(20deg); opacity: .5; } }
-  .intro-title span { display: inline-block; animation: bounce 1.2s ease-in-out infinite alternate; }
-  .intro-title .beat { color: var(--accent); text-shadow: 0 .06em 0 #8c2a5a, 0 .12em 0 rgba(30, 8, 40, .35), 0 .2em 40px rgba(30, 0, 40, .35); }
-  .intro-title .dot { color: var(--gold); }
-  .tagline { margin: 22px 0 34px; font-size: 11px; letter-spacing: .32em; color: var(--text); opacity: .8; }
-  @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-.04em); } }
-  .intro-actions { display: flex; flex-direction: column; align-items: center; gap: 16px; }
-  #goSetup { font-family: "DynaPuff", "Outfit", sans-serif; font-size: 26px; padding: 20px 56px; border-radius: 999px;
-    background: var(--gold); color: #2a1a33; border: 3px solid #2a1a33; box-shadow: 0 7px 0 #2a1a33; }
-  #goSetup:hover { transform: translateY(-3px); box-shadow: 0 10px 0 #2a1a33; }
-  #goSetup:active { transform: translateY(5px); box-shadow: 0 2px 0 #2a1a33; }
-
-  /* 2. 설정 단계 */
-  .stepper { display: flex; gap: 6px; margin-bottom: 24px; }
-  .stepper li { list-style: none; flex: 1; }
-  .stepper li::before { content: ""; display: block; height: 4px; border-radius: 4px; background: rgba(255,255,255,.14); margin-bottom: 8px; transition: background .3s; }
-  .stepper li.done::before, .stepper li.on::before { background: var(--text); }
-  .stepper li.on .mono { color: var(--text); }
-  .step { display: none; }
-  .step.on { display: block; animation: rise .35s cubic-bezier(.2,.8,.2,1); }
-  .step h2 { font-family: "Outfit", sans-serif; font-size: 26px; font-weight: 800; letter-spacing: -.02em; }
-  .step > p.lead { margin: 8px 0 22px; color: var(--muted); font-size: 14px; line-height: 1.6; max-width: 56ch; }
-  .two { display: grid; grid-template-columns: 1.3fr 1fr; gap: 22px; align-items: start; }
-  @media (max-width: 720px) { .two { grid-template-columns: 1fr; } }
-  .checks { list-style: none; display: flex; flex-direction: column; gap: 5px; }
-  .checks li { display: grid; grid-template-columns: 26px 1fr; gap: 10px; align-items: center; padding: 7px 12px; border-radius: 12px; background: rgba(255,255,255,.05); font-size: 14px; transition: background .3s; }
-  .checks li i { width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,.3); display: grid; place-items: center; font-style: normal; font-size: 12px; transition: all .25s; }
-  .checks li.ok { background: rgba(95,211,154,.12); }
-  .checks li.ok i { background: var(--ok); border-color: var(--ok); color: #0d2a1c; }
-  .checks li small { display: block; color: var(--muted); font-size: 12px; }
-  .tip { margin-top: 14px; font-size: 12px; color: var(--muted); line-height: 1.6; }
-  .row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 0; border-bottom: 1px solid var(--glass-line); }
-  .row:last-child { border-bottom: 0; }
-  .row h4 { font-size: 15px; font-weight: 500; }
-  .row h4 + p { font-size: 12px; color: var(--muted); margin-top: 3px; }
-  .seg { display: inline-flex; padding: 3px; border-radius: 999px; background: rgba(255,255,255,.08); flex: none; }
-  .seg button { padding: 8px 14px; border-radius: 999px; font-size: 12px; color: var(--muted); transition: background .2s, color .2s; }
-  .seg button.on { background: var(--text); color: #4a1e45; font-weight: 500; }
-  input[type=range] { width: 200px; accent-color: var(--text); }
-  .switch { width: 46px; height: 26px; border-radius: 999px; background: rgba(255,255,255,.18); position: relative; transition: background .2s; flex: none; }
-  .switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: var(--text); transition: transform .2s; }
-  .switch[aria-checked="true"] { background: var(--ok); }
-  .switch[aria-checked="true"]::after { transform: translateX(20px); }
-  .tester { display: grid; place-items: center; gap: 14px; padding: 22px; border-radius: 14px; background: rgba(255,255,255,.05); }
-  .big-wheel { width: 120px; height: 120px; border-radius: 50%; border: 8px solid var(--text); position: relative; transition: transform .05s linear; }
-  .big-wheel::before { content: ""; position: absolute; left: -2px; right: -2px; top: 50%; height: 8px; margin-top: -4px; background: var(--text); }
-  .big-wheel::after { content: ""; position: absolute; left: 50%; top: -14px; width: 14px; height: 14px; margin-left: -7px; border-radius: 50%; background: var(--accent); }
-  .bar { width: 100%; max-width: 280px; height: 10px; border-radius: 10px; background: rgba(255,255,255,.1); position: relative; overflow: hidden; }
-  .bar::before { content: ""; position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; margin-left: -1px; background: rgba(255,255,255,.4); }
-  .bar i { position: absolute; top: 0; bottom: 0; background: var(--accent); }
-  .panel-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 26px; gap: 12px; }
-
-  /* 3. 테마 선택 */
-  /* ---------- Music 단계: 게임 레벨 선택 느낌 ---------- */
-  #s-theme .panel { width: min(900px, 100%); }
-  .music-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-  .music-title { font-family: "DynaPuff", "Outfit", sans-serif; font-weight: 700; font-size: 34px; color: #fff6fb; text-shadow: 0 3px 0 #5b2a63; }
-  .palm-hint { color: var(--gold); text-transform: none; letter-spacing: .02em; font-size: 12px; }
-  .themes { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin: 18px 0 20px; padding: 12px 8px 20px; }
-  @media (max-width: 760px) { .themes { grid-template-columns: 1fr 1fr; } }
-  .theme {
-    --ink: #2a1a33;
-    position: relative; display: flex; flex-direction: column; align-items: center; text-align: center;
-    padding: 14px 12px 14px; border-radius: 26px; background: var(--bg); color: var(--ink);
-    border: 3px solid var(--ink); box-shadow: 0 6px 0 var(--ink);
-    transform: rotate(var(--tilt)); transition: transform .18s cubic-bezier(.2,1.4,.4,1), box-shadow .18s;
-  }
-  .theme.palm-on, .songs li.palm-on, .btn.palm-on { outline: 4px solid var(--ok); outline-offset: 4px; }
-  .theme:hover, .theme.palm-on { transform: rotate(0) translateY(-4px) scale(1.03); box-shadow: 0 10px 0 var(--ink); }
-  /* 선택된 카드: 흰 테두리는 그림자와 겹치지 않도록 outline으로 (네 변 모두 온전히 보이게) */
-  .theme.on { transform: rotate(0) translateY(-6px) scale(1.05); box-shadow: 0 10px 0 var(--ink); outline: 5px solid rgba(255,255,255,.9); outline-offset: 3px; }
-  .theme.on.palm-on { outline-color: var(--ok); }
-  .theme .art { width: 78px; height: 78px; margin-bottom: 6px; }
-  .theme .art svg { width: 100%; height: 100%; overflow: visible; }
-  .theme.on .art svg, .theme:hover .art svg { animation: wobble .9s ease-in-out infinite; }
-  @keyframes wobble { 25% { transform: rotate(-6deg) scale(1.04); } 75% { transform: rotate(6deg) scale(1.04); } }
-  .theme b { font-family: "DynaPuff", "Outfit", sans-serif; font-weight: 700; font-size: 18px; line-height: 1.1; }
-  .theme .mono { color: rgba(42,26,51,.7); margin-top: 6px; font-size: 9px; }
-  .theme .pick { position: absolute; top: -12px; right: -8px; padding: 4px 9px; border-radius: 999px; background: var(--gold); color: var(--ink); border: 2px solid var(--ink); font: 700 10px "Space Mono", monospace; transform: rotate(8deg); display: none; }
-  .theme.on .pick { display: block; }
-
-  .songs { list-style: none; display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }
-  .songs li {
-    --ink: #2a1a33;
-    display: grid; grid-template-columns: 46px 1fr auto; gap: 12px; align-items: center;
-    padding: 10px 14px 10px 10px; border-radius: 18px; cursor: pointer; color: var(--ink);
-    background: #fff6e6; border: 3px solid var(--ink); box-shadow: 0 4px 0 var(--ink);
-    transition: transform .15s cubic-bezier(.2,1.4,.4,1), box-shadow .15s, background .2s;
-  }
-  .songs li:hover, .songs li.palm-on { transform: translateY(-3px); box-shadow: 0 7px 0 var(--ink); }
-  .songs li { position: relative; }
-  /* 선택된 곡: 색 + 굵은 노란 테두리 + 살짝 떠오름 */
-  .songs li.on {
-    background: var(--hl, #ffe08a); transform: translateY(-3px);
-    outline: 4px solid var(--gold); outline-offset: 3px; box-shadow: 0 7px 0 var(--ink);
-  }
-  /* 지금 재생 중인 곡: 오른쪽 위 스티커 */
-  .songs li.playing::after {
-    content: "♪ PLAYING"; position: absolute; top: -12px; right: 12px; padding: 3px 8px; border-radius: 999px;
-    background: var(--gold); color: var(--ink); border: 2px solid var(--ink);
-    font: 700 9px "Space Mono", monospace; letter-spacing: .04em; transform: rotate(4deg);
-  }
-  .songs li .disc { width: 46px; height: 46px; border-radius: 50%; position: relative;
-    background: radial-gradient(circle, var(--hl, #ffd45c) 0 5px, #2a1a33 6px 9px, #3c2a47 10px 12px, #2a1a33 13px 15px, #3c2a47 16px 18px, #2a1a33 19px); }
-  .songs li .disc::after { content: ""; position: absolute; inset: 0; border-radius: 50%; background: linear-gradient(135deg, rgba(255,255,255,.28), transparent 45%); }
-  .songs li.playing .disc { animation: spin 1.8s linear infinite; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .songs li .nm { font-family: "Outfit", sans-serif; font-weight: 800; font-size: 16px; line-height: 1.15; }
-  .songs li .scene { font: 700 10px "Space Mono", monospace; letter-spacing: .04em; text-transform: uppercase; color: rgba(42,26,51,.6); margin-top: 3px; }
-  .songs li .bpmn { font: 700 13px "Space Mono", monospace; text-align: right; }
-  .songs li .bpmn small { display: block; font-size: 9px; opacity: .6; }
-  .songs li.add { grid-template-columns: 46px 1fr; background: transparent; color: var(--text); border-style: dashed; border-color: rgba(255,255,255,.35); box-shadow: none; }
-  .songs li.add .disc { background: none; border: 2px dashed rgba(255,255,255,.4); display: grid; place-items: center; font-size: 20px; }
-  .songs li.add .disc::after { display: none; }
-  .songs li.loading { opacity: .6; cursor: wait; }
-  .songs li.empty { display: block; background: transparent; box-shadow: none; cursor: default; transform: none; }
-  .empty { grid-column: 1 / -1; padding: 22px; text-align: center; color: var(--muted); font-size: 14px; border: 2px dashed var(--glass-line); border-radius: 18px; }
-  .btn.drive { font-family: "DynaPuff", "Outfit", sans-serif; font-size: 18px; padding: 14px 34px; background: var(--gold); color: #2a1a33; border: 3px solid #2a1a33; box-shadow: 0 5px 0 #2a1a33; }
-  .btn.drive:not(:disabled) { animation: readyPulse 1.4s ease-in-out infinite; }
-
-  /* ---------- 손바닥 커서 ---------- */
-  #palm { position: fixed; z-index: 30; left: 0; top: 0; width: 64px; height: 64px; margin: -32px 0 0 -32px; pointer-events: none; opacity: 0; transition: opacity .25s; }
-  #palm.on { opacity: 1; }
-  #palm svg { width: 100%; height: 100%; filter: drop-shadow(0 3px 6px rgba(0,0,0,.45)); }
-  #palm .track { fill: rgba(42,26,51,.55); stroke: rgba(255,255,255,.7); stroke-width: 3; }
-  #palm .fill { fill: none; stroke: var(--ok); stroke-width: 6; stroke-linecap: round; transform: rotate(-90deg); transform-origin: 32px 32px; }
-  #palm .hand rect { fill: #fff6fb; }
-  #palm.hover .track { fill: rgba(126,232,176,.45); }
-  .tag {
-    display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;
-    font: 700 9px "Space Mono", monospace; letter-spacing: .06em; text-transform: uppercase;
-    padding: 3px 7px 3px 6px; border-radius: 999px; background: rgba(255,255,255,.08); color: var(--text);
-  }
-  .tag::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--g); }
-  .empty { padding: 24px; text-align: center; color: var(--muted); font-size: 14px; border: 1px dashed var(--glass-line); border-radius: 12px; }
-
-  /* 게임 오버 */
-  #s-over .panel, #s-clear .panel { width: min(460px, 100%); text-align: center; }
-  #s-clear h2 { font-family: "Outfit", sans-serif; font-weight: 800; font-size: 40px; letter-spacing: -.03em; }
-  #s-clear h2 .em { display: block; font-size: 56px; margin-bottom: 6px; }
-  .next-list { list-style: none; display: grid; gap: 6px; margin: 18px 0 22px; text-align: left; }
-  .next-list li { padding: 10px 14px; border-radius: 12px; background: rgba(255,255,255,.06); font-size: 14px; display: flex; justify-content: space-between; }
-  .next-list li b { font-family: "Outfit"; font-weight: 700; }
-  #s-over h2 { font-family: "Outfit", sans-serif; font-weight: 800; font-size: 44px; letter-spacing: -.03em; }
-  #overWhy { margin-top: 6px; color: var(--muted); font-size: 14px; }
-  .final { display: flex; justify-content: center; gap: 30px; margin: 22px 0 26px; }
-  .final b { display: block; font-family: "Outfit", sans-serif; font-weight: 800; font-size: 48px; }
-  .final .new { color: var(--gold); }
-  .over-actions { display: flex; flex-direction: column; gap: 10px; align-items: center; }
-  .over-actions .sub { display: flex; gap: 8px; }
-
-  /* 게임 중 설명 카드 */
-  .howto {
-    position: fixed; z-index: 5; left: 50%; bottom: 20px; transform: translate(-50%, calc(100% + 40px)); opacity: 0; pointer-events: none;
-    display: flex; gap: 10px; width: max-content; max-width: calc(100vw - 40px); overflow-x: auto; padding: 4px;
-    transition: transform .45s cubic-bezier(.2,.8,.2,1), opacity .3s;
-  }
-  .howto.peek { transform: translateX(-50%); opacity: 1; pointer-events: auto; }
-  .howto .c { flex: none; width: 168px; padding: 14px 14px 13px; }
-  .howto .c .em { font-size: 22px; line-height: 1; }
-  .howto .c h4 { font-family: "Outfit", sans-serif; font-size: 12px; font-weight: 700; margin: 10px 0 4px; }
-  .howto .c p { font-size: 12px; line-height: 1.5; color: var(--muted); }
-  .help { position: fixed; z-index: 6; right: 20px; bottom: 20px; width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; font-family: "Outfit"; font-weight: 700; }
-  body:not([data-screen="game"]) .help { display: none; }
-  .pause-btn { position: fixed; z-index: 6; right: 20px; bottom: 68px; width: 38px; height: 38px; border-radius: 50%;
-    display: grid; place-items: center; font-size: 12px; letter-spacing: -2px; }
-  body:not([data-screen="game"]) .pause-btn { display: none; }
-  body[data-screen="pause"] #s-pause { opacity: 1; pointer-events: auto; }
-  body[data-screen="pause"] .hud { opacity: .35; }
-  .pause-panel { width: min(440px, 100%); text-align: center; }
-  .pause-panel h2 { font-family: "DynaPuff", "Outfit", sans-serif; font-weight: 700; font-size: 40px; color: #fff6fb; text-shadow: 0 3px 0 #5b2a63; }
-  .pause-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 18px; }
-  .pause-grid .btn { padding: 12px 10px; font-size: 13px; }
-
-  @keyframes rise { from { opacity: 0; transform: translateY(12px); } }
-  @media (max-width: 760px) { #camCard:not(.big) { width: 150px; } .now { max-width: 220px; } .scorebox b { font-size: 24px; } .panel { padding: 20px; } }
-  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
-  @media (max-height: 820px) {
-    /* 음악 고르기 · 미션 화면도 낮은 화면에선 촘촘하게 */
-    #s-theme.screen, #s-mission.screen { padding: 12px; }
-    #s-theme .panel, #s-mission .panel { padding: 16px 22px; max-height: calc(100vh - 24px); }
-    #s-theme .stepper { margin-bottom: 8px; }
-    .music-title { font-size: 26px; }
-    .themes { margin: 8px 0 10px; padding: 8px 6px 14px; gap: 14px; }
-    .theme { padding: 8px 10px 10px; }
-    .theme .art { width: 44px; height: 44px; margin-bottom: 2px; }
-    .theme b { font-size: 15px; }
-    .theme .mono { margin-top: 2px; }
-    .songs { gap: 8px; }
-    .songs li { padding: 6px 12px 6px 8px; grid-template-columns: 34px 1fr auto; }
-    .songs li .disc { width: 34px; height: 34px; }
-    #s-theme .panel-foot, #s-mission .panel-foot { margin-top: 12px; }
-    .mission h2 { font-size: 24px; }
-    .mission-art { max-width: 280px; margin: 0 auto; }
-    .mission-tips { margin: 8px 0 12px; gap: 8px; }
-    .mission-tips li { padding: 8px 6px; }
-    .mission-tips b { font-size: 26px; }
-    .mission-tips strong { font-size: 15px; }
-    #missionTime { font-size: 20px; }
-  }
-</style>
+<link rel="stylesheet" href="css/base.css" />
+<link rel="stylesheet" href="css/hud.css" />
+<link rel="stylesheet" href="css/onboarding.css" />
+<link rel="stylesheet" href="css/menus.css" />
 </head>
 <body data-screen="intro">
 <canvas id="board" aria-label="Game view"></canvas>
@@ -762,62 +320,37 @@
 <script type="module">
 import { PoseLandmarker, FilesetResolver }
   from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14";
+import {
+  VIEW, WORLD, DENSITY, DEFAULTS, BODY_W, HEAD_R,
+  START_SPEED, MAX_SPEED, SPEED_STEP, SPEED_BASE, SPEED_PER_BPM, MUSIC_MIN_SPEED,
+  MUSIC_MAX_SPEED, START_LEN, GROW, SEG, FRUIT_R, FRUIT_COUNT,
+  tempoFor, stageSpeedMul, driveSecs, CONES_STEP, TENT_R, BOOST_TIME,
+  BOOST_MUL, MP_MAX, HIT_DAMAGE, JELLY_HEAL, CLEAR_HEAL, SOLID,
+  FRUIT_TYPES, JELLY_COLORS, CELL, GRID_N, KEY_SIDE, WHEEL_DEAD,
+  GRACE_MS, PALM_SCREENS, GRAB, SHOE_CHANCE, GOLD_CHANCE
+} from "./js/config.js";
 
 // ---------- Game: 드라이브 시점 (카메라가 뱀을 따라가며 회전) ----------
-const VIEW = 680;             // 화면의 짧은 변 = 680 논리 단위 (실제 픽셀은 화면 해상도에 맞춰 확대)
-const WORLD = 8000;           // 달리는 세계 크기 (가장자리는 반대편과 이어짐) – 스테이지를 길게 하려고 넓힘
-const DENSITY = (WORLD / 2400) ** 2;   // 세계가 넓어진 만큼 풍경·먹이·콘 개수도 늘려 밀도 유지
 let VW = VIEW, VH = VIEW, CX = VW / 2, CY = VH * 0.66;   // 화면 크기와 뱀 머리 위치 (앞쪽을 더 많이 보이게 아래쪽)
 const board = document.getElementById("board");
 const ctx = board.getContext("2d");
 const $ = id => document.getElementById(id);
 
 // ---------- 설정 (온보딩에서 정하고 브라우저에 기억) ----------
-const DEFAULTS = { volume: 0.6, bpmSpeed: true, fx: 1, sens: 5, speed: 1, obstacles: 1, syncMs: null };   // syncMs: null = 자동(장치 지연값)
 let settings = { ...DEFAULTS }, hasSaved = false;
 try { const s = JSON.parse(localStorage.getItem("armsnake-settings")); if (s) { settings = { ...DEFAULTS, ...s }; hasSaved = true; } } catch {}
 if (settings.obstacles > 2) settings.obstacles = settings.obstacles >= 50 ? 2 : 1;   // 예전 저장값(콘 개수) → 단계
 function saveSettings() { try { localStorage.setItem("armsnake-settings", JSON.stringify(settings)); } catch {} }
 
-const BODY_W = 16;            // 뱀 몸 두께(px)
-const HEAD_R = BODY_W / 2;
 let MAX_TURN = 2.4;           // 핸들 끝까지 꺾었을 때 초당 회전량(rad) – 감도 설정으로 바뀜
 let TURN_EASE = 11;           // 회전 속도가 목표에 따라붙는 빠르기 – 작을수록 부드러움
-const START_SPEED = 110;      // px/s (음악 없을 때 시작 속도)
-const MAX_SPEED = 190;
-const SPEED_STEP = 2;         // 열매 하나당 속도 증가 (음악이 없을 때만)
-// 음악 모드 속도: 느린 곡과 빠른 곡 차이가 확실히 느껴지도록 BPM 차이를 1.6배로 키움
-// 속도(px/s) = 80 + (BPM − 60) × 1.6 → 72 BPM ≈ 99 · 90 ≈ 128 · 124 ≈ 182 · 145 ≈ 216 · 174 ≈ 262
-const SPEED_BASE = 80, SPEED_PER_BPM = 1.6;
-const MUSIC_MIN_SPEED = 80, MUSIC_MAX_SPEED = 280;
-const START_LEN = 110;        // 애벌레 시작 몸 길이(px)
-const GROW = 22;              // 먹이 1점당 늘어나는 길이(px)
-const SEG = 11;               // 몸 마디 간격(px)
 const headR = () => 12;       // 머리 크기 (충돌 판정에도 사용)
-const FRUIT_R = 23;           // 먹는 아이템 크기 (크게, 눈에 잘 띄게)
-const FRUIT_COUNT = Math.round(24 * DENSITY);  // 세계에 동시에 놓이는 먹이 수 (한 화면에 보통 2~3개 보이게)
 
 let obstacles = [], demo = true;
 // 스테이지: 텐트(목적지)에 시간 안에 도착하면 다음 스테이지 (비트 빨라짐, 장애물 늘어남)
 let stage = 1, tent = null, timeLeft = 0, tempo = 1;
-// 스테이지 난이도 곡선: 1~3은 연습 구간(느린 비트·느린 애벌레·가까운 텐트), 4부터 본격적으로 빨라짐
-//   스테이지    1     2     3    | 4     5     6 …
-//   비트 배율  0.85  0.90  0.95  | 1.00  1.08  1.16 … (+8%씩)
-//   속도 배율  0.70  0.78  0.86  | 1.00  1.12  1.24 … (+12%씩, 비트 상승과 곱해짐)
-//   주행 시간  12s   14s   16s   | 20s   22.5s 25s … (텐트까지 거리 = 속도 × 이 시간)
-const tempoFor = n => n <= 3 ? 0.8 + n * 0.05 : 1 + (n - 4) * 0.08;
-const stageSpeedMul = n => n <= 3 ? 0.62 + n * 0.08 : 1 + (n - 4) * 0.12;
-const driveSecs = n => n <= 3 ? 10 + n * 2 : 20 + (n - 4) * 2.5;
-const CONES_STEP = 10;        // 스테이지마다 콘 +10개
-const TENT_R = 58;            // 텐트 크기 (멀리서도 잘 보이게 크게)
-// MP: 장애물에 부딪히면 줄어들고, 0이 되면 게임 오버
-// 운동화: 먹으면 5초 동안 1.5배 빨라짐
-const BOOST_TIME = 5, BOOST_MUL = 1.5;
 let boostT = 0;
-const MP_MAX = 100, HIT_DAMAGE = 25, JELLY_HEAL = 10, CLEAR_HEAL = 30;
 let mp = MP_MAX, invuln = 0, hitFlash = 0;
-// 부딪히는 풍경 (종류: 충돌 반지름 비율)
-const SOLID = { tree: 0.75, cactus: 0.85, rock: 0.8, block: 0.62 };
 function solidAt(pt, pad, always = false) {
   if (!settings.obstacles && !always) return null;
   for (const p of propsNear(currentSceneKey(), pt.x, pt.y, pad + 80)) {
@@ -856,10 +389,9 @@ function reset() {
   for (let i = 0; i < FRUIT_COUNT; i++) fruits.push(newFruit());
 }
 
-// 아이템 종류: 운동화(스피드업) 6% · 황금 별 9% · 나머지는 과일·젤리빈
 function pickType() {
   const r = Math.random();
-  return r < 0.06 ? "shoe" : r < 0.15 ? "gold" : FRUIT_TYPES[Math.random() * FRUIT_TYPES.length | 0];
+  return r < SHOE_CHANCE ? "shoe" : r < SHOE_CHANCE + GOLD_CHANCE ? "gold" : FRUIT_TYPES[Math.random() * FRUIT_TYPES.length | 0];
 }
 // 먹는 것 = 과일 + 젤리빈
 // 이번 스테이지의 텐트와 콘 배치 (뱀이 지금 있는 곳 기준)
@@ -885,8 +417,6 @@ function placeStage() {
   timeLeft = Math.round(d / Math.max(40, goalSpeed()) * slack + 8);
 }
 
-const FRUIT_TYPES = ["cherry", "lemon", "grape", "orange", "berry", "jelly", "jelly", "jelly"];
-const JELLY_COLORS = ["#ff5fa2", "#7ee081", "#ffb347", "#8f7bff", "#4fd2ff", "#ff6b6b"];
 function newFruit() {
   let f;
   do {
@@ -1115,7 +645,6 @@ function propsFor(key) {
   propCache.set(key, list);
   return list;
 }
-const CELL = 400, GRID_N = WORLD / CELL;
 const cellOf = v => Math.floor(wrap(v) / CELL) % GRID_N;
 // (x, y) 반경 r 안의 칸들에 있는 소품을 원래 순서(겹침 순서)대로 돌려줌
 function propsNear(key, x, y, r) {
@@ -2499,7 +2028,6 @@ function updateKeySteer() {
   keySteer = (held.has("right") ? 1 : 0) - (held.has("left") ? 1 : 0);
   if (keySteer || !landmarker) showWheel(keySteer * 0.9, !!keySteer);
 }
-const KEY_SIDE = { ArrowLeft: "left", a: "left", ArrowRight: "right", d: "right" };
 addEventListener("keydown", e => {
   if (e.key in KEY_SIDE) { e.preventDefault(); held.add(KEY_SIDE[e.key]); updateKeySteer(); }
   // Esc / P: 게임 중이면 일시정지, 일시정지 중이면 계속
@@ -2524,9 +2052,7 @@ const video = $("video"), camCanvas = $("camCanvas"), cctx = camCanvas.getContex
 let landmarker = null, lastVideoTime = -1;
 let steerSmoothed = 0, upFrames = 0, lastSeen = 0, needCalib = false, wheelZero = 0;
 let wheel = 0, fps = 0, lastFrameT = 0;
-const WHEEL_DEAD = 0.035;     // ±2° 안쪽은 직진 (손 떨림 무시)
 let WHEEL_MAX = 0.55;         // ±32° 꺾으면 최대 회전 – 감도 설정으로 바뀜
-const GRACE_MS = 350;         // 손이 잠깐 안 잡혀도 이 시간 동안은 마지막 핸들 값 유지
 
 // One Euro Filter: 가만히 있을 땐 강하게 떨림 제거, 빨리 돌릴 땐 지연 없이 따라감
 class OneEuro {
@@ -2645,7 +2171,6 @@ function handleArms(lm, now) {
 
 // ---------- 손바닥 커서: 들어 올린 손을 화면 위 커서로 ----------
 // 손목 좌표(카메라)를 화면 좌표로 옮겨서, data-palm 버튼 위에 1초 머물면 클릭
-const PALM_SCREENS = ["theme", "over", "clear", "mission", "pause"];
 const palmRaw = { x: 0.5, y: 0.5, at: 0 };
 const palmCur = { x: innerWidth / 2, y: innerHeight / 2 };
 let palmEl = null, palmT = 0, palmCool = 0, palmLastT = 0;
@@ -2701,7 +2226,6 @@ function previewFor(el) {
 
 // "NEXT" 원 잡기: 준비 완료 단계에서 화면 오른쪽 위 원에 손바닥을 1초 대면 다음 단계로
 // (카메라 캔버스는 CSS로 좌우 반전되므로 원본 좌표 x=0.22 → 화면에서는 오른쪽 위에 보임)
-const GRAB = { x: 0.22, y: 0.22, r: 0.085, hold: 1.0 };   // 화면 기준 오른쪽 위
 let grabT = 0, grabLast = 0;
 function drawGrabNext(lm, W, H) {
   const active = document.body.dataset.screen === "setup" && STEPS[stepIdx] === "camera" && coachStage === 6;

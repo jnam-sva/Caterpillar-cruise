@@ -1,0 +1,78 @@
+/* ---------- 게임 중 HUD ---------- */
+.hud { position: fixed; z-index: 5; transition: opacity .3s; }
+body:not([data-screen="game"]):not([data-screen="over"]):not([data-screen="clear"]) .hud { opacity: 0; pointer-events: none; }
+.tl { top: 20px; left: 20px; display: flex; flex-direction: column; gap: 12px; align-items: flex-start; }
+.bl { left: 20px; bottom: 20px; font-size: 14px !important; opacity: .85; }
+.logo { font-family: "DynaPuff", "Outfit", sans-serif; font-weight: 700; font-size: 20px; letter-spacing: .01em; text-shadow: 0 2px 12px rgba(0,0,0,.35); }
+.logo i { color: var(--accent); font-style: normal; }
+.scorebox { display: flex; gap: 6px; padding: 10px 16px; }
+.scorebox div { min-width: 70px; }
+.scorebox b { display: block; font-family: "Outfit", sans-serif; font-weight: 700; font-size: 34px; line-height: 1.05; font-variant-numeric: tabular-nums; }
+.scorebox .pop { animation: pop .35s cubic-bezier(.2,1.6,.4,1); }
+@keyframes pop { 40% { transform: scale(1.35); color: var(--gold); } }
+.mpbox { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; padding: 10px 14px; width: 240px; }
+.mpbar { height: 12px; border-radius: 12px; background: rgba(255,255,255,.12); overflow: hidden; }
+.mpbar i { display: block; height: 100%; width: 100%; border-radius: 12px; background: linear-gradient(90deg, #8fd8ff, #b6f5a8); transition: width .3s cubic-bezier(.2,.8,.2,1), background .3s; }
+.mpbox.low .mpbar i { background: linear-gradient(90deg, #ff4d2e, #ffb347); }
+.mpbox b { font-family: "Outfit", sans-serif; font-weight: 700; font-size: 15px; min-width: 3ch; text-align: right; font-variant-numeric: tabular-nums; }
+.mpbox.hit { animation: shake .35s; }
+@keyframes shake { 20% { transform: translateX(-6px); } 40% { transform: translateX(6px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(3px); } }
+.now { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; padding: 10px 14px 10px 12px; max-width: 340px; }
+.now .disc { width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; background: rgba(255,255,255,.1); font-size: 15px; }
+.now .name { font-weight: 500; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.now .sub { margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.now .bpm { text-align: right; }
+.now .bpm b { font-family: "Outfit", sans-serif; font-weight: 700; font-size: 22px; display: flex; align-items: center; gap: 6px; justify-content: flex-end; }
+#beatDot { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,.25); transition: background .25s, transform .25s; }
+#beatDot.on { background: var(--accent); transform: scale(1.6); transition: none; }
+
+.tc { top: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 22px; padding: 10px 22px; text-align: center; }
+.tc b { display: block; font-family: "Outfit", sans-serif; font-weight: 700; font-size: 22px; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.tc .timer b { font-size: 30px; min-width: 3.2ch; }
+.boost-pill { position: absolute; left: 50%; bottom: -16px; transform: translateX(-50%); padding: 4px 12px; border-radius: 999px;
+  background: #3fa9ff; color: #fff; border: 2px solid #2a1a33; font: 700 11px "Space Mono", monospace; letter-spacing: .06em; white-space: nowrap;
+  animation: pop .35s cubic-bezier(.2,1.6,.4,1); }
+.tc.hurry .timer b { color: var(--accent); animation: tick 1s steps(1) infinite; }
+@keyframes tick { 50% { opacity: .45; } }
+.float { position: fixed; z-index: 6; left: 50%; top: 92px; transform: translateX(-50%); font-family: "Outfit"; font-weight: 800; font-size: 18px; color: var(--gold); pointer-events: none; animation: floatUp 1s ease-out forwards; text-shadow: 0 2px 10px rgba(0,0,0,.5); }
+.speed-banner {
+  position: fixed; z-index: 7; left: 50%; top: 36%; transform: translate(-50%, -50%); pointer-events: none; text-align: center;
+  font-family: "DynaPuff", "Outfit", sans-serif; font-weight: 700; font-size: 56px; color: #fff; letter-spacing: .01em;
+  padding: 10px 34px 12px; border-radius: 28px; background: #3fa9ff; border: 4px solid #2a1a33; box-shadow: 0 7px 0 #2a1a33;
+  animation: bannerPop 1.4s cubic-bezier(.2,1.5,.4,1) forwards;
+}
+.speed-banner .zap { display: inline-block; margin-right: 8px; animation: zap .3s ease-in-out 3; }
+.speed-banner small { display: block; font: 700 12px "Space Mono", monospace; letter-spacing: .1em; opacity: .9; margin-top: 2px; }
+@keyframes bannerPop {
+  0% { transform: translate(-50%, -50%) scale(.3) rotate(-8deg); opacity: 0; }
+  18% { transform: translate(-50%, -50%) scale(1.08) rotate(3deg); opacity: 1; }
+  30%, 75% { transform: translate(-50%, -50%) scale(1) rotate(-2deg); opacity: 1; }
+  100% { transform: translate(-50%, -90%) scale(.9); opacity: 0; }
+}
+@keyframes zap { 50% { transform: scale(1.4) rotate(15deg); } }
+@keyframes floatUp { to { transform: translate(-50%, -26px); opacity: 0; } }
+
+/* 카메라 카드: 게임 중엔 오른쪽 위, 카메라 설정 단계에선 크게 */
+#camCard { position: fixed; z-index: 5; top: 20px; right: 20px; width: min(300px, 32vw); padding: 8px; transition: opacity .3s; }
+body:not([data-screen="game"]):not([data-screen="over"]):not([data-screen="theme"]) #camCard:not(.big) { opacity: 0; pointer-events: none; }
+body[data-screen="theme"] #camCard.live { z-index: 9; width: 200px; }
+body[data-screen="theme"] #camCard:not(.live) { opacity: 0; pointer-events: none; }
+#camCard.big { position: relative; top: auto; right: auto; width: 100%; z-index: auto; }
+.cam { position: relative; aspect-ratio: 4/3; background: #000; border-radius: 12px; overflow: hidden; }
+.cam video, .cam canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+.cam video { filter: grayscale(1) brightness(.85); opacity: .7; }
+.cam .live { position: absolute; top: 8px; left: 8px; display: flex; align-items: center; gap: 6px; }
+.cam .live::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); animation: blink 1.4s infinite; }
+.cam .off { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; padding: 16px; color: var(--muted); font-size: 13px; }
+@keyframes blink { 50% { opacity: .2; } }
+.cam-foot { display: flex; align-items: center; gap: 10px; padding: 8px 4px 2px; }
+#status { flex: 1; text-transform: none; letter-spacing: .02em; font-size: 11px; }
+.compass { width: 30px; height: 30px; position: relative; flex: none; }
+.needle { position: absolute; inset: 0; border: 2px solid rgba(255,255,255,.3); border-radius: 50%; transition: border-color .2s; }
+.needle::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 2px; margin-top: -1px; background: rgba(255,255,255,.3); }
+.needle::after { content: ""; position: absolute; left: 50%; top: -4px; width: 6px; height: 6px; margin-left: -3px; border-radius: 50%; background: rgba(255,255,255,.3); }
+.needle.on { border-color: var(--text); }
+.needle.on::before { background: var(--text); }
+.needle.on::after { background: var(--accent); }
+.speed { display: none; }                    /* 속도 수치는 숨김 */
+#camCard.big .cam-foot { display: none; }    /* 설정 화면 카메라 아래 상태줄 숨김 */

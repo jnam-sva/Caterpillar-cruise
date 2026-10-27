@@ -1,0 +1,24 @@
+:root {
+  --glass: rgba(40, 24, 56, .74);
+  --glass-strong: rgba(36, 22, 50, .93);
+  --glass-line: rgba(255, 214, 250, .18);
+  --text: #fff6fb;
+  --muted: rgba(255, 238, 250, .62);
+  --accent: #ff6fa8;
+  --gold: #ffd45c;
+  --ok: #7ee8b0;
+  --radius: 24px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; background: #111; }
+body { color: var(--text); font-family: "IBM Plex Sans KR", sans-serif; -webkit-font-smoothing: antialiased; }
+.mono { font-family: "Space Mono", monospace; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.glass {
+  background: var(--glass); border: 1px solid var(--glass-line); border-radius: var(--radius);
+  backdrop-filter: blur(14px) saturate(1.2); -webkit-backdrop-filter: blur(14px) saturate(1.2);
+  box-shadow: 0 4px 0 rgba(20, 8, 30, .25);
+}
+button { font: inherit; color: inherit; cursor: pointer; border: 0; background: none; }
+[hidden] { display: none !important; }
+
+#board { position: fixed; inset: 0; z-index: 0; width: 100vw; height: 100vh; display: block; }
