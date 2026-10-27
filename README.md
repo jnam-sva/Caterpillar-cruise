@@ -6,3 +6,12 @@ Steer a caterpillar with an invisible steering wheel — your arms, tracked by y
 
 - Use Chrome on a laptop with a webcam, and allow camera access.
 - Stand back so both arms are in frame, then hold your arms like a steering wheel.
+
+## Body moves
+
+| Move | What it does |
+|---|---|
+| Tilt your arms like a steering wheel | Steer |
+| Pinch your thumb and index finger 🤏 | Pick a menu item |
+| Stretch both arms out wide (T shape) | Pause |
+| Raise both hands up | Play again |

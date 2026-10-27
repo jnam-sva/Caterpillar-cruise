@@ -44,7 +44,11 @@
   <div><span class="mono">Stage</span><b id="stageNum">1</b></div>
   <div class="timer"><span class="mono">Time</span><b id="timeLeft">0:45</b></div>
   <span class="boost-pill" id="boostPill" hidden>⚡ BOOST</span>
-  <div><span class="mono">⛺ Tent</span><b id="tentDist">—</b></div>
+  <div class="trip">
+    <span class="mono">Way home</span>
+    <div class="trip-bar"><i id="tripFill"></i><em id="tripCat"></em><span class="trip-tent">⛺</span></div>
+    <small class="mono" id="tentDist">—</small>
+  </div>
 </div>
 
 <div id="camCard" class="glass">
@@ -189,7 +193,7 @@
     </ol>
     <div class="music-head">
       <h2 class="music-title">Pick your mood</h2>
-      <span class="palm-hint mono" id="palmHint">✋ Hover your palm over a card to pick it</span>
+      <span class="palm-hint mono" id="palmHint">👌 Point at a card · pinch to pick</span>
     </div>
     <div class="themes" id="themes"></div>
     <ul class="songs" id="songs"></ul>
@@ -226,7 +230,8 @@
 <section class="screen" id="s-mission" aria-label="Mission">
   <div class="panel glass mission">
     <span class="mono">Stage <span id="missionStage">1</span> · Mission</span>
-    <h2>Get home before time runs out!</h2>
+    <h2>Take the caterpillar home!</h2>
+    <p class="mission-lead">Its tent is out there somewhere. Follow the <b>HOME</b> arrow and get there before time runs out.</p>
     <svg class="mission-art" viewBox="0 0 360 120" aria-hidden="true">
       <path d="M70 78 C120 30, 190 110, 262 62" fill="none" stroke="#fff6fb" stroke-width="4" stroke-dasharray="2 12" stroke-linecap="round" opacity=".8"/>
       <g class="m-cat">
@@ -235,6 +240,10 @@
         <circle cx="55" cy="80" r="14" fill="#ff8fb8" stroke="#2a1a33" stroke-width="3"/>
         <circle cx="59" cy="77" r="2.3" fill="#2a1a33"/><circle cx="51" cy="76" r="2.3" fill="#2a1a33"/>
         <path d="M52 67 q-4 -10 -9 -12 M60 67 q3 -10 9 -12" fill="none" stroke="#2a1a33" stroke-width="2.5" stroke-linecap="round"/>
+      </g>
+      <g class="m-say">
+        <path d="M6 8 H118 a10 10 0 0 1 10 10 V34 a10 10 0 0 1 -10 10 H62 L50 56 L50 44 H16 a10 10 0 0 1 -10 -10 V18 a10 10 0 0 1 10 -10Z" fill="#fff6fb" stroke="#2a1a33" stroke-width="3" stroke-linejoin="round"/>
+        <text x="67" y="32" text-anchor="middle" font-family="Outfit, sans-serif" font-weight="800" font-size="15" fill="#2a1a33">Take me home!</text>
       </g>
       <g class="m-tent">
         <path d="M262 92 L296 30 L330 92 Z" fill="#ff7a45" stroke="#2a1a33" stroke-width="3.5" stroke-linejoin="round"/>
@@ -250,13 +259,19 @@
     </svg>
     <!-- 큰 아이콘 + 짧은 한마디로 한눈에 -->
     <ul class="mission-tips">
-      <li><b>⛺</b><strong>Find the tent</strong><span>Follow the arrow</span></li>
+      <li><b>⛺</b><strong>Go home</strong><span>Follow the arrow</span></li>
       <li><b>⏱</b><strong id="missionTime">—</strong><span>Time limit</span></li>
       <li><b>🌵</b><strong>Don’t crash</strong><span>Lose MP</span></li>
       <li><b>👟</b><strong>Speed boost</strong><span>Grab sneakers</span></li>
     </ul>
+    <ul class="moves" aria-label="Body moves">
+      <li><b>🛞</b><span>Tilt arms<br><em>Steer</em></span></li>
+      <li><b><svg class="t-pose" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="2.6"/><path d="M2 10.5 H22 M12 8 V16 L8.5 22 M12 16 L15.5 22"/></svg></b><span>Arms out wide<br><em>Pause</em></span></li>
+      <li><b>👌</b><span>Pinch a button<br><em>Select</em></span></li>
+      <li><b>🙌</b><span>Both hands up<br><em>Play again</em></span></li>
+    </ul>
     <button class="btn drive" id="goBtn" data-palm>Let’s go! <span id="goCount">10</span></button>
-    <div class="mono" style="margin-top:10px">Hover your palm or press Space</div>
+    <div class="mono" style="margin-top:10px">Pinch the button or press Space</div>
   </div>
 </section>
 
@@ -277,7 +292,7 @@
   </div>
 </section>
 
-<!-- 손바닥 커서: 카메라로 손을 따라다니며, 버튼 위에 1초 머물면 선택 -->
+<!-- 손바닥 커서: 카메라로 손을 따라다니며, 버튼 위에서 핀치하면 선택 (손 모델이 없으면 1초 머물기) -->
 <div id="palm" aria-hidden="true">
   <svg viewBox="0 0 64 64">
     <circle class="track" cx="32" cy="32" r="28"/>
@@ -288,25 +303,29 @@
       <rect x="1.8" y="-17" width="4.5" height="16" rx="2.25"/><rect x="7" y="-13" width="4" height="12" rx="2"/>
       <rect x="-15" y="-1" width="4.5" height="11" rx="2.25" transform="rotate(-35 -12.75 4.5)"/>
     </g>
+    <!-- 핀치 손: 엄지와 검지가 벌어진 모양 → 집으면 끝이 맞닿음 (손 모델이 손을 볼 때만) -->
+    <g class="pinch-g" transform="translate(32 33) scale(.8)"><g class="p-open" id="pinchOpen"></g><g class="p-closed" id="pinchShut"></g></g>
   </svg>
 </div>
 
 <!-- 게임 중: 설명 카드 -->
 <div class="howto" id="howto">
   <div class="c glass"><div class="em">🛞</div><h4>Steer</h4><p>Lower one arm to turn that way. Drop both arms to go straight.</p></div>
-  <div class="c glass"><div class="em">⛺</div><h4>Get home</h4><p>Follow the big arrow to your tent before the timer runs out.</p></div>
+  <div class="c glass"><div class="em">⛺</div><h4>Take it home</h4><p>The caterpillar wants to go home. Follow the big HOME arrow to its tent before time runs out.</p></div>
   <div class="c glass"><div class="em">🍒</div><h4>Eat fruit</h4><p>Fruit and jelly beans give points and +2s. Golden ★ = +5s. 👟 Sneakers = speed boost!</p></div>
   <div class="c glass"><div class="em">🌵</div><h4>Watch your MP</h4><p>Trees, cacti, rocks, cones and your own body drain MP. Jelly beans give some back. When MP hits zero, the run ends.</p></div>
+  <div class="c glass"><div class="em"><svg class="t-pose" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="2.6"/><path d="M2 10.5 H22 M12 8 V16 L8.5 22 M12 16 L15.5 22"/></svg></div><h4>Pause</h4><p>Stretch both arms out to the sides, level with your shoulders, for a moment.</p></div>
   <div class="c glass"><div class="em">🎵</div><h4>Feel the beat</h4><p>The song sets your speed and the scenery.</p></div>
 </div>
 <button class="help glass" id="helpBtn" aria-label="Show how to play">?</button>
 <button class="pause-btn glass" id="pauseBtn" aria-label="Pause (Esc)">❚❚</button>
+<div class="pause-tip glass" id="pauseTip"><b><svg class="t-pose" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="2.6"/><path d="M2 10.5 H22 M12 8 V16 L8.5 22 M12 16 L15.5 22"/></svg></b><span>Arms out wide<br>to pause</span></div>
 
 <!-- ===== 일시정지 ===== -->
 <section class="screen" id="s-pause" aria-label="Paused">
   <div class="panel glass pause-panel">
     <h2>Paused</h2>
-    <p class="mono" style="margin:4px 0 18px">Esc or Space to keep going</p>
+    <p class="mono" style="margin:4px 0 18px">Pinch ▶ Resume · or press Esc / Space</p>
     <button class="btn drive" id="resumeBtn" data-palm>▶ Resume</button>
     <div class="pause-grid">
       <button class="btn ghost" id="restartBtn" data-palm>↻ Restart stage 1</button>
@@ -327,8 +346,10 @@ import {
   tempoFor, stageSpeedMul, driveSecs, CONES_STEP, TENT_R, BOOST_TIME,
   BOOST_MUL, MP_MAX, HIT_DAMAGE, JELLY_HEAL, CLEAR_HEAL, SOLID,
   FRUIT_TYPES, JELLY_COLORS, CELL, GRID_N, KEY_SIDE, WHEEL_DEAD,
-  GRACE_MS, PALM_SCREENS, GRAB, SHOE_CHANCE, GOLD_CHANCE
+  GRACE_MS, PALM_SCREENS, GRAB, SHOE_CHANCE, GOLD_CHANCE, PAUSE_HOLD
 } from "./js/config.js";
+import { initHands, readHands, hands, cursorHand, isPinched, pinchAmount } from "./js/hands.js";
+import { pinchSVG, drawPinchHand } from "./js/pinch-icon.js";
 
 // ---------- Game: 드라이브 시점 (카메라가 뱀을 따라가며 회전) ----------
 let VW = VIEW, VH = VIEW, CX = VW / 2, CY = VH * 0.66;   // 화면 크기와 뱀 머리 위치 (앞쪽을 더 많이 보이게 아래쪽)
@@ -348,7 +369,7 @@ const headR = () => 12;       // 머리 크기 (충돌 판정에도 사용)
 
 let obstacles = [], demo = true;
 // 스테이지: 텐트(목적지)에 시간 안에 도착하면 다음 스테이지 (비트 빨라짐, 장애물 늘어남)
-let stage = 1, tent = null, timeLeft = 0, tempo = 1;
+let stage = 1, tent = null, timeLeft = 0, tempo = 1, tripStart = 1;
 let boostT = 0;
 let mp = MP_MAX, invuln = 0, hitFlash = 0;
 function solidAt(pt, pad, always = false) {
@@ -400,6 +421,7 @@ function placeStage() {
   // 텐트: 지금 위치에서 700~1000px 떨어진 곳 (스테이지가 오를수록 조금 더 멀리)
   // 텐트 거리 = 지금 속도로 약 22초(스테이지마다 +2.5초) 달려야 하는 거리 → 느린 곡·빠른 곡 모두 스테이지가 충분히 길게
   const d = Math.min(3800, Math.max(800, goalSpeed() * driveSecs(stage)));
+  tripStart = d;
   for (let tries = 0; tries < 40; tries++) {
     const a = Math.random() * Math.PI * 2;
     tent = { x: wrap(head.x + Math.cos(a) * d), y: wrap(head.y + Math.sin(a) * d) };
@@ -1022,6 +1044,21 @@ function drawTent(x, y, pulse) {
   ctx.restore();
 }
 
+// 애벌레 머리 위 말풍선 (화면 좌표)
+function drawSay(text, x, y, a) {
+  ctx.save(); ctx.globalAlpha = a;
+  ctx.font = "800 17px Outfit, sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  const w = ctx.measureText(text).width + 28, h = 34, bob = Math.sin(performance.now() / 260) * 2;
+  ctx.translate(x, y - h / 2 + bob);
+  ctx.fillStyle = "#fff6fb"; ctx.strokeStyle = "#2a1a33"; ctx.lineWidth = 3; ctx.lineJoin = "round";
+  ctx.beginPath(); ctx.roundRect(-w / 2, -h / 2, w, h, 12);
+  ctx.moveTo(-7, h / 2); ctx.lineTo(0, h / 2 + 10); ctx.lineTo(7, h / 2);
+  ctx.fill(); ctx.stroke();
+  ctx.fillStyle = "#fff6fb"; ctx.fillRect(-5, h / 2 - 3, 10, 4);   // 꼬리와 몸 사이 선 지우기
+  ctx.fillStyle = "#2a1a33"; ctx.fillText(text, 0, 1);
+  ctx.restore();
+}
+
 // 장애물: 트래픽 콘 (움직이지 않음)
 function drawCone(x, y) {
   circle(x + 3, y + 4, 14, "rgba(0,0,0,.25)");
@@ -1188,18 +1225,36 @@ function draw(dt) {
   if (tent && !demo) {
     const x = wrapDelta(tent.x - head.x), y = wrapDelta(tent.y - head.y);
     const sx = x * ct - y * st + CX, sy = x * st + y * ct + CY;
-    const m = 60;
+    const m = 108, BR = 44;                        // 화면 가장자리 여백, 배지 반지름 (크게, 멀리서도 눈에 띄게)
     if (sx < m || sy < m || sx > VW - m || sy > VH - m) {
       const dx = sx - CX, dy = sy - CY;
       const tt = Math.min((dx > 0 ? VW - m - CX : CX - m) / Math.abs(dx || 1e-6), (dy > 0 ? VH - m - CY : CY - m) / Math.abs(dy || 1e-6));
       const ex = CX + dx * tt, ey = CY + dy * tt, a = Math.atan2(dy, dx);
-      const bounce = Math.sin(performance.now() / 180) * 4;
+      const now = performance.now(), bounce = Math.sin(now / 160) * 6;
       ctx.save(); ctx.translate(ex, ey);
-      circle(0, 0, 30, "rgba(16,17,22,.75)");
-      ctx.strokeStyle = "#ffcf3a"; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(0, 0, 30, 0, Math.PI * 2); ctx.stroke();
-      ctx.font = "22px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("⛺", 0, 1);
-      ctx.rotate(a); ctx.translate(38 + bounce, 0);
-      ctx.fillStyle = "#ffcf3a"; ctx.beginPath(); ctx.moveTo(14, 0); ctx.lineTo(-6, -12); ctx.lineTo(-6, 12); ctx.fill();
+      // 퍼져 나가는 신호 링 두 겹
+      for (const off of [0, 0.5]) {
+        const p = (now / 1400 + off) % 1;
+        ctx.globalAlpha = (1 - p) * 0.8; ctx.strokeStyle = "#ffd45c"; ctx.lineWidth = 5;
+        ctx.beginPath(); ctx.arc(0, 0, BR + p * 44, 0, Math.PI * 2); ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+      // 화살표: 배지 바깥에서 텐트 쪽으로 통통
+      ctx.save(); ctx.rotate(a); ctx.translate(BR + 14 + bounce, 0);
+      ctx.fillStyle = "#ffd45c"; ctx.strokeStyle = "#2a1a33"; ctx.lineWidth = 4; ctx.lineJoin = "round";
+      ctx.beginPath(); ctx.moveTo(30, 0); ctx.lineTo(-2, -22); ctx.lineTo(-2, 22); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.restore();
+      // 스티커 배지: 노란 원 + 굵은 외곽선 + 텐트
+      circle(3, 6, BR, "rgba(42,26,51,.45)");
+      circle(0, 0, BR, "#ffd45c");
+      ctx.strokeStyle = "#2a1a33"; ctx.lineWidth = 5; ctx.beginPath(); ctx.arc(0, 0, BR, 0, Math.PI * 2); ctx.stroke();
+      ctx.font = "44px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("⛺", 0, 2);
+      // 이름표: HOME · 거리
+      const label = `HOME · ${Math.round(wdist(head, tent) / 10)}m`;
+      ctx.font = "800 17px Outfit, sans-serif";
+      const lw = ctx.measureText(label).width + 22;
+      ctx.fillStyle = "#2a1a33"; ctx.beginPath(); ctx.roundRect(-lw / 2, BR + 6, lw, 28, 14); ctx.fill();
+      ctx.fillStyle = "#ffd45c"; ctx.fillText(label, 0, BR + 21);
       ctx.restore(); ctx.textBaseline = "alphabetic";
     }
   }
@@ -1239,6 +1294,13 @@ function draw(dt) {
     ctx.globalAlpha = fade; ctx.fillStyle = fadeFrom; ctx.fillRect(0, 0, VW, VH); ctx.globalAlpha = 1;
   }
   fade = Math.max(0, fade - dt / 1.2);
+
+  // 애벌레 말풍선: 출발 직후 "Take me home!", 10초 남으면 "Hurry home!"
+  if (!demo && tent && document.body.dataset.screen === "game") {
+    const hurry = timeLeft <= 10;
+    const sayA = titleT < 4 ? Math.min(1, titleT / 0.3, (4 - titleT) / 0.5) : hurry ? 1 : 0;
+    if (sayA > 0) drawSay(hurry && titleT >= 4 ? "Hurry home! ⛺" : "Take me home! ⛺", CX, CY - 46, sayA);
+  }
 
   // 장면 이름 (도착한 곳 표지판처럼)
   titleT += dt;
@@ -1687,7 +1749,10 @@ function tickBeats(dt) {
     const t = Math.max(0, Math.ceil(timeLeft));
     $("timeLeft").textContent = `${Math.floor(t / 60)}:${String(t % 60).padStart(2, "0")}`;
     $("stageHud").classList.toggle("hurry", t <= 10 && running);
-    $("tentDist").textContent = `${Math.round(wdist(head, tent) / 10)} m`;
+    const left = wdist(head, tent), k = Math.min(1, Math.max(0, 1 - left / tripStart));
+    $("tentDist").textContent = `${Math.round(left / 10)} m to go`;
+    $("tripFill").style.width = `${k * 100}%`;
+    $("tripCat").style.left = `${k * 100}%`;
     $("stageNum").textContent = stage;
   }
 }
@@ -1753,7 +1818,7 @@ const COACH = [
   ["🖐️", "Open your palms, arms up", "Raise both hands to chest height, like holding a big steering wheel."],
   ["⬅️", "Turn left", "Lower your left hand, raise your right — like turning a wheel."],
   ["➡️", "Now turn right", "Lower your right hand, raise your left."],
-  ["✨", "You’re ready to drive!", "Place your palm on NEXT to continue."],
+  ["✨", "You’re ready to drive!", "Pinch NEXT to continue."],
 ];
 function fitAdvice() {
   if (!camLive.arms) return ["Fit both arms in the frame", "Step back until your elbows and hands are inside the outline."];
@@ -2086,6 +2151,8 @@ async function initPose() {
     minPosePresenceConfidence: 0.4,
     minTrackingConfidence: 0.4,
   });
+  // 손 모델(핀치·두 손바닥)은 뒤에서 따로 로딩: 늦거나 실패해도 핸들 조작은 바로 시작
+  initHands(vision).catch(err => console.warn("Hand model failed, palm hold is used instead", err));
   $("status").textContent = "Starting camera…";
   const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 960, height: 540, facingMode: "user" } });
   video.srcObject = stream;
@@ -2102,8 +2169,29 @@ function poseLoop() {
     fps = fps * 0.9 + (1000 / Math.max(1, now - lastFrameT)) * 0.1; lastFrameT = now;
     const res = landmarker.detectForVideo(video, now);
     handleArms(res.landmarks[0], now);
+    if (hands.ready && handsWanted()) readHands(video, now);
   }
   requestAnimationFrame(poseLoop);
+}
+
+// 손 모델은 핀치가 필요한 화면에서만 돌림 (게임 중엔 쉬어서 핸들 인식이 느려지지 않게)
+function handsWanted() {
+  const scr = document.body.dataset.screen;
+  if (PALM_SCREENS.includes(scr)) return true;
+  return scr === "setup" && coachStage === 6;
+}
+
+// 일시정지 동작: 두 팔을 양옆으로 쭉 펴서 어깨 높이로 수평 (T자) 0.6초
+// 핸들을 잡을 땐 두 손이 가까이 모여 있어서, 팔을 넓게 벌린 이 자세와 헷갈리지 않음
+let pauseHold = 0, pauseHoldLast = 0, armsWide = false;
+function checkPausePose(now) {
+  const dt = Math.min(0.2, (now - (pauseHoldLast || now)) / 1000); pauseHoldLast = now;
+  const on = document.body.dataset.screen === "game" && running && armsWide;
+  pauseHold = on ? pauseHold + dt : Math.max(0, pauseHold - dt * 2);
+  const k = Math.min(1, pauseHold / PAUSE_HOLD);
+  $("pauseBtn").style.setProperty("--k", k);
+  $("pauseTip").classList.toggle("charging", k > 0);
+  if (k >= 1) { pauseHold = 0; $("pauseBtn").style.setProperty("--k", 0); $("pauseTip").classList.remove("charging"); pauseGame(); }
 }
 
 // 팔 하나의 "손잡이 위치" = 팔꿈치와 손목을 신뢰도(visibility)로 가중 평균
@@ -2121,13 +2209,20 @@ function armGrip(lm, elbowIdx, wristIdx, W, H) {
 function handleArms(lm, now) {
   const W = camCanvas.width, H = camCanvas.height;
   cctx.clearRect(0, 0, W, H);
-  if (!lm) { letGo(now, "No one in view"); return; }
+  if (!lm) { armsWide = false; checkPausePose(now); letGo(now, "No one in view"); return; }
   camCheck.body = true;
   camLive.seen = true; camLive.at = performance.now();
   // 손바닥 커서: 더 높이 든 손목을 사용
   const wr = [lm[15], lm[16]].filter(p => p.visibility > 0.5).sort((a, b) => a.y - b.y)[0];
   if (wr) { palmRaw.x = wr.x; palmRaw.y = wr.y; palmRaw.at = performance.now(); }
   camLive.mid = (lm[11].x + lm[12].x) / 2; camLive.shW = Math.abs(lm[11].x - lm[12].x);
+  // 일시정지 자세(T자): 두 손목 사이가 어깨너비의 2.4배 이상 + 팔꿈치·손목이 모두 어깨 높이 근처
+  {
+    const sY = (lm[11].y + lm[12].y) / 2 * H, sW = Math.hypot((lm[11].x - lm[12].x) * W, (lm[11].y - lm[12].y) * H);
+    const level = i => lm[i].visibility > 0.4 && Math.abs(lm[i].y * H - sY) < sW * 0.45;
+    armsWide = [13, 14, 15, 16].every(level) && Math.abs(lm[15].x - lm[16].x) * W > sW * 2.4;
+    checkPausePose(now);
+  }
 
   // 관절 선(스켈레톤)은 그리지 않음 – 설정 화면은 사람 윤곽선, 게임 중엔 핸들만 보여줌
 
@@ -2170,27 +2265,33 @@ function handleArms(lm, now) {
 }
 
 // ---------- 손바닥 커서: 들어 올린 손을 화면 위 커서로 ----------
-// 손목 좌표(카메라)를 화면 좌표로 옮겨서, data-palm 버튼 위에 1초 머물면 클릭
+// 손 좌표(카메라)를 화면 좌표로 옮겨서, data-palm 버튼 위에서 핀치하면 클릭
+// 손 모델이 아직 없을 때(로딩 중·실패)나 마우스일 때는 1초 머물면 클릭
 const palmRaw = { x: 0.5, y: 0.5, at: 0 };
+$("pinchOpen").innerHTML = pinchSVG(0); $("pinchShut").innerHTML = pinchSVG(1);
 const palmCur = { x: innerWidth / 2, y: innerHeight / 2 };
-let palmEl = null, palmT = 0, palmCool = 0, palmLastT = 0;
+let palmEl = null, palmT = 0, palmCool = 0, palmLastT = 0, wasPinched = false;
 // 카메라가 없을 때(미리보기·데모)는 마우스가 손바닥 역할을 대신함
 const palmMouse = { x: 0, y: 0, at: 0 };
 addEventListener("mousemove", e => { palmMouse.x = e.clientX; palmMouse.y = e.clientY; palmMouse.at = performance.now(); });
 function tickPalm() {
   const now = performance.now(), dt = Math.min(0.1, (now - (palmLastT || now)) / 1000); palmLastT = now;
   const cursor = $("palm");
-  const useCam = !!landmarker && now - palmRaw.at < 400;
+  const lead = hands.ready && now - hands.at < 300 ? cursorHand() : null;   // 손 모델이 보는 손
+  const useCam = !!landmarker && (!!lead || now - palmRaw.at < 400);
   const useMouse = !landmarker && now - palmMouse.at < 2500;
   const on = PALM_SCREENS.includes(document.body.dataset.screen) && (useCam || useMouse);
-  $("palmHint").textContent = landmarker ? "✋ Move your palm to a card · hold to pick" : "✋ No camera — your mouse is the palm · hover & hold to pick";
+  $("palmHint").textContent = hands.ready ? "👌 Point at a card · pinch to pick"
+    : landmarker ? "✋ Move your palm to a card · hold to pick" : "✋ No camera — your mouse is the palm · hover & hold to pick";
   cursor.classList.toggle("on", on);
-  if (!on) { palmT = 0; setPalmEl(null); return; }
+  cursor.classList.toggle("pinch-mode", hands.ready);   // 핀치로 고를 수 있으면 커서도 핀치 모양
+  if (!on) { palmT = 0; wasPinched = false; setPalmEl(null); return; }
   let tx, ty;
   if (useCam) {
     // 화면은 거울처럼: x를 뒤집고, 카메라 가운데 영역을 화면 전체로 넓혀서 팔을 조금만 움직여도 끝까지 닿게
-    tx = Math.min(1, Math.max(0, ((1 - palmRaw.x) - 0.2) / 0.6)) * innerWidth;
-    ty = Math.min(1, Math.max(0, (palmRaw.y - 0.15) / 0.55)) * innerHeight;
+    const src = lead ? lead.palm : palmRaw;
+    tx = Math.min(1, Math.max(0, ((1 - src.x) - 0.2) / 0.6)) * innerWidth;
+    ty = Math.min(1, Math.max(0, (src.y - 0.15) / 0.55)) * innerHeight;
   } else { tx = palmMouse.x; ty = palmMouse.y; }
   palmCur.x += (tx - palmCur.x) * 0.35; palmCur.y += (ty - palmCur.y) * 0.35;
   cursor.style.transform = `translate(${palmCur.x}px, ${palmCur.y}px)`;
@@ -2200,10 +2301,20 @@ function tickPalm() {
   const keyOf = el => el ? (el.dataset.key || el.id || el) : null;
   if (keyOf(hit) !== keyOf(palmEl)) { setPalmEl(hit); palmT = 0; }
   else if (hit !== palmEl) { palmEl = hit; hit?.classList.add("palm-on"); }   // 같은 항목이 다시 그려진 경우: 타이머 유지
+  cursor.classList.toggle("hover", !!hit);
+  if (lead) {
+    // 핀치: 엄지와 검지가 가까워질수록 링이 차고, 붙는 순간 클릭 (집은 채로 옮겨 와서는 클릭 안 됨)
+    const pinched = isPinched();
+    $("palmFill").setAttribute("stroke-dasharray", `${(hit ? pinchAmount() : 0) * 100} 100`);
+    cursor.classList.toggle("pinch", pinched);
+    if (pinched && !wasPinched && hit && palmCool <= 0) { palmCool = 0.5; hit.click(); }
+    wasPinched = pinched; palmT = 0;
+    return;
+  }
+  cursor.classList.remove("pinch"); wasPinched = false;
   palmT = hit && palmCool <= 0 ? palmT + dt : 0;
   const k = Math.min(1, palmT / 1.0);
   $("palmFill").setAttribute("stroke-dasharray", `${k * 100} 100`);
-  cursor.classList.toggle("hover", !!hit);
   if (k >= 1) { palmT = 0; palmCool = 0.8; hit.click(); }
 }
 function setPalmEl(el) {
@@ -2236,7 +2347,11 @@ function drawGrabNext(lm, W, H) {
   // 손목(15, 16) 중 하나라도 원 안에 들어오면 채워짐
   const inside = [lm[15], lm[16]].some(p => p.visibility > 0.4 && Math.hypot((p.x - GRAB.x) * W, (p.y - GRAB.y) * H) < R * 1.15);
   grabT = inside ? grabT + dt : Math.max(0, grabT - dt * 2);
-  const k = Math.min(1, grabT / GRAB.hold), pulse = 1 + Math.sin(now / 250) * 0.04;
+  // 손 모델이 있으면 원 안에서 핀치해도 바로 다음 단계 (메뉴에서 쓸 핀치를 여기서 처음 배움)
+  const lead = hands.ready && now - hands.at < 300 ? cursorHand() : null;
+  const pinchIn = lead && Math.hypot((lead.palm.x - GRAB.x) * W, (lead.palm.y - GRAB.y) * H) < R * 1.4;
+  if (pinchIn && isPinched()) grabT = GRAB.hold;
+  const k = Math.min(1, Math.max(grabT / GRAB.hold, pinchIn ? pinchAmount() : 0)), pulse = 1 + Math.sin(now / 250) * 0.04;
 
   cctx.save();
   cctx.fillStyle = inside ? "rgba(126,232,176,.35)" : "rgba(255,255,255,.14)";
@@ -2251,11 +2366,30 @@ function drawGrabNext(lm, W, H) {
   cctx.translate(cx, cy); cctx.scale(-1, 1);
   cctx.fillStyle = "#fff"; cctx.textAlign = "center"; cctx.textBaseline = "middle";
   cctx.shadowColor = "rgba(0,0,0,.6)"; cctx.shadowBlur = 8;
-  cctx.font = "800 34px Outfit, sans-serif"; cctx.fillText("NEXT", 0, -8);
-  cctx.font = "700 14px 'Space Mono', monospace"; cctx.fillText("PLACE PALM", 0, 24);
+  // 동작 그림: 핀치 손이 벌렸다 집었다 반복 (원 안에서 손을 모으면 실제 손 모양을 따라감)
+  cctx.save(); cctx.translate(0, -R * 0.4);
+  if (hands.ready) drawPinchHand(cctx, pinchIn ? pinchAmount() : pinchDemo(now), R / 52);
+  else drawPalm(cctx, R / 40);
+  cctx.restore();
+  cctx.font = "800 30px Outfit, sans-serif"; cctx.fillText("NEXT", 0, R * 0.2);
+  cctx.font = "700 13px 'Space Mono', monospace"; cctx.fillText(hands.ready ? "PINCH HERE" : "PLACE PALM", 0, R * 0.5);
   cctx.restore();
 
-  if (k >= 1) { grabT = 0; $("nextBtn").click(); }
+  if (k >= 1 && grabT >= GRAB.hold) { grabT = 0; $("nextBtn").click(); }
+}
+
+// 시범 동작: 벌림 → 집음 → 잠깐 유지 → 벌림 (1.6초 주기)
+function pinchDemo(now) {
+  const p = (now / 1000) % 1.6, ease = x => x * x * (3 - 2 * x);
+  return p < 0.5 ? ease(p / 0.5) : p < 0.9 ? 1 : p < 1.3 ? 1 - ease((p - 0.9) / 0.4) : 0;
+}
+// 손 모델이 없을 때: 펼친 손바닥 그림
+function drawPalm(c, s) {
+  c.save(); c.scale(s, s); c.fillStyle = "#fff6fb";
+  const r = (x, y, w, h) => { c.beginPath(); c.roundRect(x, y, w, h, Math.min(w, h) / 2); c.fill(); };
+  r(-9, -4, 18, 16); r(-9, -16, 4.5, 15); r(-3.6, -19, 4.5, 18); r(1.8, -17, 4.5, 16); r(7, -13, 4, 12);
+  c.rotate(-0.6); r(-14, 0, 4.5, 11);
+  c.restore();
 }
 
 // 잠깐 놓친 건 무시하고 마지막 값 유지, 오래 놓치면 핸들이 가운데로 돌아옴

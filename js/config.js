@@ -59,6 +59,7 @@ export const JELLY_COLORS = ["#ff5fa2", "#7ee081", "#ffb347", "#8f7bff", "#4fd2f
 export const WHEEL_DEAD = 0.035;     // ±2° 안쪽은 직진 (손 떨림 무시)
 export const GRACE_MS = 350;         // 손이 잠깐 안 잡혀도 이 시간 동안은 마지막 핸들 값 유지
 export const KEY_SIDE = { ArrowLeft: "left", a: "left", ArrowRight: "right", d: "right" };
-export const PALM_SCREENS = ["theme", "over", "clear", "mission", "pause"];   // 손바닥 커서를 쓰는 화면
+export const PAUSE_HOLD = 0.6;       // 두 팔을 양옆으로 벌린 자세를 이만큼(초) 유지하면 일시정지
+export const PALM_SCREENS =["theme", "over", "clear", "mission", "pause"];   // 손바닥 커서를 쓰는 화면
 // "NEXT" 원 잡기 위치 (카메라 원본 좌표, 화면에서는 좌우 반전되어 오른쪽 위)
 export const GRAB = { x: 0.22, y: 0.22, r: 0.085, hold: 1.0 };   // 화면 기준 오른쪽 위
